@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Общий склад - Работает!</title>
+    <title>Общий склад - Google Sheets</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -163,15 +163,14 @@
 
     <script>
         // ==================================================
-        // ✅ ТВОЙ НОВЫЙ URL (УЖЕ ВСТАВЛЕН)
+        // ✅ ТВОЙ НОВЫЙ URL УЖЕ ВСТАВЛЕН ✅
         // ==================================================
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2Xaq6GwGkwVKZRShP29FUNwOnxFW5LfMLc-AODbIHDKNO0-gTWhZO2ZpmkPupSO1e/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxtrCNifFN6_f4iH9Gu0JWw3blDVknRPWOlpSC4QiwUcqIBNePK2PMUIX9Ds-xKq8r/exec';
         
         let products = [];
         let currentFilter = 'all';
         let searchQuery = '';
         let isLoading = false;
-        let callbackCounter = 0;
 
         function updateSyncStatus(text, status = 'waiting') {
             const el = document.getElementById('syncStatus');
@@ -192,44 +191,19 @@
             setTimeout(() => notif.remove(), 2000);
         }
 
-        // --- Универсальный JSONP запрос ---
-        function jsonpRequest(params, callback) {
-            const callbackName = 'jsonp_callback_' + (++callbackCounter);
-            const script = document.createElement('script');
-            
-            window[callbackName] = function(data) {
-                delete window[callbackName];
-                if (script.parentNode) script.parentNode.removeChild(script);
-                if (callback) callback(null, data);
-            };
-            
-            script.onerror = function() {
-                delete window[callbackName];
-                if (script.parentNode) script.parentNode.removeChild(script);
-                if (callback) callback(new Error('Network error'), null);
-            };
-            
-            const urlParams = new URLSearchParams();
-            urlParams.set('callback', callbackName);
-            if (params.action) urlParams.set('action', params.action);
-            if (params.data) urlParams.set('data', JSON.stringify(params.data));
-            
-            script.src = SCRIPT_URL + '?' + urlParams.toString();
-            document.head.appendChild(script);
-        }
-
-        // --- Загрузка всех товаров ---
-        function loadFromGoogle() {
+        // ============================================
+        // ЗАГРУЗКА ИЗ GOOGLE SHEETS
+        // ============================================
+        async function loadFromGoogle() {
             if (isLoading) return;
             isLoading = true;
-            updateSyncStatus('🔄 Загрузка...', 'waiting');
+            updateSyncStatus('🔄 Загрузка из Google...', 'waiting');
             
-            jsonpRequest({ action: 'get' }, function(err, data) {
-                if (err) {
-                    console.error('Ошибка:', err);
-                    updateSyncStatus('⚠️ Ошибка загрузки', 'offline');
-                    loadFromCache();
-                } else if (data && Array.isArray(data)) {
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const data = await response.json();
+                
+                if (data && Array.isArray(data)) {
                     products = data.map(item => ({
                         id: item.id,
                         name: item.name || '',
@@ -246,38 +220,52 @@
                     updateSyncStatus('📭 Таблица пуста', 'online');
                     renderProducts();
                 }
-                isLoading = false;
-            });
+            } catch (error) {
+                console.error('Ошибка:', error);
+                updateSyncStatus('⚠️ Ошибка загрузки', 'offline');
+                loadFromCache();
+            }
+            isLoading = false;
         }
 
-        // --- Добавление товара ---
-        function addProductToGoogle(product, callback) {
-            jsonpRequest({ action: 'add', data: product }, function(err, response) {
-                if (!err && response && response.success) {
-                    if (callback) callback(response.id);
-                } else {
-                    if (callback) callback(null);
+        // ============================================
+        // ЗАПИСЬ В GOOGLE SHEETS (POST)
+        // ============================================
+        async function callGoogleAPI(action, productData) {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        action: action, 
+                        product: productData 
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка HTTP: ' + response.status);
                 }
-            });
+                
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('Ошибка API:', error);
+                return { success: false, error: error.message };
+            }
         }
 
-        // --- Обновление товара ---
-        function updateProductInGoogle(id, updates) {
-            jsonpRequest({ action: 'update', data: { id: id, updates: updates } });
-        }
-
-        // --- Удаление товара ---
-        function deleteProductFromGoogle(id) {
-            jsonpRequest({ action: 'delete', data: { id: id } });
-        }
-
-        // --- Кэш ---
+        // ============================================
+        // КЭШ
+        // ============================================
         function saveToCache() {
-            localStorage.setItem('google_warehouse', JSON.stringify(products));
+            localStorage.setItem('warehouse_google', JSON.stringify(products));
         }
 
         function loadFromCache() {
-            const saved = localStorage.getItem('google_warehouse');
+            const saved = localStorage.getItem('warehouse_google');
             if (saved) {
                 try {
                     products = JSON.parse(saved);
@@ -288,39 +276,38 @@
         }
 
         // ============================================
-        // ОСНОВНЫЕ ФУНКЦИИ
+        // ДОБАВЛЕНИЕ ТОВАРА
         // ============================================
-        
-        // Добавление
-        function addProductLogic(name, quantity, category, minStock, photoData) {
-            const newProduct = {
-                id: Date.now(),
+        async function addProductLogic(name, quantity, category, minStock, photoData) {
+            showNotification(`📤 Сохранение "${name}"...`, false);
+            
+            const result = await callGoogleAPI('add', {
                 name: name,
                 quantity: quantity,
                 category: category,
                 minStock: minStock,
-                photo: photoData,
-                created_at: new Date().toISOString()
-            };
-            
-            // Добавляем локально
-            products.unshift(newProduct);
-            renderProducts();
-            clearForm();
-            saveToCache();
-            showNotification(`✅ Добавлен: ${name}`, false);
-            
-            // Отправляем в Google
-            addProductToGoogle(newProduct, function(realId) {
-                if (realId) {
-                    // Обновляем ID в локальном списке
-                    const idx = products.findIndex(p => p.id === newProduct.id);
-                    if (idx !== -1) {
-                        products[idx].id = realId;
-                        saveToCache();
-                    }
-                }
+                photo: photoData
             });
+            
+            if (result && result.success) {
+                // Добавляем в локальный список с реальным ID из Google
+                const newProduct = {
+                    id: result.id,
+                    name: name,
+                    quantity: quantity,
+                    category: category,
+                    minStock: minStock,
+                    photo: photoData,
+                    createdAt: new Date().toLocaleString()
+                };
+                products.unshift(newProduct);
+                renderProducts();
+                saveToCache();
+                clearForm();
+                showNotification(`✅ Добавлен: ${name}`, false);
+            } else {
+                showNotification(`❌ Ошибка: "${name}" не сохранён`, true);
+            }
         }
 
         function addProduct() {
@@ -351,23 +338,31 @@
             document.getElementById('photoPreview').innerHTML = '';
         }
 
-        // Удаление
-        function deleteProduct(id) {
+        // ============================================
+        // УДАЛЕНИЕ ТОВАРА
+        // ============================================
+        async function deleteProduct(id) {
             const product = products.find(p => p.id === id);
             if (product && confirm(`Удалить "${product.name}"?`)) {
-                // Удаляем локально
-                products = products.filter(p => p.id !== id);
-                renderProducts();
-                saveToCache();
-                showNotification(`🗑️ Удалён: ${product.name}`, false);
+                showNotification(`📤 Удаление "${product.name}"...`, false);
                 
-                // Отправляем в Google
-                deleteProductFromGoogle(id);
+                const result = await callGoogleAPI('delete', { id: id });
+                
+                if (result && result.success) {
+                    products = products.filter(p => p.id !== id);
+                    renderProducts();
+                    saveToCache();
+                    showNotification(`✅ Удалён: ${product.name}`, false);
+                } else {
+                    showNotification(`❌ Ошибка удаления`, true);
+                }
             }
         }
 
-        // Изменение количества
-        function changeQuantity(id, delta) {
+        // ============================================
+        // ИЗМЕНЕНИЕ КОЛИЧЕСТВА
+        // ============================================
+        async function changeQuantity(id, delta) {
             const p = products.find(p => p.id === id);
             if (p) {
                 const newQuantity = Math.max(0, p.quantity + delta);
@@ -376,15 +371,15 @@
                 saveToCache();
                 
                 if (p.quantity <= p.minStock) {
-                    showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
+                    showNotification(`⚠️ ${p.name}: осталось ${p.quantity} шт.`, true);
                 }
                 
-                // Отправляем в Google
-                updateProductInGoogle(id, { quantity: newQuantity });
+                // Отправляем обновление в Google
+                await callGoogleAPI('update', { id: id, updates: { quantity: newQuantity } });
             }
         }
 
-        function setQuantity(id, newValue) {
+        async function setQuantity(id, newValue) {
             const p = products.find(p => p.id === id);
             if (p) {
                 const quantity = Math.max(0, parseInt(newValue, 10) || 0);
@@ -393,15 +388,16 @@
                 saveToCache();
                 
                 if (p.quantity <= p.minStock) {
-                    showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
+                    showNotification(`⚠️ ${p.name}: осталось ${p.quantity} шт.`, true);
                 }
                 
-                // Отправляем в Google
-                updateProductInGoogle(id, { quantity: quantity });
+                await callGoogleAPI('update', { id: id, updates: { quantity: quantity } });
             }
         }
 
-        // Фильтрация
+        // ============================================
+        // ФИЛЬТРАЦИЯ И ОТРИСОВКА
+        // ============================================
         function getFiltered() {
             return products.filter(p => {
                 if (currentFilter !== 'all' && p.category !== currentFilter) return false;
@@ -418,7 +414,7 @@
             
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="empty-state">✨ Товары не найдены ✨</div>';
-                totalSpan.innerHTML = `📊 Всего: ${products.length}`;
+                totalSpan.innerHTML = `📊 Всего товаров: ${products.length}`;
                 return;
             }
             
@@ -487,7 +483,9 @@
             });
         }
         
-        // Запуск
+        // ============================================
+        // ЗАПУСК
+        // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             setupPhotoPreview();
             setupCategoryFilter();
