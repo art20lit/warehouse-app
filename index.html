@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Мой склад - учёт товаров</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            padding-bottom: 100px;
+            transition: all 0.3s ease;
+        }
+
+        :root {
+            --tg-bg: var(--tg-theme-bg-color, #ffffff);
+            --tg-text: var(--tg-theme-text-color, #000000);
+            --tg-hint: var(--tg-theme-hint-color, #999999);
+            --tg-button: var(--tg-theme-button-color, #2481cc);
+            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+            --tg-secondary: var(--tg-theme-secondary-bg-color, #f0f0f0);
+        }
+
+        .header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .add-form, .search-section, .category-filter {
+            background: var(--tg-secondary);
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: var(--tg-hint);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--tg-hint);
+            border-radius: 12px;
+            background: var(--tg-bg);
+            color: var(--tg-text);
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--tg-button);
+        }
+
+        button {
+            background: var(--tg-button);
+            color: var(--tg-button-text);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            opacity: 0.7;
+            transform: scale(0.98);
+        }
+
+        .photo-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .photo-preview img {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .product-card {
+            background: var(--tg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .product-card.low-stock {
+            border-left: 4px solid #ff5c5c;
+            background: rgba(255, 92, 92, 0.1);
+        }
+
+        .product-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .product-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: var(--tg-bg);
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-name {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .product-category {
+            font-size: 12px;
+            color: var(--tg-button);
+            margin-bottom: 4px;
+        }
+
+        .product-quantity {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--tg-button);
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quantity-control input {
+            width: 80px;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        .action-btn.minus {
+            background: rgba(255, 92, 92, 0.2);
+            color: #ff5c5c;
+        }
+
+        .action-btn.plus {
+            background: rgba(0, 184, 148, 0.2);
+            color: #00b894;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--tg-hint);
+            margin-left: auto;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-box input {
+            flex: 1;
+        }
+
+        .category-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: var(--tg-bg);
+            color: var(--tg-text);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chip.active {
+            background: var(--tg-button);
+            color: var(--tg-button-text);
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 100px;
+            left: 16px;
+            right: 16px;
+            background: #ff5c5c;
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+            z-index: 200;
+        }
+
+        @keyframes slideUp {
+            from { bottom: 0; opacity: 0; }
+            to { bottom: 100px; opacity: 1; }
+        }
+
+        .total-info {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tg-secondary);
+            padding: 12px 16px;
+            border-top: 1px solid var(--tg-hint);
+            text-align: center;
+            font-weight: 500;
+            z-index: 100;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-hint);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📦 Мой склад</h1>
+    </div>
+
+    <div class="add-form">
+        <div class="input-group">
+            <label>📷 Фото товара</label>
+            <input type="file" id="productPhoto" accept="image/*">
+            <div class="photo-preview" id="photoPreview"></div>
+        </div>
+        <div class="input-group">
+            <label>📝 Название товара</label>
+            <input type="text" id="productName" placeholder="Например: Джинсы прямые">
+        </div>
+        <div class="input-group">
+            <label>📁 Категория</label>
+            <select id="productCategory">
+                <option value="Одежда">👕 Одежда</option>
+                <option value="Обувь">👟 Обувь</option>
+                <option value="Аксессуары">👜 Аксессуары</option>
+                <option value="Электроника">📱 Электроника</option>
+                <option value="Другое">📦 Другое</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>🔢 Количество</label>
+            <input type="number" id="productQuantity" value="1" min="0">
+        </div>
+        <div class="input-group">
+            <label>⚠️ Минимальный остаток (уведомление)</label>
+            <input type="number" id="productMinStock" value="5" min="0">
+        </div>
+        <button id="addBtn">➕ Добавить товар</button>
+    </div>
+
+    <div class="search-section">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск товаров...">
+        </div>
+    </div>
+
+    <div class="category-filter">
+        <label>📂 Фильтр по категории</label>
+        <div class="category-chips" id="categoryChips"></div>
+    </div>
+
+    <div id="productsList"></div>
+    <div id="totalInfo" class="total-info"></div>
+    <div id="notificationContainer"></div>
+
+    <script>
+        const STORAGE_KEY = 'my_warehouse_app';
+        
+        const categories = ['Одежда', 'Обувь', 'Аксессуары', 'Электроника', 'Другое'];
+        
+        let products = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        function saveToLocalStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    products = JSON.parse(saved);
+                } catch(e) { products = []; }
+            }
+            if (!products || !Array.isArray(products)) {
+                products = [];
+            }
+        }
+
+        function showNotification(message, isWarning = true) {
+            const container = document.getElementById('notificationContainer');
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.style.background = isWarning ? '#ff5c5c' : '#00b894';
+            notif.innerHTML = message;
+            container.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        function checkLowStock(product) {
+            if (product.quantity <= product.minStock) {
+                showNotification(`⚠️ Внимание! ${product.name} осталось ${product.quantity} шт. (мин: ${product.minStock})`, true);
+            }
+        }
+
+        function addProduct() {
+            const nameInput = document.getElementById('productName');
+            const quantityInput = document.getElementById('productQuantity');
+            const categorySelect = document.getElementById('productCategory');
+            const minStockInput = document.getElementById('productMinStock');
+            const photoInput = document.getElementById('productPhoto');
+            
+            let name = nameInput.value.trim();
+            let quantity = parseInt(quantityInput.value, 10);
+            let category = categorySelect.value;
+            let minStock = parseInt(minStockInput.value, 10);
+            
+            if (name === '') {
+                alert('Введите название товара');
+                return;
+            }
+            if (isNaN(quantity)) quantity = 0;
+            if (isNaN(minStock)) minStock = 5;
+            
+            let photoData = null;
+            if (photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photoData = e.target.result;
+                    saveProduct(name, quantity, category, minStock, photoData);
+                };
+                reader.readAsDataURL(photoInput.files[0]);
+            } else {
+                saveProduct(name, quantity, category, minStock, null);
+            }
+        }
+
+        function saveProduct(name, quantity, category, minStock, photoData) {
+            products.push({
+                id: Date.now(),
+                name: name,
+                quantity: quantity,
+                category: category,
+                minStock: minStock,
+                photo: photoData,
+                createdAt: new Date().toLocaleString()
+            });
+            
+            saveToLocalStorage();
+            renderProducts();
+            clearForm();
+            showNotification(`✅ Добавлен: ${name} (${quantity} шт.)`, false);
+        }
+
+        function clearForm() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productQuantity').value = '1';
+            document.getElementById('productMinStock').value = '5';
+            document.getElementById('productPhoto').value = '';
+            document.getElementById('photoPreview').innerHTML = '';
+        }
+
+        function deleteProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (product && confirm(`Удалить "${product.name}"?`)) {
+                products = products.filter(p => p.id !== id);
+                saveToLocalStorage();
+                renderProducts();
+                showNotification(`🗑️ Удалён: ${product.name}`, false);
+            }
+        }
+
+        function changeQuantity(id, delta) {
+            const product = products.find(p => p.id === id);
+            if (product) {
+                let newQuantity = product.quantity + delta;
+                if (newQuantity < 0) newQuantity = 0;
+                product.quantity = newQuantity;
+                saveToLocalStorage();
+                renderProducts();
+                checkLowStock(product);
+            }
+        }
+
+        function setQuantity(id, newValue) {
+            const product = products.find(p => p.id === id);
+            if (product) {
+                let quantity = parseInt(newValue, 10);
+                if (isNaN(quantity)) quantity = 0;
+                if (quantity < 0) quantity = 0;
+                product.quantity = quantity;
+                saveToLocalStorage();
+                renderProducts();
+                checkLowStock(product);
+            }
+        }
+
+        function getFilteredProducts() {
+            return products.filter(product => {
+                if (currentFilter !== 'all' && product.category !== currentFilter) return false;
+                if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                return true;
+            });
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('productsList');
+            const totalSpan = document.getElementById('totalInfo');
+            const filtered = getFilteredProducts();
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state">✨ Товары не найдены ✨</div>';
+                totalSpan.innerHTML = `📊 Показано: 0 из ${products.length} товаров`;
+                return;
+            }
+            
+            let totalQuantity = 0;
+            let html = '';
+            
+            for (let product of filtered) {
+                totalQuantity += product.quantity;
+                const isLow = product.quantity <= product.minStock;
+                
+                html += `
+                    <div class="product-card ${isLow ? 'low-stock' : ''}">
+                        <div class="product-header">
+                            ${product.photo ? `<img class="product-photo" src="${product.photo}" alt="фото">` : '<div class="product-photo" style="background: var(--tg-hint); display: flex; align-items: center; justify-content: center;">📷</div>'}
+                            <div class="product-info">
+                                <div class="product-name">${escapeHtml(product.name)}</div>
+                                <div class="product-category">${product.category}</div>
+                                <div class="product-quantity">${product.quantity} шт.</div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
+                        </div>
+                        <div class="quantity-control">
+                            <button class="action-btn minus" onclick="changeQuantity(${product.id}, -1)">−</button>
+                            <input type="number" value="${product.quantity}" onchange="setQuantity(${product.id}, this.value)" min="0">
+                            <button class="action-btn plus" onclick="changeQuantity(${product.id}, 1)">+</button>
+                            ${isLow ? '<span style="color:#ff5c5c; font-size:12px;">⚠️ Мало!</span>' : ''}
+                        </div>
+                        <div style="font-size:11px; color:var(--tg-hint); margin-top:8px;">
+                            Мин. остаток: ${product.minStock} шт.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            totalSpan.innerHTML = `📊 Всего товаров: ${products.length} | На складе: ${totalQuantity} шт. | Показано: ${filtered.length}`;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        function setupPhotoPreview() {
+            const photoInput = document.getElementById('productPhoto');
+            const preview = document.getElementById('photoPreview');
+            if (photoInput) {
+                photoInput.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            preview.innerHTML = `<img src="${ev.target.result}" alt="предпросмотр">`;
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        preview.innerHTML = '';
+                    }
+                });
+            }
+        }
+
+        function setupCategoryFilter() {
+            const container = document.getElementById('categoryChips');
+            if (!container) return;
+            
+            container.innerHTML = '<span class="chip active" data-cat="all">📋 Все</span>';
+            
+            categories.forEach(cat => {
+                const emoji = getCategoryEmoji(cat);
+                container.innerHTML += `<span class="chip" data-cat="${cat}">${emoji} ${cat}</span>`;
+            });
+            
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    currentFilter = chip.getAttribute('data-cat');
+                    renderProducts();
+                });
+            });
+        }
+
+        function getCategoryEmoji(category) {
+            const emojis = {
+                'Одежда': '👕',
+                'Обувь': '👟',
+                'Аксессуары': '👜',
+                'Электроника': '📱',
+                'Другое': '📦'
+            };
+            return emojis[category] || '📦';
+        }
+
+        function initTelegram() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                document.body.style.backgroundColor = tg.themeParams.bg_color;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            renderProducts();
+            initTelegram();
+            setupPhotoPreview();
+            setupCategoryFilter();
+            
+            const addBtn = document.getElementById('addBtn');
+            if (addBtn) addBtn.addEventListener('click', addProduct);
+            
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    searchQuery = e.target.value;
+                    renderProducts();
+                });
+            }
+            
+            const nameField = document.getElementById('productName');
+            if (nameField) {
+                nameField.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') addProduct();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
