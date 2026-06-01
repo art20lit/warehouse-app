@@ -165,7 +165,7 @@
         // ==================================================
         // ✅ ТВОЙ НОВЫЙ URL (УЖЕ ВСТАВЛЕН)
         // ==================================================
-        const SCRIPT_URL_BASE = 'https://script.google.com/macros/s/AKfycbwT_-R-IhLKvR596H3INOvAiyzfOpwDS3b6mjddRCZydrktuVt83fprmsDtZW4ipta9';
+        const SCRIPT_URL_BASE = 'https://script.google.com/macros/s/AKfycbxV3HPfv2aLgLxv-D83A18wMVQvMKpR-A84QOrxj_lV0wAeQ8cTRes7u7RwJU0IHR71';
         
         let products = [];
         let currentFilter = 'all';
@@ -189,7 +189,7 @@
             notif.style.background = isWarning ? '#ff5c5c' : '#00b894';
             notif.innerHTML = message;
             container.appendChild(notif);
-            setTimeout(() => notif.remove(), 2500);
+            setTimeout(() => notif.remove(), 2000);
         }
 
         // --- JSONP для GET (чтение) ---
@@ -214,11 +214,11 @@
             document.head.appendChild(script);
         }
 
-        // --- Загрузка из Google Sheets (JSONP - работает без CORS) ---
+        // --- Загрузка из Google Sheets ---
         function loadFromGoogle() {
             if (isLoading) return;
             isLoading = true;
-            updateSyncStatus('🔄 Загрузка из Google...', 'waiting');
+            updateSyncStatus('🔄 Загрузка...', 'waiting');
             
             jsonpRequest(SCRIPT_URL_BASE + '/exec', function(err, data) {
                 if (err) {
@@ -246,10 +246,10 @@
             });
         }
 
-        // --- Запись в Google Sheets (POST/PUT/DELETE) ---
+        // --- Отправка запросов в Google (POST/PUT/DELETE) ---
         async function callGoogleAPI(method, body) {
             try {
-                const response = await fetch(SCRIPT_URL_BASE + '/exec', {
+                await fetch(SCRIPT_URL_BASE + '/exec', {
                     method: method,
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
@@ -262,7 +262,7 @@
             }
         }
 
-        // --- Кэш (быстрое сохранение и загрузка) ---
+        // --- Кэш ---
         function saveToCache() {
             localStorage.setItem('google_warehouse', JSON.stringify(products));
         }
@@ -286,7 +286,10 @@
         async function addProductLogic(name, quantity, category, minStock, photoData) {
             const newProduct = {
                 id: Date.now(),
-                name, quantity, category, minStock,
+                name: name,
+                quantity: quantity,
+                category: category,
+                minStock: minStock,
                 photo: photoData,
                 created_at: new Date().toISOString()
             };
@@ -326,44 +329,48 @@
             document.getElementById('photoPreview').innerHTML = '';
         }
 
-        // Удаление (ТЕПЕРЬ РАБОТАЕТ!)
+        // Удаление
         async function deleteProduct(id) {
             const product = products.find(p => p.id === id);
             if (product && confirm(`Удалить "${product.name}"?`)) {
-                // Удаляем из локального списка
                 products = products.filter(p => p.id !== id);
                 renderProducts();
                 saveToCache();
                 showNotification(`🗑️ Удалён: ${product.name}`, false);
-                
-                // Отправляем запрос в Google
                 await callGoogleAPI('DELETE', { id: id });
-                
-                // Фоновая синхронизация
-                setTimeout(() => loadFromGoogle(), 500);
             }
         }
 
-        // Изменение количества
+        // ИЗМЕНЕНИЕ КОЛИЧЕСТВА (ТЕПЕРЬ РАБОТАЕТ!)
         async function changeQuantity(id, delta) {
             const p = products.find(p => p.id === id);
             if (p) {
-                p.quantity = Math.max(0, p.quantity + delta);
+                const newQuantity = Math.max(0, p.quantity + delta);
+                p.quantity = newQuantity;
                 renderProducts();
                 saveToCache();
-                if (p.quantity <= p.minStock) showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
-                await callGoogleAPI('PUT', { id: id, updates: { quantity: p.quantity } });
+                
+                if (p.quantity <= p.minStock) {
+                    showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
+                }
+                
+                await callGoogleAPI('PUT', { id: id, updates: { quantity: newQuantity } });
             }
         }
 
-        async function setQuantity(id, newVal) {
+        async function setQuantity(id, newValue) {
             const p = products.find(p => p.id === id);
             if (p) {
-                p.quantity = Math.max(0, parseInt(newVal, 10) || 0);
+                const quantity = Math.max(0, parseInt(newValue, 10) || 0);
+                p.quantity = quantity;
                 renderProducts();
                 saveToCache();
-                if (p.quantity <= p.minStock) showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
-                await callGoogleAPI('PUT', { id: id, updates: { quantity: p.quantity } });
+                
+                if (p.quantity <= p.minStock) {
+                    showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
+                }
+                
+                await callGoogleAPI('PUT', { id: id, updates: { quantity: quantity } });
             }
         }
 
@@ -419,7 +426,15 @@
             totalSpan.innerHTML = `📊 Всего: ${products.length} | На складе: ${totalQty} шт. | Показано: ${filtered.length}`;
         }
 
-        function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+        function escapeHtml(str) { 
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, function(m) { 
+                if (m === '&') return '&amp;'; 
+                if (m === '<') return '&lt;'; 
+                if (m === '>') return '&gt;'; 
+                return m; 
+            }); 
+        }
         
         function setupPhotoPreview() {
             const input = document.getElementById('productPhoto');
@@ -449,8 +464,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             setupPhotoPreview();
             setupCategoryFilter();
-            loadFromCache();      // мгновенный показ
-            loadFromGoogle();     // фоновая синхронизация
+            loadFromCache();
+            loadFromGoogle();
             
             document.getElementById('addBtn')?.addEventListener('click', addProduct);
             document.getElementById('refreshBtn')?.addEventListener('click', loadFromGoogle);
