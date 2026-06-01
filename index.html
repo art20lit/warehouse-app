@@ -3,47 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Общий склад - бесплатно</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Общий склад - Джинсы и Шорты</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            background: #ffffff;
+            color: #000000;
             padding: 16px;
             padding-bottom: 100px;
         }
-        :root {
-            --tg-bg: var(--tg-theme-bg-color, #ffffff);
-            --tg-text: var(--tg-theme-text-color, #000000);
-            --tg-hint: var(--tg-theme-hint-color, #999999);
-            --tg-button: var(--tg-theme-button-color, #2481cc);
-            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
-            --tg-secondary: var(--tg-theme-secondary-bg-color, #f0f0f0);
+        /* Тёмная тема для системы */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1a1a1a;
+                color: #ffffff;
+            }
+            .add-form, .product-card, .search-section, .category-filter {
+                background: #2d2d2d;
+            }
+            input, select {
+                background: #1a1a1a;
+                color: #ffffff;
+                border-color: #444;
+            }
+            .total-info {
+                background: #2d2d2d;
+                border-top-color: #444;
+            }
+            .product-name {
+                color: #ffffff !important;
+            }
+            .product-category {
+                color: #aaaaaa !important;
+            }
         }
         .header { margin-bottom: 20px; text-align: center; }
         h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
         .add-form, .search-section, .category-filter {
-            background: var(--tg-secondary);
+            background: #f0f0f0;
             padding: 16px;
             border-radius: 16px;
             margin-bottom: 16px;
         }
         .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 14px; margin-bottom: 6px; color: var(--tg-hint); }
+        label { display: block; font-size: 14px; margin-bottom: 6px; color: #666; }
         input, select {
             width: 100%;
             padding: 12px;
-            border: 1px solid var(--tg-hint);
+            border: 1px solid #ccc;
             border-radius: 12px;
-            background: var(--tg-bg);
-            color: var(--tg-text);
+            background: white;
+            color: black;
             font-size: 16px;
         }
         button {
-            background: var(--tg-button);
-            color: var(--tg-button-text);
+            background: #2481cc;
+            color: white;
             border: none;
             padding: 12px 20px;
             border-radius: 12px;
@@ -52,10 +68,11 @@
             cursor: pointer;
             width: 100%;
         }
+        button:active { opacity: 0.7; }
         .photo-preview { margin-top: 10px; text-align: center; }
         .photo-preview img { max-width: 100px; max-height: 100px; border-radius: 12px; }
         .product-card {
-            background: var(--tg-secondary);
+            background: #f9f9f9;
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 12px;
@@ -64,36 +81,48 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .product-card.low-stock { border-left: 4px solid #ff5c5c; background: rgba(255, 92, 92, 0.1); }
         .product-header { display: flex; gap: 12px; margin-bottom: 12px; }
-        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: var(--tg-bg); }
+        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; }
         .product-info { flex: 1; }
-        .product-name { font-weight: 600; font-size: 18px; margin-bottom: 4px; }
-        .product-category { font-size: 12px; color: var(--tg-button); margin-bottom: 4px; }
-        .product-quantity { font-size: 20px; font-weight: bold; color: var(--tg-button); }
+        /* 👇 ГЛАВНОЕ ИЗМЕНЕНИЕ — ТЕКСТ ЧЁРНЫЙ 👇 */
+        .product-name { 
+            font-weight: 600; 
+            font-size: 18px; 
+            margin-bottom: 4px; 
+            color: #000000 !important;
+        }
+        .product-category { 
+            font-size: 12px; 
+            color: #555555 !important; 
+            margin-bottom: 4px; 
+        }
+        .product-quantity { font-size: 20px; font-weight: bold; color: #2481cc; }
         .quantity-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
         .quantity-control input { width: 80px; text-align: center; padding: 8px; }
         .action-btn { width: 40px; height: 40px; border-radius: 20px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; }
         .action-btn.minus { background: rgba(255, 92, 92, 0.2); color: #ff5c5c; }
         .action-btn.plus { background: rgba(0, 184, 148, 0.2); color: #00b894; }
-        .delete-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--tg-hint); margin-left: auto; }
+        .delete-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; margin-left: auto; }
         .search-box { display: flex; gap: 8px; align-items: center; }
         .search-box input { flex: 1; }
         .category-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-        .chip { padding: 6px 12px; border-radius: 20px; background: var(--tg-bg); color: var(--tg-text); font-size: 13px; cursor: pointer; }
-        .chip.active { background: var(--tg-button); color: var(--tg-button-text); }
+        .chip { padding: 6px 12px; border-radius: 20px; background: white; color: black; font-size: 13px; cursor: pointer; border: 1px solid #ccc; }
+        .chip.active { background: #2481cc; color: white; border-color: #2481cc; }
         .notification { position: fixed; bottom: 100px; left: 16px; right: 16px; background: #ff5c5c; color: white; padding: 12px; border-radius: 12px; text-align: center; z-index: 200; animation: fadeIn 0.3s; }
-        .total-info { position: fixed; bottom: 0; left: 0; right: 0; background: var(--tg-secondary); padding: 12px 16px; border-top: 1px solid var(--tg-hint); text-align: center; font-weight: 500; z-index: 100; }
-        .empty-state { text-align: center; padding: 40px; color: var(--tg-hint); }
-        .sync-status { font-size: 12px; text-align: center; margin-top: 5px; color: var(--tg-hint); }
-        .refresh-btn { margin-top: 8px; padding: 8px 16px; font-size: 14px; width: auto; display: inline-block; }
+        .total-info { position: fixed; bottom: 0; left: 0; right: 0; background: #f0f0f0; padding: 12px 16px; border-top: 1px solid #ddd; text-align: center; font-weight: 500; z-index: 100; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .sync-status { font-size: 12px; text-align: center; margin-top: 5px; color: #666; }
+        .refresh-btn { margin-top: 8px; padding: 8px 16px; font-size: 14px; width: auto; display: inline-block; background: #2481cc; color: white; border: none; border-radius: 20px; cursor: pointer; }
         .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+        .online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #00b894; margin-right: 6px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>📦 Общий склад</h1>
-        <div class="sync-status" id="syncStatus">🔄 Загрузка...</div>
+        <h1>👖🩳 Общий склад</h1>
+        <div class="sync-status" id="syncStatus"><span class="online-dot"></span> Подключение к облаку...</div>
         <div class="button-group">
-            <button class="refresh-btn" id="refreshBtn">🔄 Обновить</button>
+            <button class="refresh-btn" id="refreshBtn">🔄 Синхронизировать</button>
         </div>
     </div>
 
@@ -105,13 +134,13 @@
         </div>
         <div class="input-group">
             <label>📝 Название товара</label>
-            <input type="text" id="productName" placeholder="Например: Джинсы прямые">
+            <input type="text" id="productName" placeholder="Например: Джинсы slim, Шорты пляжные">
         </div>
         <div class="input-group">
             <label>📁 Категория</label>
             <select id="productCategory">
-                <option value="Джинсы"> Джинсы</option>
-                <option value="Шорты"> Шорты</option>
+                <option value="Джинсы">👖 Джинсы</option>
+                <option value="Шорты">🩳 Шорты</option>
             </select>
         </div>
         <div class="input-group">
@@ -141,76 +170,139 @@
     <div id="notificationContainer"></div>
 
     <script>
-        const SPREADSHEET_ID = '2PACX-1vS3DqKeT4O0kWCEUWrO-OvOWtR1HHeJK-0kbUhbncEHQDNh3-TxQtaqXkE5e6aTLaAhtHKXRee4_zod'; 
+        // =====================================================
+        // ТВОИ ДАННЫЕ ДЛЯ ПОДКЛЮЧЕНИЯ
+        // =====================================================
+        const SUPABASE_URL = 'https://lrrkrscejxmexsouiwmk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycmtyc2NlamhtZXhzb3Vpd21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzE0NzAsImV4cCI6MjA5NTkwNzQ3MH0.G5zQWtj-MPnKksWcXr35YTmwoSj1qIf4r_K7D9-dzm4';
         
-        // Ссылка для чтения данных
-        const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`;
+        let supabaseClient = null;
         
-        const categories = ['Джинсы','Шорты'];
-        
+        const categories = ['Джинсы', 'Шорты'];
         let products = [];
         let currentFilter = 'all';
         let searchQuery = '';
         let isLoading = false;
 
-        function updateSyncStatus(text, isError = false) {
+        function updateSyncStatus(text, isError = false, isOnline = true) {
             const statusEl = document.getElementById('syncStatus');
             if (statusEl) {
-                statusEl.innerHTML = text;
-                statusEl.style.color = isError ? '#ff5c5c' : 'var(--tg-hint)';
+                if (isOnline) {
+                    statusEl.innerHTML = `<span class="online-dot"></span> ${text}`;
+                } else {
+                    statusEl.innerHTML = `⚠️ ${text}`;
+                }
+                statusEl.style.color = isError ? '#ff5c5c' : '#666';
             }
         }
 
-        // Загрузка из Google Sheets
-        async function loadFromGoogleSheets() {
+        async function loadFromSupabase() {
             if (isLoading) return;
+            if (!supabaseClient) {
+                updateSyncStatus('⚠️ Supabase не загружен', true, false);
+                loadFromLocalStorage();
+                return;
+            }
+            
             isLoading = true;
-            updateSyncStatus('🔄 Загрузка с сервера...');
+            updateSyncStatus('🔄 Загрузка с облака...');
             
             try {
-                const response = await fetch(GOOGLE_SHEET_URL);
-                const csvText = await response.text();
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .order('created_at', { ascending: false });
                 
-                const rows = csvText.split('\n');
-                if (rows.length < 2) {
-                    products = [];
-                    updateSyncStatus('✅ Таблица пуста. Добавьте первый товар!');
-                    renderProducts();
+                if (error) {
+                    console.error('Ошибка:', error);
+                    if (error.message.includes('does not exist')) {
+                        updateSyncStatus('❌ Таблица "products" не найдена! Создайте её в Supabase', true, false);
+                    } else {
+                        updateSyncStatus(`❌ Ошибка: ${error.message}`, true, false);
+                    }
+                    loadFromLocalStorage();
                     return;
                 }
                 
-                const newProducts = [];
-                for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i].split(',');
-                    if (row.length >= 4 && row[0] && row[0] !== 'id' && row[0] !== '') {
-                        newProducts.push({
-                            id: parseInt(row[0]) || Date.now() + i,
-                            name: (row[1] || '').replace(/^"|"$/g, ''),
-                            quantity: parseInt(row[2]) || 0,
-                            category: (row[3] || 'Другое').replace(/^"|"$/g, ''),
-                            minStock: parseInt(row[4]) || 5,
-                            photo: row[5] && row[5] !== '""' ? (row[5].replace(/^"|"$/g, '') || null) : null,
-                            createdAt: new Date().toLocaleString()
-                        });
-                    }
-                }
-                
-                if (newProducts.length > 0 || products.length > 0) {
-                    products = newProducts;
-                    saveToLocalStorage();
+                if (data && data.length > 0) {
+                    products = data.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        quantity: item.quantity,
+                        category: item.category || 'Джинсы',
+                        minStock: item.minStock || 5,
+                        photo: item.photo,
+                        created_at: item.created_at
+                    }));
                     updateSyncStatus(`✅ Загружено ${products.length} товаров`);
-                    renderProducts();
+                } else {
+                    products = [];
+                    updateSyncStatus('✅ Таблица пуста. Добавьте первый товар!');
                 }
+                renderProducts();
+                saveToLocalStorage();
                 
             } catch (error) {
                 console.error('Ошибка:', error);
-                updateSyncStatus('⚠️ Ошибка, показываю локальные данные', true);
+                updateSyncStatus('⚠️ Ошибка подключения к облаку', true, false);
                 loadFromLocalStorage();
             }
             isLoading = false;
         }
 
-        // Сохранение в localStorage (для кэша)
+        async function saveToSupabase(product) {
+            if (!supabaseClient) return false;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .insert([{
+                        name: product.name,
+                        quantity: product.quantity,
+                        category: product.category,
+                        minStock: product.minStock,
+                        photo: product.photo
+                    }])
+                    .select();
+                
+                if (error) throw error;
+                if (data && data[0]) product.id = data[0].id;
+                return true;
+            } catch (error) {
+                console.error('Ошибка сохранения:', error);
+                return false;
+            }
+        }
+
+        async function updateInSupabase(id, updates) {
+            if (!supabaseClient) return false;
+            try {
+                const { error } = await supabaseClient
+                    .from('products')
+                    .update(updates)
+                    .eq('id', id);
+                if (error) throw error;
+                return true;
+            } catch (error) {
+                console.error('Ошибка обновления:', error);
+                return false;
+            }
+        }
+
+        async function deleteFromSupabase(id) {
+            if (!supabaseClient) return false;
+            try {
+                const { error } = await supabaseClient
+                    .from('products')
+                    .delete()
+                    .eq('id', id);
+                if (error) throw error;
+                return true;
+            } catch (error) {
+                console.error('Ошибка удаления:', error);
+                return false;
+            }
+        }
+
         function saveToLocalStorage() {
             localStorage.setItem('shared_warehouse', JSON.stringify(products));
         }
@@ -220,7 +312,7 @@
             if (saved) {
                 try {
                     products = JSON.parse(saved);
-                    updateSyncStatus(`📱 Загружено ${products.length} товаров из кэша`);
+                    updateSyncStatus(`📱 Загружено ${products.length} товаров из кэша`, false, false);
                     renderProducts();
                 } catch(e) { products = []; }
             }
@@ -242,24 +334,7 @@
             }
         }
 
-        // Сохранение в Google Sheets (через fetch POST)
-        async function syncToGoogleSheets() {
-            // Для записи нужен Google Apps Script
-            // Пока просто сохраняем локально и показываем уведомление
-            saveToLocalStorage();
-            showNotification('💾 Сохранено локально. Облако: настрой Google Apps Script', false);
-        }
-
-        function addProductToLocal(productData) {
-            products.push(productData);
-            saveToLocalStorage();
-            syncToGoogleSheets();
-            renderProducts();
-            clearForm();
-            showNotification(`✅ Добавлен: ${productData.name}`, false);
-        }
-
-        function addProduct() {
+        async function addProduct() {
             const nameInput = document.getElementById('productName');
             const quantityInput = document.getElementById('productQuantity');
             const categorySelect = document.getElementById('productCategory');
@@ -278,30 +353,37 @@
             if (isNaN(quantity)) quantity = 0;
             if (isNaN(minStock)) minStock = 5;
             
-            if (photoInput.files && photoInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    addProductToLocal({
-                        id: Date.now(),
-                        name: name,
-                        quantity: quantity,
-                        category: category,
-                        minStock: minStock,
-                        photo: e.target.result,
-                        createdAt: new Date().toLocaleString()
-                    });
-                };
-                reader.readAsDataURL(photoInput.files[0]);
-            } else {
-                addProductToLocal({
-                    id: Date.now(),
+            const processSave = async (photoData) => {
+                const newProduct = {
                     name: name,
                     quantity: quantity,
                     category: category,
                     minStock: minStock,
-                    photo: null,
-                    createdAt: new Date().toLocaleString()
-                });
+                    photo: photoData,
+                    created_at: new Date().toISOString()
+                };
+                
+                const saved = await saveToSupabase(newProduct);
+                
+                if (saved && newProduct.id) {
+                    products.unshift({ id: newProduct.id, ...newProduct });
+                } else {
+                    newProduct.id = Date.now();
+                    products.unshift(newProduct);
+                }
+                
+                saveToLocalStorage();
+                renderProducts();
+                clearForm();
+                showNotification(`✅ Добавлен: ${name}`, false);
+            };
+            
+            if (photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { processSave(e.target.result); };
+                reader.readAsDataURL(photoInput.files[0]);
+            } else {
+                processSave(null);
             }
         }
 
@@ -313,38 +395,38 @@
             document.getElementById('photoPreview').innerHTML = '';
         }
 
-        function deleteProduct(id) {
+        async function deleteProduct(id) {
             const product = products.find(p => p.id === id);
             if (product && confirm(`Удалить "${product.name}"?`)) {
+                await deleteFromSupabase(id);
                 products = products.filter(p => p.id !== id);
                 saveToLocalStorage();
-                syncToGoogleSheets();
                 renderProducts();
                 showNotification(`🗑️ Удалён: ${product.name}`, false);
             }
         }
 
-        function changeQuantity(id, delta) {
+        async function changeQuantity(id, delta) {
             const product = products.find(p => p.id === id);
             if (product) {
                 let newQuantity = product.quantity + delta;
                 if (newQuantity < 0) newQuantity = 0;
                 product.quantity = newQuantity;
+                await updateInSupabase(id, { quantity: newQuantity });
                 saveToLocalStorage();
-                syncToGoogleSheets();
                 renderProducts();
                 checkLowStock(product);
             }
         }
 
-        function setQuantity(id, newValue) {
+        async function setQuantity(id, newValue) {
             const product = products.find(p => p.id === id);
             if (product) {
                 let quantity = parseInt(newValue, 10);
                 if (isNaN(quantity)) quantity = 0;
                 product.quantity = quantity;
+                await updateInSupabase(id, { quantity: quantity });
                 saveToLocalStorage();
-                syncToGoogleSheets();
                 renderProducts();
                 checkLowStock(product);
             }
@@ -375,14 +457,15 @@
             for (let product of filtered) {
                 totalQuantity += product.quantity;
                 const isLow = product.quantity <= product.minStock;
+                const categoryEmoji = product.category === 'Джинсы' ? '👖' : '🩳';
                 
                 html += `
                     <div class="product-card ${isLow ? 'low-stock' : ''}">
                         <div class="product-header">
-                            ${product.photo ? `<img class="product-photo" src="${product.photo}" alt="фото">` : '<div class="product-photo" style="background: var(--tg-hint); display: flex; align-items: center; justify-content: center;">📷</div>'}
+                            ${product.photo ? `<img class="product-photo" src="${product.photo}" alt="фото">` : '<div class="product-photo">📷</div>'}
                             <div class="product-info">
                                 <div class="product-name">${escapeHtml(product.name)}</div>
-                                <div class="product-category">${product.category}</div>
+                                <div class="product-category">${categoryEmoji} ${product.category}</div>
                                 <div class="product-quantity">${product.quantity} шт.</div>
                             </div>
                             <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
@@ -393,7 +476,7 @@
                             <button class="action-btn plus" onclick="changeQuantity(${product.id}, 1)">+</button>
                             ${isLow ? '<span style="color:#ff5c5c;">⚠️ Мало!</span>' : ''}
                         </div>
-                        <div style="font-size:11px; color:var(--tg-hint);">Мин. остаток: ${product.minStock} шт.</div>
+                        <div style="font-size:11px; color:#999;">Мин. остаток: ${product.minStock} шт.</div>
                     </div>
                 `;
             }
@@ -435,10 +518,8 @@
             if (!container) return;
             
             container.innerHTML = '<span class="chip active" data-cat="all">📋 Все</span>';
-            categories.forEach(cat => {
-                const emoji = getCategoryEmoji(cat);
-                container.innerHTML += `<span class="chip" data-cat="${cat}">${emoji} ${cat}</span>`;
-            });
+            container.innerHTML += `<span class="chip" data-cat="Джинсы">👖 Джинсы</span>`;
+            container.innerHTML += `<span class="chip" data-cat="Шорты">🩳 Шорты</span>`;
             
             document.querySelectorAll('.chip').forEach(chip => {
                 chip.addEventListener('click', () => {
@@ -450,31 +531,36 @@
             });
         }
 
-        function getCategoryEmoji(category) {
-            const emojis = {
-                'Джинсы' , 'Шорты'
+        function loadSupabaseLibrary() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            script.onload = () => {
+                if (window.supabase) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    updateSyncStatus('✅ Облако подключено');
+                    loadFromSupabase();
+                } else {
+                    updateSyncStatus('⚠️ Не удалось загрузить Supabase', true, false);
+                    loadFromLocalStorage();
+                }
             };
-            return emojis[category] || '📦';
-        }
-
-        function initTelegram() {
-            if (window.Telegram && window.Telegram.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.ready();
-                tg.expand();
-                document.body.style.backgroundColor = tg.themeParams.bg_color;
-            }
+            script.onerror = () => {
+                updateSyncStatus('⚠️ Ошибка загрузки Supabase', true, false);
+                loadFromLocalStorage();
+            };
+            document.head.appendChild(script);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            initTelegram();
             setupPhotoPreview();
             setupCategoryFilter();
-            
-            loadFromGoogleSheets();
+            loadSupabaseLibrary();
             
             document.getElementById('addBtn').addEventListener('click', addProduct);
-            document.getElementById('refreshBtn').addEventListener('click', loadFromGoogleSheets);
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                if (supabaseClient) loadFromSupabase();
+                else loadFromLocalStorage();
+            });
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 searchQuery = e.target.value;
                 renderProducts();
