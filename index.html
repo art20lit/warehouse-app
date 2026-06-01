@@ -1,1 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Общий склад - бесплатно</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+        :root {
+            --tg-bg: var(--tg-theme-bg-color, #ffffff);
+            --tg-text: var(--tg-theme-text-color, #000000);
+            --tg-hint: var(--tg-theme-hint-color, #999999);
+            --tg-button: var(--tg-theme-button-color, #2481cc);
+            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+            --tg-secondary: var(--tg-theme-secondary-bg-color, #f0f0f0);
+        }
+        .header { margin-bottom: 20px; text-align: center; }
+        h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+        .add-form, .search-section, .category-filter {
+            background: var(--tg-secondary);
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 14px; margin-bottom: 6px; color: var(--tg-hint); }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--tg-hint);
+            border-radius: 12px;
+            background: var(--tg-bg);
+            color: var(--tg-text);
+            font-size: 16px;
+        }
+        button {
+            background: var(--tg-button);
+            color: var(--tg-button-text);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+        }
+        .photo-preview { margin-top: 10px; text-align: center; }
+        .photo-preview img { max-width: 100px; max-height: 100px; border-radius: 12px; }
+        .product-card {
+            background: var(--tg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .product-card.low-stock { border-left: 4px solid #ff5c5c; background: rgba(255, 92, 92, 0.1); }
+        .product-header { display: flex; gap: 12px; margin-bottom: 12px; }
+        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: var(--tg-bg); }
+        .product-info { flex: 1; }
+        .product-name { font-weight: 600; font-size: 18px; margin-bottom: 4px; }
+        .product-category { font-size: 12px; color: var(--tg-button); margin-bottom: 4px; }
+        .product-quantity { font-size: 20px; font-weight: bold; color: var(--tg-button); }
+        .quantity-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .quantity-control input { width: 80px; text-align: center; padding: 8px; }
+        .action-btn { width: 40px; height: 40px; border-radius: 20px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; }
+        .action-btn.minus { background: rgba(255, 92, 92, 0.2); color: #ff5c5c; }
+        .action-btn.plus { background: rgba(0, 184, 148, 0.2); color: #00b894; }
+        .delete-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--tg-hint); margin-left: auto; }
+        .search-box { display: flex; gap: 8px; align-items: center; }
+        .search-box input { flex: 1; }
+        .category-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .chip { padding: 6px 12px; border-radius: 20px; background: var(--tg-bg); color: var(--tg-text); font-size: 13px; cursor: pointer; }
+        .chip.active { background: var(--tg-button); color: var(--tg-button-text); }
+        .notification { position: fixed; bottom: 100px; left: 16px; right: 16px; background: #ff5c5c; color: white; padding: 12px; border-radius: 12px; text-align: center; z-index: 200; animation: fadeIn 0.3s; }
+        .total-info { position: fixed; bottom: 0; left: 0; right: 0; background: var(--tg-secondary); padding: 12px 16px; border-top: 1px solid var(--tg-hint); text-align: center; font-weight: 500; z-index: 100; }
+        .empty-state { text-align: center; padding: 40px; color: var(--tg-hint); }
+        .sync-status { font-size: 12px; text-align: center; margin-top: 5px; color: var(--tg-hint); }
+        .refresh-btn { margin-top: 8px; padding: 8px 16px; font-size: 14px; width: auto; display: inline-block; }
+        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📦 Общий склад</h1>
+        <div class="sync-status" id="syncStatus">🔄 Загрузка...</div>
+        <div class="button-group">
+            <button class="refresh-btn" id="refreshBtn">🔄 Обновить</button>
+        </div>
+    </div>
 
+    <div class="add-form">
+        <div class="input-group">
+            <label>📷 Фото товара</label>
+            <input type="file" id="productPhoto" accept="image/*">
+            <div class="photo-preview" id="photoPreview"></div>
+        </div>
+        <div class="input-group">
+            <label>📝 Название товара</label>
+            <input type="text" id="productName" placeholder="Например: Джинсы прямые">
+        </div>
+        <div class="input-group">
+            <label>📁 Категория</label>
+            <select id="productCategory">
+                <option value="Джинсы"> Джинсы</option>
+                <option value="Шорты"> Шорты</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>🔢 Количество</label>
+            <input type="number" id="productQuantity" value="1" min="0">
+        </div>
+        <div class="input-group">
+            <label>⚠️ Минимальный остаток</label>
+            <input type="number" id="productMinStock" value="5" min="0">
+        </div>
+        <button id="addBtn">➕ Добавить товар</button>
+    </div>
+
+    <div class="search-section">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск товаров...">
+        </div>
+    </div>
+
+    <div class="category-filter">
+        <label>📂 Фильтр по категории</label>
+        <div class="category-chips" id="categoryChips"></div>
+    </div>
+
+    <div id="productsList"></div>
+    <div id="totalInfo" class="total-info"></div>
+    <div id="notificationContainer"></div>
+
+    <script>
+        const SPREADSHEET_ID = '2PACX-1vS3DqKeT4O0kWCEUWrO-OvOWtR1HHeJK-0kbUhbncEHQDNh3-TxQtaqXkE5e6aTLaAhtHKXRee4_zod'; 
+        
+        // Ссылка для чтения данных
+        const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`;
+        
+        const categories = ['Джинсы','Шорты'];
+        
+        let products = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let isLoading = false;
+
+        function updateSyncStatus(text, isError = false) {
+            const statusEl = document.getElementById('syncStatus');
+            if (statusEl) {
+                statusEl.innerHTML = text;
+                statusEl.style.color = isError ? '#ff5c5c' : 'var(--tg-hint)';
+            }
+        }
+
+        // Загрузка из Google Sheets
+        async function loadFromGoogleSheets() {
+            if (isLoading) return;
+            isLoading = true;
+            updateSyncStatus('🔄 Загрузка с сервера...');
+            
+            try {
+                const response = await fetch(GOOGLE_SHEET_URL);
+                const csvText = await response.text();
+                
+                const rows = csvText.split('\n');
+                if (rows.length < 2) {
+                    products = [];
+                    updateSyncStatus('✅ Таблица пуста. Добавьте первый товар!');
+                    renderProducts();
+                    return;
+                }
+                
+                const newProducts = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i].split(',');
+                    if (row.length >= 4 && row[0] && row[0] !== 'id' && row[0] !== '') {
+                        newProducts.push({
+                            id: parseInt(row[0]) || Date.now() + i,
+                            name: (row[1] || '').replace(/^"|"$/g, ''),
+                            quantity: parseInt(row[2]) || 0,
+                            category: (row[3] || 'Другое').replace(/^"|"$/g, ''),
+                            minStock: parseInt(row[4]) || 5,
+                            photo: row[5] && row[5] !== '""' ? (row[5].replace(/^"|"$/g, '') || null) : null,
+                            createdAt: new Date().toLocaleString()
+                        });
+                    }
+                }
+                
+                if (newProducts.length > 0 || products.length > 0) {
+                    products = newProducts;
+                    saveToLocalStorage();
+                    updateSyncStatus(`✅ Загружено ${products.length} товаров`);
+                    renderProducts();
+                }
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                updateSyncStatus('⚠️ Ошибка, показываю локальные данные', true);
+                loadFromLocalStorage();
+            }
+            isLoading = false;
+        }
+
+        // Сохранение в localStorage (для кэша)
+        function saveToLocalStorage() {
+            localStorage.setItem('shared_warehouse', JSON.stringify(products));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('shared_warehouse');
+            if (saved) {
+                try {
+                    products = JSON.parse(saved);
+                    updateSyncStatus(`📱 Загружено ${products.length} товаров из кэша`);
+                    renderProducts();
+                } catch(e) { products = []; }
+            }
+        }
+
+        function showNotification(message, isWarning = true) {
+            const container = document.getElementById('notificationContainer');
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.style.background = isWarning ? '#ff5c5c' : '#00b894';
+            notif.innerHTML = message;
+            container.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        function checkLowStock(product) {
+            if (product.quantity <= product.minStock) {
+                showNotification(`⚠️ ${product.name} осталось ${product.quantity} шт.`, true);
+            }
+        }
+
+        // Сохранение в Google Sheets (через fetch POST)
+        async function syncToGoogleSheets() {
+            // Для записи нужен Google Apps Script
+            // Пока просто сохраняем локально и показываем уведомление
+            saveToLocalStorage();
+            showNotification('💾 Сохранено локально. Облако: настрой Google Apps Script', false);
+        }
+
+        function addProductToLocal(productData) {
+            products.push(productData);
+            saveToLocalStorage();
+            syncToGoogleSheets();
+            renderProducts();
+            clearForm();
+            showNotification(`✅ Добавлен: ${productData.name}`, false);
+        }
+
+        function addProduct() {
+            const nameInput = document.getElementById('productName');
+            const quantityInput = document.getElementById('productQuantity');
+            const categorySelect = document.getElementById('productCategory');
+            const minStockInput = document.getElementById('productMinStock');
+            const photoInput = document.getElementById('productPhoto');
+            
+            let name = nameInput.value.trim();
+            let quantity = parseInt(quantityInput.value, 10);
+            let category = categorySelect.value;
+            let minStock = parseInt(minStockInput.value, 10);
+            
+            if (name === '') {
+                alert('Введите название товара');
+                return;
+            }
+            if (isNaN(quantity)) quantity = 0;
+            if (isNaN(minStock)) minStock = 5;
+            
+            if (photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addProductToLocal({
+                        id: Date.now(),
+                        name: name,
+                        quantity: quantity,
+                        category: category,
+                        minStock: minStock,
+                        photo: e.target.result,
+                        createdAt: new Date().toLocaleString()
+                    });
+                };
+                reader.readAsDataURL(photoInput.files[0]);
+            } else {
+                addProductToLocal({
+                    id: Date.now(),
+                    name: name,
+                    quantity: quantity,
+                    category: category,
+                    minStock: minStock,
+                    photo: null,
+                    createdAt: new Date().toLocaleString()
+                });
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productQuantity').value = '1';
+            document.getElementById('productMinStock').value = '5';
+            document.getElementById('productPhoto').value = '';
+            document.getElementById('photoPreview').innerHTML = '';
+        }
+
+        function deleteProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (product && confirm(`Удалить "${product.name}"?`)) {
+                products = products.filter(p => p.id !== id);
+                saveToLocalStorage();
+                syncToGoogleSheets();
+                renderProducts();
+                showNotification(`🗑️ Удалён: ${product.name}`, false);
+            }
+        }
+
+        function changeQuantity(id, delta) {
+            const product = products.find(p => p.id === id);
+            if (product) {
+                let newQuantity = product.quantity + delta;
+                if (newQuantity < 0) newQuantity = 0;
+                product.quantity = newQuantity;
+                saveToLocalStorage();
+                syncToGoogleSheets();
+                renderProducts();
+                checkLowStock(product);
+            }
+        }
+
+        function setQuantity(id, newValue) {
+            const product = products.find(p => p.id === id);
+            if (product) {
+                let quantity = parseInt(newValue, 10);
+                if (isNaN(quantity)) quantity = 0;
+                product.quantity = quantity;
+                saveToLocalStorage();
+                syncToGoogleSheets();
+                renderProducts();
+                checkLowStock(product);
+            }
+        }
+
+        function getFilteredProducts() {
+            return products.filter(product => {
+                if (currentFilter !== 'all' && product.category !== currentFilter) return false;
+                if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                return true;
+            });
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('productsList');
+            const totalSpan = document.getElementById('totalInfo');
+            const filtered = getFilteredProducts();
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state">✨ Товары не найдены ✨</div>';
+                totalSpan.innerHTML = `📊 Показано: 0 из ${products.length} товаров`;
+                return;
+            }
+            
+            let totalQuantity = 0;
+            let html = '';
+            
+            for (let product of filtered) {
+                totalQuantity += product.quantity;
+                const isLow = product.quantity <= product.minStock;
+                
+                html += `
+                    <div class="product-card ${isLow ? 'low-stock' : ''}">
+                        <div class="product-header">
+                            ${product.photo ? `<img class="product-photo" src="${product.photo}" alt="фото">` : '<div class="product-photo" style="background: var(--tg-hint); display: flex; align-items: center; justify-content: center;">📷</div>'}
+                            <div class="product-info">
+                                <div class="product-name">${escapeHtml(product.name)}</div>
+                                <div class="product-category">${product.category}</div>
+                                <div class="product-quantity">${product.quantity} шт.</div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️</button>
+                        </div>
+                        <div class="quantity-control">
+                            <button class="action-btn minus" onclick="changeQuantity(${product.id}, -1)">−</button>
+                            <input type="number" value="${product.quantity}" onchange="setQuantity(${product.id}, this.value)" min="0">
+                            <button class="action-btn plus" onclick="changeQuantity(${product.id}, 1)">+</button>
+                            ${isLow ? '<span style="color:#ff5c5c;">⚠️ Мало!</span>' : ''}
+                        </div>
+                        <div style="font-size:11px; color:var(--tg-hint);">Мин. остаток: ${product.minStock} шт.</div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            totalSpan.innerHTML = `📊 Всего: ${products.length} | На складе: ${totalQuantity} шт. | Показано: ${filtered.length}`;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        function setupPhotoPreview() {
+            const photoInput = document.getElementById('productPhoto');
+            const preview = document.getElementById('photoPreview');
+            if (photoInput) {
+                photoInput.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            preview.innerHTML = `<img src="${ev.target.result}" alt="предпросмотр">`;
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        preview.innerHTML = '';
+                    }
+                });
+            }
+        }
+
+        function setupCategoryFilter() {
+            const container = document.getElementById('categoryChips');
+            if (!container) return;
+            
+            container.innerHTML = '<span class="chip active" data-cat="all">📋 Все</span>';
+            categories.forEach(cat => {
+                const emoji = getCategoryEmoji(cat);
+                container.innerHTML += `<span class="chip" data-cat="${cat}">${emoji} ${cat}</span>`;
+            });
+            
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    currentFilter = chip.getAttribute('data-cat');
+                    renderProducts();
+                });
+            });
+        }
+
+        function getCategoryEmoji(category) {
+            const emojis = {
+                'Джинсы' , 'Шорты'
+            };
+            return emojis[category] || '📦';
+        }
+
+        function initTelegram() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                document.body.style.backgroundColor = tg.themeParams.bg_color;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTelegram();
+            setupPhotoPreview();
+            setupCategoryFilter();
+            
+            loadFromGoogleSheets();
+            
+            document.getElementById('addBtn').addEventListener('click', addProduct);
+            document.getElementById('refreshBtn').addEventListener('click', loadFromGoogleSheets);
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                renderProducts();
+            });
+            document.getElementById('productName').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addProduct();
+            });
+        });
+    </script>
+</body>
+</html>
