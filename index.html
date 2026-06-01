@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Общий склад - Быстрая синхронизация</title>
+    <title>Общий склад - Google Sheets</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -14,28 +14,12 @@
             padding-bottom: 100px;
         }
         @media (prefers-color-scheme: dark) {
-            body {
-                background: #1a1a1a;
-                color: #ffffff;
-            }
-            .add-form, .product-card, .search-section, .category-filter {
-                background: #2d2d2d !important;
-            }
-            input, select {
-                background: #1a1a1a;
-                color: #ffffff;
-                border-color: #444;
-            }
-            .total-info {
-                background: #2d2d2d;
-                border-top-color: #444;
-            }
-            .product-name {
-                color: #ffffff !important;
-            }
-            .product-category {
-                color: #aaaaaa !important;
-            }
+            body { background: #1a1a1a; color: #ffffff; }
+            .add-form, .product-card, .search-section, .category-filter { background: #2d2d2d !important; }
+            input, select { background: #1a1a1a; color: #ffffff; border-color: #444; }
+            .total-info { background: #2d2d2d; border-top-color: #444; }
+            .product-name { color: #ffffff !important; }
+            .product-category { color: #aaaaaa !important; }
         }
         .header { margin-bottom: 20px; text-align: center; }
         h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
@@ -75,12 +59,12 @@
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 12px;
-            animation: fadeIn 0.2s ease;
+            animation: fadeIn 0.15s ease;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .product-card.low-stock { border-left: 4px solid #ff5c5c; background: rgba(255, 92, 92, 0.1); }
         .product-header { display: flex; gap: 12px; margin-bottom: 12px; }
-        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; }
+        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .product-info { flex: 1; }
         .product-name { font-weight: 600; font-size: 18px; margin-bottom: 4px; color: #000000 !important; }
         .product-category { font-size: 12px; color: #555555 !important; margin-bottom: 4px; }
@@ -94,31 +78,39 @@
         .search-box { display: flex; gap: 8px; align-items: center; }
         .search-box input { flex: 1; }
         .category-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-        .chip { padding: 6px 12px; border-radius: 20px; background: white; color: black; font-size: 13px; cursor: pointer; border: 1px solid #ccc; transition: all 0.1s; }
+        .chip { padding: 6px 12px; border-radius: 20px; background: white; color: black; font-size: 13px; cursor: pointer; border: 1px solid #ccc; }
         .chip.active { background: #2481cc; color: white; border-color: #2481cc; }
-        .notification { position: fixed; bottom: 100px; left: 16px; right: 16px; background: #ff5c5c; color: white; padding: 12px; border-radius: 12px; text-align: center; z-index: 200; animation: slideUp 0.2s ease; }
-        @keyframes slideUp { from { bottom: 0; opacity: 0; } to { bottom: 100px; opacity: 1; } }
-        .total-info { position: fixed; bottom: 0; left: 0; right: 0; background: #f0f0f0; padding: 12px 16px; border-top: 1px solid #ddd; text-align: center; font-weight: 500; z-index: 100; }
+        .notification { position: fixed; bottom: 100px; left: 16px; right: 16px; background: #ff5c5c; color: white; padding: 12px; border-radius: 12px; text-align: center; z-index: 200; animation: fadeIn 0.2s; }
+        .total-info { position: fixed; bottom: 0; left: 0; right: 0; background: #f0f0f0; padding: 12px 16px; border-top: 1px solid #ddd; text-align: center; font-weight: 500; z-index: 100; font-size: 13px; }
         .empty-state { text-align: center; padding: 40px; color: #999; }
-        .sync-status { font-size: 12px; text-align: center; margin-top: 5px; color: #666; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .refresh-btn { padding: 8px 16px; font-size: 14px; width: auto; background: #2481cc; color: white; border: none; border-radius: 20px; cursor: pointer; }
+        .sync-status {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 5px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            width: auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .sync-online { background: rgba(0, 184, 148, 0.15); color: #00b894; }
+        .sync-offline { background: rgba(255, 92, 92, 0.15); color: #ff5c5c; }
+        .sync-waiting { background: rgba(36, 129, 204, 0.15); color: #2481cc; }
         .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
-        .online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #00b894; margin-right: 6px; animation: pulse 1.5s infinite; }
-        .offline-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #ff5c5c; margin-right: 6px; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .spinner { width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: #2481cc; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .refresh-btn { padding: 8px 16px; font-size: 14px; width: auto; background: #2481cc; color: white; border: none; border-radius: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>👖🩳 Общий склад</h1>
-        <div class="sync-status" id="syncStatus">
-            <span class="online-dot"></span> <span id="syncText">Загрузка...</span>
-            <span id="syncSpinner" class="spinner" style="display:none;"></span>
+        <div style="text-align: center;">
+            <div class="sync-status sync-waiting" id="syncStatus">
+                🔄 Подключение к Google...
+            </div>
         </div>
         <div class="button-group">
-            <button class="refresh-btn" id="refreshBtn">🔄 Обновить</button>
+            <button class="refresh-btn" id="refreshBtn">🔄 Синхронизировать</button>
         </div>
     </div>
 
@@ -158,7 +150,11 @@
 
     <div class="category-filter">
         <label>📂 Фильтр по категории</label>
-        <div class="category-chips" id="categoryChips"></div>
+        <div class="category-chips" id="categoryChips">
+            <span class="chip active" data-cat="all">📋 Все</span>
+            <span class="chip" data-cat="Джинсы">👖 Джинсы</span>
+            <span class="chip" data-cat="Шорты">🩳 Шорты</span>
+        </div>
     </div>
 
     <div id="productsList"></div>
@@ -166,174 +162,21 @@
     <div id="notificationContainer"></div>
 
     <script>
-        const SUPABASE_URL = 'https://lrrkrscejxmexsouiwmk.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycmtyc2NlamhtZXhzb3Vpd21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzE0NzAsImV4cCI6MjA5NTkwNzQ3MH0.G5zQWtj-MPnKksWcXr35YTmwoSj1qIf4r_K7D9-dzm4';
+        // ============================================
+        // ✅ ТВОИ ДАННЫЕ УЖЕ ВСТАВЛЕНЫ ✅
+        // ============================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzwBQ_fYzePqxmJ4WzOkYO-ZgCPERbdtSlDaofd6BXcbJ3IkmcWO8aRtofzWCUyBg0l/exec';
         
-        let supabaseClient = null;
         let products = [];
         let currentFilter = 'all';
         let searchQuery = '';
         let isLoading = false;
-        let lastSyncTime = 0;
 
-        function updateSyncStatus(text, isError = false, showSpinner = false) {
-            const syncText = document.getElementById('syncText');
-            const spinner = document.getElementById('syncSpinner');
-            const dot = document.querySelector('.online-dot');
-            
-            if (syncText) syncText.textContent = text;
-            if (spinner) spinner.style.display = showSpinner ? 'inline-block' : 'none';
-            
-            if (dot) {
-                if (isError) {
-                    dot.className = 'offline-dot';
-                } else {
-                    dot.className = 'online-dot';
-                }
-            }
-        }
-
-        // Мгновенная загрузка из кэша + фоновая синхронизация
-        function loadFromCache() {
-            const saved = localStorage.getItem('shared_warehouse');
-            if (saved) {
-                try {
-                    products = JSON.parse(saved);
-                    renderProducts();
-                    updateSyncStatus(`📱 ${products.length} товаров (кэш)`, false, false);
-                    return true;
-                } catch(e) { return false; }
-            }
-            return false;
-        }
-
-        async function syncWithCloud() {
-            if (isLoading) return;
-            isLoading = true;
-            updateSyncStatus('Синхронизация...', false, true);
-            
-            try {
-                const { data, error } = await supabaseClient
-                    .from('products')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                if (data && data.length > 0) {
-                    const newProducts = data.map(item => ({
-                        id: item.id,
-                        name: item.name,
-                        quantity: item.quantity,
-                        category: item.category || 'Джинсы',
-                        minStock: item.minStock || 5,
-                        photo: item.photo,
-                        created_at: item.created_at
-                    }));
-                    
-                    // Проверяем, изменились ли данные
-                    const needUpdate = JSON.stringify(products) !== JSON.stringify(newProducts);
-                    
-                    if (needUpdate) {
-                        products = newProducts;
-                        saveToLocalStorage();
-                        renderProducts();
-                        updateSyncStatus(`✅ ${products.length} товаров`, false, false);
-                        lastSyncTime = Date.now();
-                    } else {
-                        updateSyncStatus(`✅ Актуально (${products.length} товаров)`, false, false);
-                    }
-                } else {
-                    if (products.length === 0) {
-                        updateSyncStatus('📭 Добавьте первый товар', false, false);
-                    } else {
-                        updateSyncStatus(`✅ ${products.length} товаров`, false, false);
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Ошибка синхронизации:', error);
-                updateSyncStatus('Офлайн режим', true, false);
-            }
-            isLoading = false;
-        }
-
-        async function fastLoad() {
-            // Сначала показываем из кэша (мгновенно)
-            const hasCache = loadFromCache();
-            
-            if (hasCache) {
-                updateSyncStatus(`📱 ${products.length} товаров (кэш)`, false, false);
-            } else {
-                updateSyncStatus('Загрузка...', false, true);
-            }
-            
-            // Загружаем Supabase
-            if (supabaseClient) {
-                await syncWithCloud();
-            } else {
-                // Ждём загрузки библиотеки
-                const waitForLib = setInterval(() => {
-                    if (supabaseClient) {
-                        clearInterval(waitForLib);
-                        syncWithCloud();
-                    }
-                }, 100);
-                setTimeout(() => clearInterval(waitForLib), 5000);
-            }
-        }
-
-        async function saveToSupabase(product) {
-            if (!supabaseClient) return false;
-            try {
-                const { data, error } = await supabaseClient
-                    .from('products')
-                    .insert([{
-                        name: product.name,
-                        quantity: product.quantity,
-                        category: product.category,
-                        minStock: product.minStock,
-                        photo: product.photo
-                    }])
-                    .select();
-                
-                if (error) throw error;
-                if (data && data[0]) product.id = data[0].id;
-                return true;
-            } catch (error) {
-                console.error('Ошибка:', error);
-                return false;
-            }
-        }
-
-        async function updateInSupabase(id, updates) {
-            if (!supabaseClient) return false;
-            try {
-                const { error } = await supabaseClient
-                    .from('products')
-                    .update(updates)
-                    .eq('id', id);
-                return !error;
-            } catch (error) {
-                return false;
-            }
-        }
-
-        async function deleteFromSupabase(id) {
-            if (!supabaseClient) return false;
-            try {
-                const { error } = await supabaseClient
-                    .from('products')
-                    .delete()
-                    .eq('id', id);
-                return !error;
-            } catch (error) {
-                return false;
-            }
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('shared_warehouse', JSON.stringify(products));
+        function updateSyncStatus(text, status = 'waiting') {
+            const el = document.getElementById('syncStatus');
+            if (!el) return;
+            el.textContent = text;
+            el.className = `sync-status sync-${status}`;
         }
 
         function showNotification(message, isWarning = true) {
@@ -343,15 +186,130 @@
             notif.style.background = isWarning ? '#ff5c5c' : '#00b894';
             notif.innerHTML = message;
             container.appendChild(notif);
-            setTimeout(() => notif.remove(), 2000);
+            setTimeout(() => notif.remove(), 2500);
         }
 
-        function checkLowStock(product) {
-            if (product.quantity <= product.minStock) {
-                showNotification(`⚠️ ${product.name}: ${product.quantity} шт.`, true);
+        // ============================================
+        // ЗАГРУЗКА ИЗ GOOGLE SHEETS
+        // ============================================
+        async function loadFromGoogle() {
+            if (isLoading) return;
+            isLoading = true;
+            updateSyncStatus('🔄 Загрузка из Google...', 'waiting');
+            
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    products = data.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        quantity: item.quantity || 0,
+                        category: item.category || 'Джинсы',
+                        minStock: item.minStock || 5,
+                        photo: item.photo || null,
+                        created_at: item.created_at || new Date().toISOString()
+                    }));
+                    updateSyncStatus(`✅ ${products.length} товаров из Google`, 'online');
+                } else {
+                    products = [];
+                    updateSyncStatus('📭 Таблица пуста. Добавьте первый товар!', 'online');
+                }
+                renderProducts();
+                saveToCache();
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                updateSyncStatus('⚠️ Ошибка загрузки', 'offline');
+                loadFromCache();
+            }
+            isLoading = false;
+        }
+
+        // ============================================
+        // СОХРАНЕНИЕ В GOOGLE SHEETS
+        // ============================================
+        async function saveToGoogle(product) {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(product)
+                });
+                
+                if (!response.ok) throw new Error('Ошибка');
+                
+                const data = await response.json();
+                if (data && data[0]) {
+                    product.id = data[0].id;
+                    showNotification(`✅ Сохранено в Google: ${product.name}`, false);
+                    return true;
+                }
+                return false;
+                
+            } catch (error) {
+                console.error('Ошибка сохранения:', error);
+                showNotification(`⚠️ Не удалось сохранить "${product.name}"`, true);
+                return false;
             }
         }
 
+        // ============================================
+        // ОБНОВЛЕНИЕ В GOOGLE SHEETS
+        // ============================================
+        async function updateInGoogle(id, updates) {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id, updates: updates })
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('Ошибка обновления:', error);
+                return false;
+            }
+        }
+
+        // ============================================
+        // УДАЛЕНИЕ ИЗ GOOGLE SHEETS
+        // ============================================
+        async function deleteFromGoogle(id) {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('Ошибка удаления:', error);
+                return false;
+            }
+        }
+
+        // ============================================
+        // КЭШ (ЛОКАЛЬНОЕ ХРАНИЛИЩЕ)
+        // ============================================
+        function saveToCache() {
+            localStorage.setItem('google_warehouse', JSON.stringify(products));
+        }
+
+        function loadFromCache() {
+            const saved = localStorage.getItem('google_warehouse');
+            if (saved) {
+                try {
+                    products = JSON.parse(saved);
+                    renderProducts();
+                    updateSyncStatus(`📱 ${products.length} товаров (кэш)`, 'offline');
+                } catch(e) {}
+            }
+        }
+
+        // ============================================
+        // ДОБАВЛЕНИЕ ТОВАРА
+        // ============================================
         async function addProduct() {
             const nameInput = document.getElementById('productName');
             const quantityInput = document.getElementById('productQuantity');
@@ -381,28 +339,24 @@
                     created_at: new Date().toISOString()
                 };
                 
-                // Сначала добавляем в интерфейс (мгновенно)
-                const tempId = Date.now();
-                const displayProduct = { id: tempId, ...newProduct };
-                products.unshift(displayProduct);
-                renderProducts();
-                clearForm();
-                showNotification(`➕ Добавляю: ${name}...`, false);
+                showNotification(`📤 Сохранение "${name}"...`, false);
                 
-                // Потом сохраняем в облако
-                const saved = await saveToSupabase(newProduct);
+                const saved = await saveToGoogle(newProduct);
+                
                 if (saved && newProduct.id) {
-                    // Заменяем временный ID на реальный
-                    const index = products.findIndex(p => p.id === tempId);
-                    if (index !== -1) {
-                        products[index].id = newProduct.id;
-                        saveToLocalStorage();
-                        showNotification(`✅ Добавлен: ${name}`, false);
-                    }
-                } else {
-                    showNotification(`💾 ${name} сохранён локально`, false);
+                    products.unshift({
+                        id: newProduct.id,
+                        name: name,
+                        quantity: quantity,
+                        category: category,
+                        minStock: minStock,
+                        photo: photoData,
+                        created_at: newProduct.created_at
+                    });
+                    renderProducts();
+                    clearForm();
+                    saveToCache();
                 }
-                saveToLocalStorage();
             };
             
             if (photoInput.files && photoInput.files[0]) {
@@ -424,16 +378,18 @@
 
         async function deleteProduct(id) {
             const product = products.find(p => p.id === id);
-            if (product && confirm(`Удалить "${product.name}"?`)) {
-                // Сразу удаляем из интерфейса
-                products = products.filter(p => p.id !== id);
-                renderProducts();
-                showNotification(`🗑️ Удаляю: ${product.name}...`, false);
+            if (product && confirm(`Удалить "${product.name}" из общего склада?`)) {
+                showNotification(`📤 Удаление "${product.name}"...`, false);
                 
-                // Фоновое удаление из облака
-                await deleteFromSupabase(id);
-                saveToLocalStorage();
-                showNotification(`✅ Удалён: ${product.name}`, false);
+                const deleted = await deleteFromGoogle(id);
+                if (deleted) {
+                    products = products.filter(p => p.id !== id);
+                    renderProducts();
+                    saveToCache();
+                    showNotification(`✅ Удалён: ${product.name}`, false);
+                } else {
+                    showNotification(`❌ Не удалось удалить`, true);
+                }
             }
         }
 
@@ -444,11 +400,8 @@
                 if (newQuantity < 0) newQuantity = 0;
                 product.quantity = newQuantity;
                 renderProducts();
-                saveToLocalStorage();
+                await updateInGoogle(id, { quantity: newQuantity });
                 checkLowStock(product);
-                
-                // Фоновое обновление в облаке
-                updateInSupabase(id, { quantity: newQuantity });
             }
         }
 
@@ -459,11 +412,14 @@
                 if (isNaN(quantity)) quantity = 0;
                 product.quantity = quantity;
                 renderProducts();
-                saveToLocalStorage();
+                await updateInGoogle(id, { quantity: quantity });
                 checkLowStock(product);
-                
-                // Фоновое обновление в облаке
-                updateInSupabase(id, { quantity: quantity });
+            }
+        }
+
+        function checkLowStock(product) {
+            if (product.quantity <= product.minStock) {
+                showNotification(`⚠️ ${product.name}: осталось ${product.quantity} шт.`, true);
             }
         }
 
@@ -482,7 +438,7 @@
             
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="empty-state">✨ Товары не найдены ✨</div>';
-                totalSpan.innerHTML = `📊 Всего: ${products.length} товаров`;
+                totalSpan.innerHTML = `📊 Всего товаров: ${products.length}`;
                 return;
             }
             
@@ -549,16 +505,10 @@
         }
 
         function setupCategoryFilter() {
-            const container = document.getElementById('categoryChips');
-            if (!container) return;
-            
-            container.innerHTML = '<span class="chip active" data-cat="all">📋 Все</span>';
-            container.innerHTML += `<span class="chip" data-cat="Джинсы">👖 Джинсы</span>`;
-            container.innerHTML += `<span class="chip" data-cat="Шорты">🩳 Шорты</span>`;
-            
-            document.querySelectorAll('.chip').forEach(chip => {
+            const chips = document.querySelectorAll('.chip');
+            chips.forEach(chip => {
                 chip.addEventListener('click', () => {
-                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                    chips.forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
                     currentFilter = chip.getAttribute('data-cat');
                     renderProducts();
@@ -566,32 +516,16 @@
             });
         }
 
-        function loadSupabaseLibrary() {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-            script.onload = () => {
-                if (window.supabase) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    fastLoad();
-                }
-            };
-            script.onerror = () => {
-                updateSyncStatus('Офлайн режим', true, false);
-                loadFromCache();
-            };
-            document.head.appendChild(script);
-        }
-
+        // ============================================
+        // ЗАПУСК
+        // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             setupPhotoPreview();
             setupCategoryFilter();
-            loadSupabaseLibrary();
+            loadFromGoogle();
             
             document.getElementById('addBtn').addEventListener('click', addProduct);
-            document.getElementById('refreshBtn').addEventListener('click', () => {
-                if (supabaseClient) syncWithCloud();
-                else fastLoad();
-            });
+            document.getElementById('refreshBtn').addEventListener('click', loadFromGoogle);
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 searchQuery = e.target.value;
                 renderProducts();
