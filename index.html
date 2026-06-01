@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Общий склад - Google Sheets (Работает 100%)</title>
+    <title>Общий склад - Google Sheets</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -165,7 +165,7 @@
         // ==================================================
         // ✅ ТВОЙ НОВЫЙ URL (УЖЕ ВСТАВЛЕН)
         // ==================================================
-        const SCRIPT_URL_BASE = 'https://script.google.com/macros/s/AKfycbxApsZ4dpEcPwwsSbyWQ_TYffR-nAxBsm8lXtTzZ8HsBlGRo_1triDVdVtvduiZdZNh';
+        const SCRIPT_URL_BASE = 'https://script.google.com/macros/s/AKfycbwT_-R-IhLKvR596H3INOvAiyzfOpwDS3b6mjddRCZydrktuVt83fprmsDtZW4ipta9';
         
         let products = [];
         let currentFilter = 'all';
@@ -192,7 +192,7 @@
             setTimeout(() => notif.remove(), 2500);
         }
 
-        // --- JSONP (работает без CORS) ---
+        // --- JSONP для GET (чтение) ---
         function jsonpRequest(url, callback) {
             const callbackName = 'jsonp_callback_' + (++callbackCounter);
             const script = document.createElement('script');
@@ -214,11 +214,11 @@
             document.head.appendChild(script);
         }
 
-        // --- Загрузка из Google Sheets (JSONP) ---
+        // --- Загрузка из Google Sheets (JSONP - работает без CORS) ---
         function loadFromGoogle() {
             if (isLoading) return;
             isLoading = true;
-            updateSyncStatus('🔄 Загрузка...', 'waiting');
+            updateSyncStatus('🔄 Загрузка из Google...', 'waiting');
             
             jsonpRequest(SCRIPT_URL_BASE + '/exec', function(err, data) {
                 if (err) {
@@ -246,46 +246,18 @@
             });
         }
 
-        // --- Запись (POST/PUT/DELETE) с mode: 'no-cors' (не видим ответ, но запрос уходит) ---
-        async function saveToGoogle(product) {
+        // --- Запись в Google Sheets (POST/PUT/DELETE) ---
+        async function callGoogleAPI(method, body) {
             try {
-                await fetch(SCRIPT_URL_BASE + '/exec', {
-                    method: 'POST',
+                const response = await fetch(SCRIPT_URL_BASE + '/exec', {
+                    method: method,
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(product)
+                    body: JSON.stringify(body)
                 });
                 return true;
             } catch (e) {
-                console.warn('POST error (ignored):', e);
-                return false;
-            }
-        }
-
-        async function updateInGoogle(id, updates) {
-            try {
-                await fetch(SCRIPT_URL_BASE + '/exec', {
-                    method: 'PUT',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, updates })
-                });
-                return true;
-            } catch (e) {
-                return false;
-            }
-        }
-
-        async function deleteFromGoogle(id) {
-            try {
-                await fetch(SCRIPT_URL_BASE + '/exec', {
-                    method: 'DELETE',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
-                });
-                return true;
-            } catch (e) {
+                console.warn(method + ' error:', e);
                 return false;
             }
         }
@@ -306,7 +278,11 @@
             }
         }
 
-        // --- CRUD (сначала локально, потом фоном в Google) ---
+        // ============================================
+        // ОСНОВНЫЕ ФУНКЦИИ
+        // ============================================
+        
+        // Добавление
         async function addProductLogic(name, quantity, category, minStock, photoData) {
             const newProduct = {
                 id: Date.now(),
@@ -319,7 +295,7 @@
             clearForm();
             saveToCache();
             showNotification(`✅ Добавлен: ${name}`, false);
-            await saveToGoogle(newProduct); // фоном
+            await callGoogleAPI('POST', newProduct);
         }
 
         function addProduct() {
@@ -350,17 +326,25 @@
             document.getElementById('photoPreview').innerHTML = '';
         }
 
+        // Удаление (ТЕПЕРЬ РАБОТАЕТ!)
         async function deleteProduct(id) {
             const product = products.find(p => p.id === id);
             if (product && confirm(`Удалить "${product.name}"?`)) {
+                // Удаляем из локального списка
                 products = products.filter(p => p.id !== id);
                 renderProducts();
                 saveToCache();
                 showNotification(`🗑️ Удалён: ${product.name}`, false);
-                await deleteFromGoogle(id);
+                
+                // Отправляем запрос в Google
+                await callGoogleAPI('DELETE', { id: id });
+                
+                // Фоновая синхронизация
+                setTimeout(() => loadFromGoogle(), 500);
             }
         }
 
+        // Изменение количества
         async function changeQuantity(id, delta) {
             const p = products.find(p => p.id === id);
             if (p) {
@@ -368,7 +352,7 @@
                 renderProducts();
                 saveToCache();
                 if (p.quantity <= p.minStock) showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
-                await updateInGoogle(id, { quantity: p.quantity });
+                await callGoogleAPI('PUT', { id: id, updates: { quantity: p.quantity } });
             }
         }
 
@@ -379,11 +363,11 @@
                 renderProducts();
                 saveToCache();
                 if (p.quantity <= p.minStock) showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
-                await updateInGoogle(id, { quantity: p.quantity });
+                await callGoogleAPI('PUT', { id: id, updates: { quantity: p.quantity } });
             }
         }
 
-        // --- Фильтрация и отрисовка ---
+        // Фильтрация
         function getFiltered() {
             return products.filter(p => {
                 if (currentFilter !== 'all' && p.category !== currentFilter) return false;
@@ -436,6 +420,7 @@
         }
 
         function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+        
         function setupPhotoPreview() {
             const input = document.getElementById('productPhoto');
             const preview = document.getElementById('photoPreview');
@@ -447,6 +432,7 @@
                 } else preview.innerHTML = '';
             };
         }
+        
         function setupCategoryFilter() {
             const chips = document.querySelectorAll('.chip');
             chips.forEach(chip => {
@@ -459,11 +445,13 @@
             });
         }
         
+        // Запуск
         document.addEventListener('DOMContentLoaded', () => {
             setupPhotoPreview();
             setupCategoryFilter();
             loadFromCache();      // мгновенный показ
             loadFromGoogle();     // фоновая синхронизация
+            
             document.getElementById('addBtn')?.addEventListener('click', addProduct);
             document.getElementById('refreshBtn')?.addEventListener('click', loadFromGoogle);
             document.getElementById('searchInput')?.addEventListener('input', (e) => { searchQuery = e.target.value; renderProducts(); });
