@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Склад - Локальная версия</title>
+    <title>Общий склад - Быстрая синхронизация</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -95,23 +98,22 @@
             margin-right: auto;
         }
         .sync-online { background: rgba(0, 184, 148, 0.15); color: #00b894; }
-        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
-        .small-btn { padding: 8px 16px; font-size: 14px; width: auto; border-radius: 20px; }
-        .export-btn { background: #00b894; }
-        .import-btn { background: #f39c12; }
-        .clear-btn { background: #e74c3c; }
+        .sync-offline { background: rgba(255, 92, 92, 0.15); color: #ff5c5c; }
+        .sync-waiting { background: rgba(36, 129, 204, 0.15); color: #2481cc; }
+        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+        .refresh-btn { padding: 8px 16px; font-size: 14px; width: auto; background: #2481cc; color: white; border: none; border-radius: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>👖🩳 Склад</h1>
-        <div class="sync-status sync-online" id="syncStatus">
-            💾 Данные на вашем устройстве
+        <h1>👖🩳 Общий склад</h1>
+        <div style="text-align: center;">
+            <div class="sync-status sync-waiting" id="syncStatus">
+                🔄 Подключение к облаку...
+            </div>
         </div>
         <div class="button-group">
-            <button class="small-btn export-btn" id="exportBtn">📤 Экспорт</button>
-            <button class="small-btn import-btn" id="importBtn">📥 Импорт</button>
-            <button class="small-btn clear-btn" id="clearAllBtn">🗑️ Очистить всё</button>
+            <button class="refresh-btn" id="refreshBtn">🔄 Синхронизировать</button>
         </div>
     </div>
 
@@ -163,14 +165,33 @@
     <div id="notificationContainer"></div>
 
     <script>
-        const STORAGE_KEY = 'warehouse_local';
+        // ==================================================
+        // ✅ ТВОЙ FIREBASE КОНФИГ (УЖЕ ВСТАВЛЕН) ✅
+        // ==================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-a15NM1nzH8ELTqlBc6SDtQIIAQ2qu0g",
+            authDomain: "sklad-app-898f7.firebaseapp.com",
+            projectId: "sklad-app-898f7",
+            storageBucket: "sklad-app-898f7.firebasestorage.app",
+            messagingSenderId: "617217671865",
+            appId: "1:617217671865:web:2a75647e9369d032bb1168"
+        };
+        
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
         let products = [];
         let currentFilter = 'all';
         let searchQuery = '';
+        let unsubscribe = null;
 
-        function updateSyncStatus(text) {
+        function updateSyncStatus(text, status = 'waiting') {
             const el = document.getElementById('syncStatus');
-            if (el) el.textContent = text;
+            if (el) {
+                el.textContent = text;
+                el.className = `sync-status sync-${status}`;
+            }
         }
 
         function showNotification(message, isWarning = true) {
@@ -184,75 +205,63 @@
             setTimeout(() => notif.remove(), 2000);
         }
 
-        function saveToLocalStorage() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-            updateSyncStatus(`💾 Сохранено: ${products.length} товаров`);
-        }
-
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                try {
-                    products = JSON.parse(saved);
-                    showNotification(`📂 Загружено ${products.length} товаров`, false);
-                } catch(e) { products = []; }
+        // ============================================
+        // ПОДКЛЮЧЕНИЕ К FIREBASE (РЕАЛЬНОЕ ВРЕМЯ)
+        // ============================================
+        function listenToFirebase() {
+            updateSyncStatus('🔄 Синхронизация...', 'waiting');
+            
+            if (unsubscribe) {
+                unsubscribe();
             }
-            if (!products || !Array.isArray(products)) products = [];
-            renderProducts();
-            updateSyncStatus(`📊 Всего: ${products.length} товаров`);
+            
+            unsubscribe = db.collection('products')
+                .orderBy('createdAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    products = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        products.push({
+                            id: doc.id,
+                            name: data.name || '',
+                            quantity: data.quantity || 0,
+                            category: data.category || 'Джинсы',
+                            minStock: data.minStock || 5,
+                            photo: data.photo || null,
+                            createdAt: data.createdAt || new Date().toISOString()
+                        });
+                    });
+                    renderProducts();
+                    updateSyncStatus(`✅ ${products.length} товаров`, 'online');
+                }, (error) => {
+                    console.error('Ошибка Firebase:', error);
+                    updateSyncStatus('⚠️ Ошибка подключения', 'offline');
+                });
         }
 
-        function exportToFile() {
-            const dataStr = JSON.stringify(products, null, 2);
-            const blob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `sklad_${new Date().toISOString().slice(0,19)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showNotification(`📁 Экспортировано ${products.length} товаров`, false);
-        }
-
-        function importFromFile(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        products = imported;
-                        saveToLocalStorage();
-                        renderProducts();
-                        showNotification(`📥 Импортировано ${products.length} товаров`, false);
-                    } else throw new Error('Неверный формат');
-                } catch(err) {
-                    showNotification('❌ Ошибка импорта', true);
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function clearAllData() {
-            if (confirm('⚠️ Удалить ВСЕ товары?')) {
-                products = [];
-                saveToLocalStorage();
-                renderProducts();
-                showNotification('🗑️ Все данные очищены', false);
+        // ============================================
+        // ДОБАВЛЕНИЕ ТОВАРА
+        // ============================================
+        async function addProductLogic(name, quantity, category, minStock, photoData) {
+            showNotification(`📤 Сохранение "${name}"...`, false);
+            
+            try {
+                await db.collection('products').add({
+                    name: name,
+                    quantity: quantity,
+                    category: category,
+                    minStock: minStock,
+                    photo: photoData,
+                    createdAt: new Date().toISOString()
+                });
+                
+                showNotification(`✅ Добавлен: ${name}`, false);
+                clearForm();
+                
+            } catch (error) {
+                console.error('Ошибка добавления:', error);
+                showNotification(`❌ Ошибка: "${name}" не сохранён`, true);
             }
-        }
-
-        function addProductLogic(name, quantity, category, minStock, photoData) {
-            const newProduct = {
-                id: Date.now(),
-                name, quantity, category, minStock,
-                photo: photoData,
-                createdAt: new Date().toLocaleString()
-            };
-            products.unshift(newProduct);
-            saveToLocalStorage();
-            renderProducts();
-            clearForm();
-            showNotification(`✅ Добавлен: ${name}`, false);
         }
 
         function addProduct() {
@@ -270,7 +279,9 @@
                 const reader = new FileReader();
                 reader.onload = (e) => process(e.target.result);
                 reader.readAsDataURL(photoInput.files[0]);
-            } else process(null);
+            } else {
+                process(null);
+            }
         }
 
         function clearForm() {
@@ -281,36 +292,68 @@
             document.getElementById('photoPreview').innerHTML = '';
         }
 
-        function deleteProduct(id) {
+        // ============================================
+        // УДАЛЕНИЕ
+        // ============================================
+        async function deleteProduct(id) {
             const product = products.find(p => p.id === id);
             if (product && confirm(`Удалить "${product.name}"?`)) {
-                products = products.filter(p => p.id !== id);
-                saveToLocalStorage();
-                renderProducts();
-                showNotification(`🗑️ Удалён: ${product.name}`, false);
+                showNotification(`📤 Удаление "${product.name}"...`, false);
+                
+                try {
+                    await db.collection('products').doc(id).delete();
+                    showNotification(`✅ Удалён: ${product.name}`, false);
+                } catch (error) {
+                    console.error('Ошибка удаления:', error);
+                    showNotification(`❌ Ошибка удаления`, true);
+                }
             }
         }
 
-        function changeQuantity(id, delta) {
+        // ============================================
+        // ИЗМЕНЕНИЕ КОЛИЧЕСТВА
+        // ============================================
+        async function changeQuantity(id, delta) {
             const p = products.find(p => p.id === id);
             if (p) {
-                p.quantity = Math.max(0, p.quantity + delta);
-                saveToLocalStorage();
-                renderProducts();
-                if (p.quantity <= p.minStock) showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
+                const newQuantity = Math.max(0, p.quantity + delta);
+                
+                try {
+                    await db.collection('products').doc(id).update({
+                        quantity: newQuantity
+                    });
+                    
+                    if (newQuantity <= p.minStock) {
+                        showNotification(`⚠️ ${p.name}: осталось ${newQuantity} шт.`, true);
+                    }
+                } catch (error) {
+                    console.error('Ошибка обновления:', error);
+                }
             }
         }
 
-        function setQuantity(id, newValue) {
+        async function setQuantity(id, newValue) {
             const p = products.find(p => p.id === id);
             if (p) {
-                p.quantity = Math.max(0, parseInt(newValue, 10) || 0);
-                saveToLocalStorage();
-                renderProducts();
-                if (p.quantity <= p.minStock) showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
+                const quantity = Math.max(0, parseInt(newValue, 10) || 0);
+                
+                try {
+                    await db.collection('products').doc(id).update({
+                        quantity: quantity
+                    });
+                    
+                    if (quantity <= p.minStock) {
+                        showNotification(`⚠️ ${p.name}: осталось ${quantity} шт.`, true);
+                    }
+                } catch (error) {
+                    console.error('Ошибка обновления:', error);
+                }
             }
         }
 
+        // ============================================
+        // ФИЛЬТРАЦИЯ
+        // ============================================
         function getFiltered() {
             return products.filter(p => {
                 if (currentFilter !== 'all' && p.category !== currentFilter) return false;
@@ -327,7 +370,7 @@
             
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="empty-state">✨ Товары не найдены ✨</div>';
-                totalSpan.innerHTML = `📊 Всего: ${products.length}`;
+                totalSpan.innerHTML = `📊 Всего товаров: ${products.length}`;
                 return;
             }
             
@@ -346,12 +389,12 @@
                                 <div class="product-category">${catEmoji} ${p.category}</div>
                                 <div class="product-quantity">${p.quantity} шт.</div>
                             </div>
-                            <button class="delete-btn" onclick="deleteProduct(${p.id})">🗑️</button>
+                            <button class="delete-btn" onclick="deleteProduct('${p.id}')">🗑️</button>
                         </div>
                         <div class="quantity-control">
-                            <button class="action-btn minus" onclick="changeQuantity(${p.id}, -1)">−</button>
-                            <input type="number" value="${p.quantity}" onchange="setQuantity(${p.id}, this.value)" min="0">
-                            <button class="action-btn plus" onclick="changeQuantity(${p.id}, 1)">+</button>
+                            <button class="action-btn minus" onclick="changeQuantity('${p.id}', -1)">−</button>
+                            <input type="number" value="${p.quantity}" onchange="setQuantity('${p.id}', this.value)" min="0">
+                            <button class="action-btn plus" onclick="changeQuantity('${p.id}', 1)">+</button>
                             ${isLow ? '<span style="color:#ff5c5c;">⚠️ Мало!</span>' : ''}
                         </div>
                         <div style="font-size:11px; color:#999;">Мин. остаток: ${p.minStock} шт.</div>
@@ -396,24 +439,19 @@
             });
         }
         
-        const importFileInput = document.createElement('input');
-        importFileInput.type = 'file';
-        importFileInput.accept = '.json';
-        importFileInput.style.display = 'none';
-        importFileInput.onchange = (e) => {
-            if (e.target.files && e.target.files[0]) importFromFile(e.target.files[0]);
-            importFileInput.value = '';
-        };
-        document.body.appendChild(importFileInput);
-        
+        // ============================================
+        // ЗАПУСК
+        // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             setupPhotoPreview();
             setupCategoryFilter();
-            loadFromLocalStorage();
+            listenToFirebase();
+            
             document.getElementById('addBtn')?.addEventListener('click', addProduct);
-            document.getElementById('exportBtn')?.addEventListener('click', exportToFile);
-            document.getElementById('importBtn')?.addEventListener('click', () => importFileInput.click());
-            document.getElementById('clearAllBtn')?.addEventListener('click', clearAllData);
+            document.getElementById('refreshBtn')?.addEventListener('click', () => {
+                listenToFirebase();
+                showNotification('🔄 Данные обновлены', false);
+            });
             document.getElementById('searchInput')?.addEventListener('input', (e) => { searchQuery = e.target.value; renderProducts(); });
             document.getElementById('productName')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') addProduct(); });
         });
