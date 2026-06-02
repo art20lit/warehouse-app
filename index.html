@@ -1,97 +1,422 @@
-function doGet(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = sheet.getDataRange().getValues();
-  var headers = data[0];
-  var rows = data.slice(1);
-  
-  var products = [];
-  for (var i = 0; i < rows.length; i++) {
-    if (rows[i][0] && rows[i][0] !== '') {
-      var product = {};
-      for (var j = 0; j < headers.length; j++) {
-        product[headers[j]] = rows[i][j];
-      }
-      products.push(product);
-    }
-  }
-  
-  return ContentService
-    .createTextOutput(JSON.stringify(products))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  var action = data.action;
-  var product = data.product;
-  
-  if (action === 'add') {
-    var newId = getNextId(sheet);
-    sheet.appendRow([
-      newId,
-      product.name,
-      product.quantity || 0,
-      product.category || 'Джинсы',
-      product.minStock || 5,
-      product.photo || null
-    ]);
-    
-    return ContentService
-      .createTextOutput(JSON.stringify({success: true, id: newId}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  else if (action === 'update') {
-    var updateId = product.id;
-    var updates = product.updates;
-    var allData = sheet.getDataRange().getValues();
-    
-    for (var i = 1; i < allData.length; i++) {
-      if (allData[i][0] == updateId) {
-        for (var key in updates) {
-          var colIndex = allData[0].indexOf(key);
-          if (colIndex !== -1) {
-            sheet.getRange(i + 1, colIndex + 1).setValue(updates[key]);
-          }
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Склад - Локальная версия</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            padding: 16px;
+            padding-bottom: 100px;
         }
-        break;
-      }
-    }
-    
-    return ContentService
-      .createTextOutput(JSON.stringify({success: true}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  else if (action === 'delete') {
-    var deleteId = product.id;
-    var allData = sheet.getDataRange().getValues();
-    
-    for (var i = 1; i < allData.length; i++) {
-      if (allData[i][0] == deleteId) {
-        sheet.deleteRow(i + 1);
-        break;
-      }
-    }
-    
-    return ContentService
-      .createTextOutput(JSON.stringify({success: true}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  return ContentService
-    .createTextOutput(JSON.stringify({success: false}))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+        @media (prefers-color-scheme: dark) {
+            body { background: #1a1a1a; color: #ffffff; }
+            .add-form, .product-card, .search-section, .category-filter { background: #2d2d2d !important; }
+            input, select { background: #1a1a1a; color: #ffffff; border-color: #444; }
+            .total-info { background: #2d2d2d; border-top-color: #444; }
+            .product-name { color: #ffffff !important; }
+            .product-category { color: #aaaaaa !important; }
+        }
+        .header { margin-bottom: 20px; text-align: center; }
+        h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+        .add-form, .search-section, .category-filter {
+            background: #f0f0f0;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 14px; margin-bottom: 6px; color: #666; }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            background: white;
+            color: black;
+            font-size: 16px;
+        }
+        button {
+            background: #2481cc;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:active { opacity: 0.7; }
+        .photo-preview { margin-top: 10px; text-align: center; }
+        .photo-preview img { max-width: 100px; max-height: 100px; border-radius: 12px; }
+        .product-card {
+            background: #f9f9f9;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            animation: fadeIn 0.15s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .product-card.low-stock { border-left: 4px solid #ff5c5c; background: rgba(255, 92, 92, 0.1); }
+        .product-header { display: flex; gap: 12px; margin-bottom: 12px; }
+        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .product-info { flex: 1; }
+        .product-name { font-weight: 600; font-size: 18px; margin-bottom: 4px; color: #000000 !important; }
+        .product-category { font-size: 12px; color: #555555 !important; margin-bottom: 4px; }
+        .product-quantity { font-size: 20px; font-weight: bold; color: #2481cc; }
+        .quantity-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .quantity-control input { width: 80px; text-align: center; padding: 8px; }
+        .action-btn { width: 40px; height: 40px; border-radius: 20px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; }
+        .action-btn.minus { background: rgba(255, 92, 92, 0.2); color: #ff5c5c; }
+        .action-btn.plus { background: rgba(0, 184, 148, 0.2); color: #00b894; }
+        .delete-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; margin-left: auto; }
+        .search-box { display: flex; gap: 8px; align-items: center; }
+        .search-box input { flex: 1; }
+        .category-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .chip { padding: 6px 12px; border-radius: 20px; background: white; color: black; font-size: 13px; cursor: pointer; border: 1px solid #ccc; }
+        .chip.active { background: #2481cc; color: white; border-color: #2481cc; }
+        .notification { position: fixed; bottom: 100px; left: 16px; right: 16px; background: #ff5c5c; color: white; padding: 12px; border-radius: 12px; text-align: center; z-index: 200; animation: fadeIn 0.2s; }
+        .total-info { position: fixed; bottom: 0; left: 0; right: 0; background: #f0f0f0; padding: 12px 16px; border-top: 1px solid #ddd; text-align: center; font-weight: 500; z-index: 100; font-size: 13px; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .sync-status {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 5px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            width: auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .sync-online { background: rgba(0, 184, 148, 0.15); color: #00b894; }
+        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+        .small-btn { padding: 8px 16px; font-size: 14px; width: auto; border-radius: 20px; }
+        .export-btn { background: #00b894; }
+        .import-btn { background: #f39c12; }
+        .clear-btn { background: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👖🩳 Склад</h1>
+        <div class="sync-status sync-online" id="syncStatus">
+            💾 Данные на вашем устройстве
+        </div>
+        <div class="button-group">
+            <button class="small-btn export-btn" id="exportBtn">📤 Экспорт</button>
+            <button class="small-btn import-btn" id="importBtn">📥 Импорт</button>
+            <button class="small-btn clear-btn" id="clearAllBtn">🗑️ Очистить всё</button>
+        </div>
+    </div>
 
-function getNextId(sheet) {
-  var lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return 1;
-  var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-  var maxId = 0;
-  for (var i = 0; i < ids.length; i++) {
-    if (ids[i][0] > maxId) maxId = ids[i][0];
-  }
-  return maxId + 1;
-}
+    <div class="add-form">
+        <div class="input-group">
+            <label>📷 Фото товара</label>
+            <input type="file" id="productPhoto" accept="image/*">
+            <div class="photo-preview" id="photoPreview"></div>
+        </div>
+        <div class="input-group">
+            <label>📝 Название товара</label>
+            <input type="text" id="productName" placeholder="Например: Джинсы slim">
+        </div>
+        <div class="input-group">
+            <label>📁 Категория</label>
+            <select id="productCategory">
+                <option value="Джинсы">👖 Джинсы</option>
+                <option value="Шорты">🩳 Шорты</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>🔢 Количество</label>
+            <input type="number" id="productQuantity" value="1" min="0">
+        </div>
+        <div class="input-group">
+            <label>⚠️ Мин. остаток</label>
+            <input type="number" id="productMinStock" value="5" min="0">
+        </div>
+        <button id="addBtn">➕ Добавить товар</button>
+    </div>
+
+    <div class="search-section">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск товаров...">
+        </div>
+    </div>
+
+    <div class="category-filter">
+        <label>📂 Фильтр</label>
+        <div class="category-chips" id="categoryChips">
+            <span class="chip active" data-cat="all">📋 Все</span>
+            <span class="chip" data-cat="Джинсы">👖 Джинсы</span>
+            <span class="chip" data-cat="Шорты">🩳 Шорты</span>
+        </div>
+    </div>
+
+    <div id="productsList"></div>
+    <div id="totalInfo" class="total-info"></div>
+    <div id="notificationContainer"></div>
+
+    <script>
+        const STORAGE_KEY = 'warehouse_local';
+        let products = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        function updateSyncStatus(text) {
+            const el = document.getElementById('syncStatus');
+            if (el) el.textContent = text;
+        }
+
+        function showNotification(message, isWarning = true) {
+            const container = document.getElementById('notificationContainer');
+            if (!container) return;
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.style.background = isWarning ? '#ff5c5c' : '#00b894';
+            notif.innerHTML = message;
+            container.appendChild(notif);
+            setTimeout(() => notif.remove(), 2000);
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+            updateSyncStatus(`💾 Сохранено: ${products.length} товаров`);
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    products = JSON.parse(saved);
+                    showNotification(`📂 Загружено ${products.length} товаров`, false);
+                } catch(e) { products = []; }
+            }
+            if (!products || !Array.isArray(products)) products = [];
+            renderProducts();
+            updateSyncStatus(`📊 Всего: ${products.length} товаров`);
+        }
+
+        function exportToFile() {
+            const dataStr = JSON.stringify(products, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sklad_${new Date().toISOString().slice(0,19)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification(`📁 Экспортировано ${products.length} товаров`, false);
+        }
+
+        function importFromFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        products = imported;
+                        saveToLocalStorage();
+                        renderProducts();
+                        showNotification(`📥 Импортировано ${products.length} товаров`, false);
+                    } else throw new Error('Неверный формат');
+                } catch(err) {
+                    showNotification('❌ Ошибка импорта', true);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ Удалить ВСЕ товары?')) {
+                products = [];
+                saveToLocalStorage();
+                renderProducts();
+                showNotification('🗑️ Все данные очищены', false);
+            }
+        }
+
+        function addProductLogic(name, quantity, category, minStock, photoData) {
+            const newProduct = {
+                id: Date.now(),
+                name, quantity, category, minStock,
+                photo: photoData,
+                createdAt: new Date().toLocaleString()
+            };
+            products.unshift(newProduct);
+            saveToLocalStorage();
+            renderProducts();
+            clearForm();
+            showNotification(`✅ Добавлен: ${name}`, false);
+        }
+
+        function addProduct() {
+            const name = document.getElementById('productName').value.trim();
+            const quantity = parseInt(document.getElementById('productQuantity').value, 10) || 0;
+            const category = document.getElementById('productCategory').value;
+            const minStock = parseInt(document.getElementById('productMinStock').value, 10) || 5;
+            const photoInput = document.getElementById('productPhoto');
+            
+            if (!name) { alert('Введите название'); return; }
+            
+            const process = (photoData) => addProductLogic(name, quantity, category, minStock, photoData);
+            
+            if (photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => process(e.target.result);
+                reader.readAsDataURL(photoInput.files[0]);
+            } else process(null);
+        }
+
+        function clearForm() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productQuantity').value = '1';
+            document.getElementById('productMinStock').value = '5';
+            document.getElementById('productPhoto').value = '';
+            document.getElementById('photoPreview').innerHTML = '';
+        }
+
+        function deleteProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (product && confirm(`Удалить "${product.name}"?`)) {
+                products = products.filter(p => p.id !== id);
+                saveToLocalStorage();
+                renderProducts();
+                showNotification(`🗑️ Удалён: ${product.name}`, false);
+            }
+        }
+
+        function changeQuantity(id, delta) {
+            const p = products.find(p => p.id === id);
+            if (p) {
+                p.quantity = Math.max(0, p.quantity + delta);
+                saveToLocalStorage();
+                renderProducts();
+                if (p.quantity <= p.minStock) showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
+            }
+        }
+
+        function setQuantity(id, newValue) {
+            const p = products.find(p => p.id === id);
+            if (p) {
+                p.quantity = Math.max(0, parseInt(newValue, 10) || 0);
+                saveToLocalStorage();
+                renderProducts();
+                if (p.quantity <= p.minStock) showNotification(`⚠️ ${p.name}: ${p.quantity} шт.`, true);
+            }
+        }
+
+        function getFiltered() {
+            return products.filter(p => {
+                if (currentFilter !== 'all' && p.category !== currentFilter) return false;
+                if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                return true;
+            });
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('productsList');
+            const totalSpan = document.getElementById('totalInfo');
+            const filtered = getFiltered();
+            if (!container) return;
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state">✨ Товары не найдены ✨</div>';
+                totalSpan.innerHTML = `📊 Всего: ${products.length}`;
+                return;
+            }
+            
+            let totalQty = 0;
+            let html = '';
+            for (let p of filtered) {
+                totalQty += p.quantity;
+                const isLow = p.quantity <= p.minStock;
+                const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
+                html += `
+                    <div class="product-card ${isLow ? 'low-stock' : ''}">
+                        <div class="product-header">
+                            ${p.photo ? `<img class="product-photo" src="${p.photo}">` : '<div class="product-photo">📷</div>'}
+                            <div class="product-info">
+                                <div class="product-name">${escapeHtml(p.name)}</div>
+                                <div class="product-category">${catEmoji} ${p.category}</div>
+                                <div class="product-quantity">${p.quantity} шт.</div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteProduct(${p.id})">🗑️</button>
+                        </div>
+                        <div class="quantity-control">
+                            <button class="action-btn minus" onclick="changeQuantity(${p.id}, -1)">−</button>
+                            <input type="number" value="${p.quantity}" onchange="setQuantity(${p.id}, this.value)" min="0">
+                            <button class="action-btn plus" onclick="changeQuantity(${p.id}, 1)">+</button>
+                            ${isLow ? '<span style="color:#ff5c5c;">⚠️ Мало!</span>' : ''}
+                        </div>
+                        <div style="font-size:11px; color:#999;">Мин. остаток: ${p.minStock} шт.</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+            totalSpan.innerHTML = `📊 Всего: ${products.length} | На складе: ${totalQty} шт. | Показано: ${filtered.length}`;
+        }
+
+        function escapeHtml(str) { 
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, function(m) { 
+                if (m === '&') return '&amp;'; 
+                if (m === '<') return '&lt;'; 
+                if (m === '>') return '&gt;'; 
+                return m; 
+            }); 
+        }
+        
+        function setupPhotoPreview() {
+            const input = document.getElementById('productPhoto');
+            const preview = document.getElementById('photoPreview');
+            if (input) input.onchange = () => {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = e => preview.innerHTML = `<img src="${e.target.result}">`;
+                    reader.readAsDataURL(input.files[0]);
+                } else preview.innerHTML = '';
+            };
+        }
+        
+        function setupCategoryFilter() {
+            const chips = document.querySelectorAll('.chip');
+            chips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    chips.forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    currentFilter = chip.dataset.cat;
+                    renderProducts();
+                });
+            });
+        }
+        
+        const importFileInput = document.createElement('input');
+        importFileInput.type = 'file';
+        importFileInput.accept = '.json';
+        importFileInput.style.display = 'none';
+        importFileInput.onchange = (e) => {
+            if (e.target.files && e.target.files[0]) importFromFile(e.target.files[0]);
+            importFileInput.value = '';
+        };
+        document.body.appendChild(importFileInput);
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setupPhotoPreview();
+            setupCategoryFilter();
+            loadFromLocalStorage();
+            document.getElementById('addBtn')?.addEventListener('click', addProduct);
+            document.getElementById('exportBtn')?.addEventListener('click', exportToFile);
+            document.getElementById('importBtn')?.addEventListener('click', () => importFileInput.click());
+            document.getElementById('clearAllBtn')?.addEventListener('click', clearAllData);
+            document.getElementById('searchInput')?.addEventListener('input', (e) => { searchQuery = e.target.value; renderProducts(); });
+            document.getElementById('productName')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') addProduct(); });
+        });
+    </script>
+</body>
+</html>
