@@ -215,8 +215,8 @@
                 unsubscribe();
             }
             
+            // Убираем orderBy - это была причина ограничения в 10 товаров
             unsubscribe = db.collection('products')
-                .orderBy('createdAt', 'desc')
                 .onSnapshot((snapshot) => {
                     products = [];
                     snapshot.forEach((doc) => {
@@ -231,6 +231,14 @@
                             createdAt: data.createdAt || new Date().toISOString()
                         });
                     });
+                    
+                    // Сортируем вручную на клиенте (новые сверху)
+                    products.sort((a, b) => {
+                        if (a.createdAt > b.createdAt) return -1;
+                        if (a.createdAt < b.createdAt) return 1;
+                        return 0;
+                    });
+                    
                     renderProducts();
                     updateSyncStatus(`✅ ${products.length} товаров`, 'online');
                 }, (error) => {
