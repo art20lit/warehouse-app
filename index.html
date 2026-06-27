@@ -7,6 +7,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -55,6 +56,7 @@
             width: 100%;
         }
         button:active { opacity: 0.7; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .photo-preview { margin-top: 10px; text-align: center; }
         .photo-preview img { max-width: 100px; max-height: 100px; border-radius: 12px; }
         .product-card {
@@ -67,17 +69,17 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .product-card.low-stock { border-left: 4px solid #ff5c5c; background: rgba(255, 92, 92, 0.1); }
         .product-header { display: flex; gap: 12px; margin-bottom: 12px; }
-        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .product-info { flex: 1; }
-        .product-name { font-weight: 600; font-size: 18px; margin-bottom: 4px; color: #000000 !important; }
+        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+        .product-info { flex: 1; min-width: 0; }
+        .product-name { font-weight: 600; font-size: 18px; margin-bottom: 4px; color: #000000 !important; word-break: break-word; }
         .product-category { font-size: 12px; color: #555555 !important; margin-bottom: 4px; }
         .product-quantity { font-size: 20px; font-weight: bold; color: #2481cc; }
         .quantity-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
         .quantity-control input { width: 80px; text-align: center; padding: 8px; }
-        .action-btn { width: 40px; height: 40px; border-radius: 20px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; }
+        .action-btn { width: 40px; height: 40px; border-radius: 20px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; flex-shrink: 0; }
         .action-btn.minus { background: rgba(255, 92, 92, 0.2); color: #ff5c5c; }
         .action-btn.plus { background: rgba(0, 184, 148, 0.2); color: #00b894; }
-        .delete-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; margin-left: auto; }
+        .delete-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; margin-left: auto; flex-shrink: 0; }
         .search-box { display: flex; gap: 8px; align-items: center; }
         .search-box input { flex: 1; }
         .category-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
@@ -102,6 +104,20 @@
         .sync-waiting { background: rgba(36, 129, 204, 0.15); color: #2481cc; }
         .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
         .refresh-btn { padding: 8px 16px; font-size: 14px; width: auto; background: #2481cc; color: white; border: none; border-radius: 20px; cursor: pointer; }
+        .upload-progress {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .upload-progress-bar {
+            height: 100%;
+            background: #2481cc;
+            width: 0%;
+            transition: width 0.3s;
+        }
     </style>
 </head>
 <body>
@@ -122,6 +138,9 @@
             <label>📷 Фото товара</label>
             <input type="file" id="productPhoto" accept="image/*">
             <div class="photo-preview" id="photoPreview"></div>
+            <div class="upload-progress" id="uploadProgress" style="display:none;">
+                <div class="upload-progress-bar" id="uploadProgressBar"></div>
+            </div>
         </div>
         <div class="input-group">
             <label>📝 Название товара</label>
@@ -166,7 +185,7 @@
 
     <script>
         // ==================================================
-        // ✅ ТВОЙ FIREBASE КОНФИГ (УЖЕ ВСТАВЛЕН) ✅
+        // ✅ FIREBASE КОНФИГ
         // ==================================================
         const firebaseConfig = {
             apiKey: "AIzaSyC-a15NM1nzH8ELTqlBc6SDtQIIAQ2qu0g",
@@ -180,11 +199,13 @@
         // Инициализация Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const storage = firebase.storage();
         
         let products = [];
         let currentFilter = 'all';
         let searchQuery = '';
         let unsubscribe = null;
+        let isUploading = false;
 
         function updateSyncStatus(text, status = 'waiting') {
             const el = document.getElementById('syncStatus');
@@ -202,11 +223,56 @@
             notif.style.background = isWarning ? '#ff5c5c' : '#00b894';
             notif.innerHTML = message;
             container.appendChild(notif);
-            setTimeout(() => notif.remove(), 2000);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        function setUploadProgress(percent) {
+            const container = document.getElementById('uploadProgress');
+            const bar = document.getElementById('uploadProgressBar');
+            if (container) container.style.display = 'block';
+            if (bar) bar.style.width = percent + '%';
+        }
+
+        function hideUploadProgress() {
+            const container = document.getElementById('uploadProgress');
+            if (container) container.style.display = 'none';
         }
 
         // ============================================
-        // ПОДКЛЮЧЕНИЕ К FIREBASE (РЕАЛЬНОЕ ВРЕМЯ)
+        // ЗАГРУЗКА ФОТО В STORAGE
+        // ============================================
+        async function uploadPhoto(file) {
+            if (!file) return null;
+            
+            const fileName = `products/${Date.now()}_${file.name}`;
+            const storageRef = storage.ref(fileName);
+            const uploadTask = storageRef.put(file);
+            
+            return new Promise((resolve, reject) => {
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        setUploadProgress(progress);
+                    },
+                    (error) => {
+                        console.error('Ошибка загрузки фото:', error);
+                        reject(error);
+                    },
+                    async () => {
+                        try {
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            hideUploadProgress();
+                            resolve(downloadURL);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }
+                );
+            });
+        }
+
+        // ============================================
+        // ПОДКЛЮЧЕНИЕ К FIREBASE
         // ============================================
         function listenToFirebase() {
             updateSyncStatus('🔄 Синхронизация...', 'waiting');
@@ -215,7 +281,6 @@
                 unsubscribe();
             }
             
-            // Убрали orderBy - теперь загружаются ВСЕ товары без ограничений
             unsubscribe = db.collection('products')
                 .onSnapshot((snapshot) => {
                     products = [];
@@ -232,7 +297,6 @@
                         });
                     });
                     
-                    // Сортируем вручную на клиенте (новые сверху)
                     products.sort((a, b) => {
                         if (a.createdAt > b.createdAt) return -1;
                         if (a.createdAt < b.createdAt) return 1;
@@ -250,8 +314,15 @@
         // ============================================
         // ДОБАВЛЕНИЕ ТОВАРА
         // ============================================
-        async function addProductLogic(name, quantity, category, minStock, photoData) {
-            showNotification(`📤 Сохранение "${name}"...`, false);
+        async function addProductLogic(name, quantity, category, minStock, photoURL) {
+            if (isUploading) {
+                showNotification('⏳ Подождите, фото загружается...', true);
+                return;
+            }
+            
+            const btn = document.getElementById('addBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Сохранение...';
             
             try {
                 await db.collection('products').add({
@@ -259,7 +330,7 @@
                     quantity: quantity,
                     category: category,
                     minStock: minStock,
-                    photo: photoData,
+                    photo: photoURL,
                     createdAt: new Date().toISOString()
                 });
                 
@@ -269,10 +340,14 @@
             } catch (error) {
                 console.error('Ошибка добавления:', error);
                 showNotification(`❌ Ошибка: "${name}" не сохранён`, true);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '➕ Добавить товар';
+                isUploading = false;
             }
         }
 
-        function addProduct() {
+        async function addProduct() {
             const name = document.getElementById('productName').value.trim();
             const quantity = parseInt(document.getElementById('productQuantity').value, 10) || 0;
             const category = document.getElementById('productCategory').value;
@@ -280,15 +355,30 @@
             const photoInput = document.getElementById('productPhoto');
             
             if (!name) { alert('Введите название'); return; }
+            if (isUploading) { showNotification('⏳ Подождите, фото загружается...', true); return; }
             
-            const process = (photoData) => addProductLogic(name, quantity, category, minStock, photoData);
-            
-            if (photoInput.files && photoInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => process(e.target.result);
-                reader.readAsDataURL(photoInput.files[0]);
-            } else {
-                process(null);
+            try {
+                let photoURL = null;
+                
+                // Если есть фото - загружаем в Storage
+                if (photoInput.files && photoInput.files[0]) {
+                    isUploading = true;
+                    const btn = document.getElementById('addBtn');
+                    btn.textContent = '📤 Загрузка фото...';
+                    
+                    photoURL = await uploadPhoto(photoInput.files[0]);
+                }
+                
+                await addProductLogic(name, quantity, category, minStock, photoURL);
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showNotification('❌ Ошибка загрузки фото', true);
+                const btn = document.getElementById('addBtn');
+                btn.disabled = false;
+                btn.textContent = '➕ Добавить товар';
+                isUploading = false;
+                hideUploadProgress();
             }
         }
 
@@ -298,6 +388,7 @@
             document.getElementById('productMinStock').value = '5';
             document.getElementById('productPhoto').value = '';
             document.getElementById('photoPreview').innerHTML = '';
+            hideUploadProgress();
         }
 
         // ============================================
@@ -391,7 +482,7 @@
                 html += `
                     <div class="product-card ${isLow ? 'low-stock' : ''}">
                         <div class="product-header">
-                            ${p.photo ? `<img class="product-photo" src="${p.photo}">` : '<div class="product-photo">📷</div>'}
+                            ${p.photo ? `<img class="product-photo" src="${p.photo}" loading="lazy">` : '<div class="product-photo">📷</div>'}
                             <div class="product-info">
                                 <div class="product-name">${escapeHtml(p.name)}</div>
                                 <div class="product-category">${catEmoji} ${p.category}</div>
