@@ -111,28 +111,12 @@
             border-radius: 2px;
             margin-top: 8px;
             overflow: hidden;
-            display: none;
         }
         .upload-progress-bar {
             height: 100%;
             background: #2481cc;
             width: 0%;
             transition: width 0.3s;
-        }
-        .debug-console {
-            background: #1a1a1a;
-            color: #00ff00;
-            padding: 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 12px;
-            margin-top: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
-        .debug-console.show {
-            display: block;
         }
     </style>
 </head>
@@ -146,7 +130,6 @@
         </div>
         <div class="button-group">
             <button class="refresh-btn" id="refreshBtn">🔄 Синхронизировать</button>
-            <button class="refresh-btn" id="debugBtn" style="background:#666;">🐛 Отладка</button>
         </div>
     </div>
 
@@ -155,7 +138,7 @@
             <label>📷 Фото товара</label>
             <input type="file" id="productPhoto" accept="image/*">
             <div class="photo-preview" id="photoPreview"></div>
-            <div class="upload-progress" id="uploadProgress">
+            <div class="upload-progress" id="uploadProgress" style="display:none;">
                 <div class="upload-progress-bar" id="uploadProgressBar"></div>
             </div>
         </div>
@@ -199,8 +182,6 @@
     <div id="productsList"></div>
     <div id="totalInfo" class="total-info"></div>
     <div id="notificationContainer"></div>
-    
-    <div class="debug-console" id="debugConsole"></div>
 
     <script>
         // ==================================================
@@ -215,15 +196,10 @@
             appId: "1:617217671865:web:2a75647e9369d032bb1168"
         };
         
-        console.log('🚀 Инициализация Firebase...');
-        
         // Инициализация Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const storage = firebase.storage();
-        
-        console.log('✅ Firebase инициализирован');
-        console.log('📁 Storage bucket:', firebaseConfig.storageBucket);
         
         let products = [];
         let currentFilter = 'all';
@@ -231,49 +207,12 @@
         let unsubscribe = null;
         let isUploading = false;
 
-        // ============================================
-        // ОТЛАДКА
-        // ============================================
-        function debugLog(message, type = 'info') {
-            const console = document.getElementById('debugConsole');
-            if (!console) return;
-            
-            const time = new Date().toLocaleTimeString();
-            const colors = {
-                info: '#00ff00',
-                error: '#ff4444',
-                warning: '#ffaa00',
-                success: '#44ff88'
-            };
-            
-            const entry = document.createElement('div');
-            entry.style.color = colors[type] || '#ffffff';
-            entry.textContent = `[${time}] ${message}`;
-            console.appendChild(entry);
-            console.scrollTop = console.scrollHeight;
-            
-            // Также выводим в консоль браузера
-            console.log(`[${time}] ${message}`);
-        }
-
-        function toggleDebug() {
-            const console = document.getElementById('debugConsole');
-            console.classList.toggle('show');
-            if (console.classList.contains('show')) {
-                debugLog('🐛 Отладка включена');
-            }
-        }
-
-        // ============================================
-        // ФУНКЦИИ
-        // ============================================
         function updateSyncStatus(text, status = 'waiting') {
             const el = document.getElementById('syncStatus');
             if (el) {
                 el.textContent = text;
                 el.className = `sync-status sync-${status}`;
             }
-            debugLog(`Статус: ${text} (${status})`);
         }
 
         function showNotification(message, isWarning = true) {
@@ -285,7 +224,6 @@
             notif.innerHTML = message;
             container.appendChild(notif);
             setTimeout(() => notif.remove(), 3000);
-            debugLog(`Уведомление: ${message}`, isWarning ? 'warning' : 'success');
         }
 
         function setUploadProgress(percent) {
@@ -304,12 +242,7 @@
         // ЗАГРУЗКА ФОТО В STORAGE
         // ============================================
         async function uploadPhoto(file) {
-            if (!file) {
-                debugLog('Нет файла для загрузки', 'warning');
-                return null;
-            }
-            
-            debugLog(`📤 Начинаем загрузку фото: ${file.name} (${(file.size/1024).toFixed(1)} KB)`);
+            if (!file) return null;
             
             const fileName = `products/${Date.now()}_${file.name}`;
             const storageRef = storage.ref(fileName);
@@ -320,24 +253,17 @@
                     (snapshot) => {
                         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                         setUploadProgress(progress);
-                        debugLog(`Загрузка фото: ${progress.toFixed(1)}%`);
                     },
                     (error) => {
                         console.error('Ошибка загрузки фото:', error);
-                        debugLog(`❌ Ошибка загрузки фото: ${error.message}`, 'error');
-                        hideUploadProgress();
                         reject(error);
                     },
                     async () => {
                         try {
                             const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                            debugLog(`✅ Фото загружено! URL: ${downloadURL.substring(0, 50)}...`, 'success');
                             hideUploadProgress();
                             resolve(downloadURL);
                         } catch (error) {
-                            console.error('Ошибка получения URL:', error);
-                            debugLog(`❌ Ошибка получения URL: ${error.message}`, 'error');
-                            hideUploadProgress();
                             reject(error);
                         }
                     }
@@ -349,17 +275,14 @@
         // ПОДКЛЮЧЕНИЕ К FIREBASE
         // ============================================
         function listenToFirebase() {
-            debugLog('🔄 Подключение к Firestore...');
             updateSyncStatus('🔄 Синхронизация...', 'waiting');
             
             if (unsubscribe) {
                 unsubscribe();
-                debugLog('Отписка от предыдущего слушателя');
             }
             
             unsubscribe = db.collection('products')
                 .onSnapshot((snapshot) => {
-                    debugLog(`📥 Получено ${snapshot.size} документов`, 'success');
                     products = [];
                     snapshot.forEach((doc) => {
                         const data = doc.data();
@@ -382,10 +305,8 @@
                     
                     renderProducts();
                     updateSyncStatus(`✅ ${products.length} товаров`, 'online');
-                    debugLog(`📊 Загружено ${products.length} товаров`, 'success');
                 }, (error) => {
                     console.error('Ошибка Firebase:', error);
-                    debugLog(`❌ Ошибка подключения: ${error.message}`, 'error');
                     updateSyncStatus('⚠️ Ошибка подключения', 'offline');
                 });
         }
@@ -403,25 +324,21 @@
             btn.disabled = true;
             btn.textContent = '⏳ Сохранение...';
             
-            debugLog(`📝 Сохраняем товар: ${name}, кол-во: ${quantity}, кат: ${category}`);
-            
             try {
-                const docRef = await db.collection('products').add({
+                await db.collection('products').add({
                     name: name,
                     quantity: quantity,
                     category: category,
                     minStock: minStock,
-                    photo: photoURL || null,
+                    photo: photoURL,
                     createdAt: new Date().toISOString()
                 });
                 
-                debugLog(`✅ Товар добавлен! ID: ${docRef.id}`, 'success');
                 showNotification(`✅ Добавлен: ${name}`, false);
                 clearForm();
                 
             } catch (error) {
                 console.error('Ошибка добавления:', error);
-                debugLog(`❌ Ошибка добавления: ${error.message}`, 'error');
                 showNotification(`❌ Ошибка: "${name}" не сохранён`, true);
             } finally {
                 btn.disabled = false;
@@ -437,39 +354,25 @@
             const minStock = parseInt(document.getElementById('productMinStock').value, 10) || 5;
             const photoInput = document.getElementById('productPhoto');
             
-            debugLog(`📤 Попытка добавить товар: ${name}`);
-            
-            if (!name) { 
-                alert('Введите название'); 
-                debugLog('❌ Нет названия товара', 'error');
-                return; 
-            }
-            
-            if (isUploading) { 
-                showNotification('⏳ Подождите, фото загружается...', true);
-                debugLog('⏳ Уже идет загрузка фото', 'warning');
-                return; 
-            }
+            if (!name) { alert('Введите название'); return; }
+            if (isUploading) { showNotification('⏳ Подождите, фото загружается...', true); return; }
             
             try {
                 let photoURL = null;
                 
+                // Если есть фото - загружаем в Storage
                 if (photoInput.files && photoInput.files[0]) {
                     isUploading = true;
                     const btn = document.getElementById('addBtn');
                     btn.textContent = '📤 Загрузка фото...';
                     
-                    debugLog(`📸 Загружаем фото: ${photoInput.files[0].name}`);
                     photoURL = await uploadPhoto(photoInput.files[0]);
-                } else {
-                    debugLog('📸 Без фото');
                 }
                 
                 await addProductLogic(name, quantity, category, minStock, photoURL);
                 
             } catch (error) {
                 console.error('Ошибка:', error);
-                debugLog(`❌ Критическая ошибка: ${error.message}`, 'error');
                 showNotification('❌ Ошибка загрузки фото', true);
                 const btn = document.getElementById('addBtn');
                 btn.disabled = false;
@@ -486,7 +389,6 @@
             document.getElementById('productPhoto').value = '';
             document.getElementById('photoPreview').innerHTML = '';
             hideUploadProgress();
-            debugLog('🧹 Форма очищена');
         }
 
         // ============================================
@@ -495,16 +397,13 @@
         async function deleteProduct(id) {
             const product = products.find(p => p.id === id);
             if (product && confirm(`Удалить "${product.name}"?`)) {
-                debugLog(`🗑️ Удаляем товар: ${product.name}`);
                 showNotification(`📤 Удаление "${product.name}"...`, false);
                 
                 try {
                     await db.collection('products').doc(id).delete();
-                    debugLog(`✅ Товар удалён: ${product.name}`, 'success');
                     showNotification(`✅ Удалён: ${product.name}`, false);
                 } catch (error) {
                     console.error('Ошибка удаления:', error);
-                    debugLog(`❌ Ошибка удаления: ${error.message}`, 'error');
                     showNotification(`❌ Ошибка удаления`, true);
                 }
             }
@@ -517,7 +416,6 @@
             const p = products.find(p => p.id === id);
             if (p) {
                 const newQuantity = Math.max(0, p.quantity + delta);
-                debugLog(`🔄 Изменяем количество ${p.name}: ${p.quantity} → ${newQuantity}`);
                 
                 try {
                     await db.collection('products').doc(id).update({
@@ -529,7 +427,6 @@
                     }
                 } catch (error) {
                     console.error('Ошибка обновления:', error);
-                    debugLog(`❌ Ошибка обновления: ${error.message}`, 'error');
                 }
             }
         }
@@ -538,7 +435,6 @@
             const p = products.find(p => p.id === id);
             if (p) {
                 const quantity = Math.max(0, parseInt(newValue, 10) || 0);
-                debugLog(`🔄 Устанавливаем количество ${p.name}: ${quantity}`);
                 
                 try {
                     await db.collection('products').doc(id).update({
@@ -550,13 +446,12 @@
                     }
                 } catch (error) {
                     console.error('Ошибка обновления:', error);
-                    debugLog(`❌ Ошибка обновления: ${error.message}`, 'error');
                 }
             }
         }
 
         // ============================================
-        // ФИЛЬТРАЦИЯ И ОТОБРАЖЕНИЕ
+        // ФИЛЬТРАЦИЯ
         // ============================================
         function getFiltered() {
             return products.filter(p => {
@@ -573,12 +468,8 @@
             if (!container) return;
             
             if (filtered.length === 0) {
-                container.innerHTML = products.length === 0 
-                    ? '<div class="empty-state">📦 Склад пуст. Добавьте первый товар!</div>'
-                    : '<div class="empty-state">✨ Товары не найдены ✨</div>';
-                if (totalSpan) {
-                    totalSpan.innerHTML = `📊 Всего товаров: ${products.length}`;
-                }
+                container.innerHTML = '<div class="empty-state">✨ Товары не найдены ✨</div>';
+                totalSpan.innerHTML = `📊 Всего товаров: ${products.length}`;
                 return;
             }
             
@@ -591,7 +482,7 @@
                 html += `
                     <div class="product-card ${isLow ? 'low-stock' : ''}">
                         <div class="product-header">
-                            ${p.photo ? `<img class="product-photo" src="${p.photo}" loading="lazy" onerror="this.src=''; this.innerHTML='📷'">` : '<div class="product-photo">📷</div>'}
+                            ${p.photo ? `<img class="product-photo" src="${p.photo}" loading="lazy">` : '<div class="product-photo">📷</div>'}
                             <div class="product-info">
                                 <div class="product-name">${escapeHtml(p.name)}</div>
                                 <div class="product-category">${catEmoji} ${p.category}</div>
@@ -631,10 +522,7 @@
                     const reader = new FileReader();
                     reader.onload = e => preview.innerHTML = `<img src="${e.target.result}">`;
                     reader.readAsDataURL(input.files[0]);
-                    debugLog(`📸 Выбрано фото: ${input.files[0].name}`);
-                } else {
-                    preview.innerHTML = '';
-                }
+                } else preview.innerHTML = '';
             };
         }
         
@@ -645,7 +533,6 @@
                     chips.forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
                     currentFilter = chip.dataset.cat;
-                    debugLog(`🔍 Фильтр: ${currentFilter}`);
                     renderProducts();
                 });
             });
@@ -655,12 +542,6 @@
         // ЗАПУСК
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
-            debugLog('🚀 Страница загружена');
-            
-            // Проверка Firebase
-            debugLog(`📡 Firebase App: ${firebase.apps.length} приложений`);
-            debugLog(`📁 Storage: ${firebase.storage().ref() ? '✅ доступен' : '❌ недоступен'}`);
-            
             setupPhotoPreview();
             setupCategoryFilter();
             listenToFirebase();
@@ -669,19 +550,9 @@
             document.getElementById('refreshBtn')?.addEventListener('click', () => {
                 listenToFirebase();
                 showNotification('🔄 Данные обновлены', false);
-                debugLog('🔄 Ручная синхронизация');
             });
-            document.getElementById('debugBtn')?.addEventListener('click', toggleDebug);
-            document.getElementById('searchInput')?.addEventListener('input', (e) => { 
-                searchQuery = e.target.value; 
-                debugLog(`🔍 Поиск: "${searchQuery}"`);
-                renderProducts(); 
-            });
-            document.getElementById('productName')?.addEventListener('keypress', (e) => { 
-                if (e.key === 'Enter') addProduct(); 
-            });
-            
-            debugLog('✅ Приложение запущено', 'success');
+            document.getElementById('searchInput')?.addEventListener('input', (e) => { searchQuery = e.target.value; renderProducts(); });
+            document.getElementById('productName')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') addProduct(); });
         });
     </script>
 </body>
