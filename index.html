@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Общий склад - 500+ позиций</title>
+    <title>Общий склад - Быстрая синхронизация</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -67,43 +67,24 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .product-card.low-stock { border-left: 4px solid #ff5c5c; background: rgba(255, 92, 92, 0.1); }
         .product-header { display: flex; gap: 12px; margin-bottom: 12px; }
-        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-        .product-info { flex: 1; min-width: 0; }
-        .product-name { font-weight: 600; font-size: 18px; margin-bottom: 4px; color: #000000 !important; word-break: break-word; }
+        .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .product-info { flex: 1; }
+        .product-name { font-weight: 600; font-size: 18px; margin-bottom: 4px; color: #000000 !important; }
         .product-category { font-size: 12px; color: #555555 !important; margin-bottom: 4px; }
         .product-quantity { font-size: 20px; font-weight: bold; color: #2481cc; }
         .quantity-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
         .quantity-control input { width: 80px; text-align: center; padding: 8px; }
-        .action-btn { width: 40px; height: 40px; border-radius: 20px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; flex-shrink: 0; }
+        .action-btn { width: 40px; height: 40px; border-radius: 20px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; }
         .action-btn.minus { background: rgba(255, 92, 92, 0.2); color: #ff5c5c; }
         .action-btn.plus { background: rgba(0, 184, 148, 0.2); color: #00b894; }
-        .delete-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; margin-left: auto; flex-shrink: 0; }
+        .delete-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; margin-left: auto; }
         .search-box { display: flex; gap: 8px; align-items: center; }
         .search-box input { flex: 1; }
         .category-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .chip { padding: 6px 12px; border-radius: 20px; background: white; color: black; font-size: 13px; cursor: pointer; border: 1px solid #ccc; }
         .chip.active { background: #2481cc; color: white; border-color: #2481cc; }
         .notification { position: fixed; bottom: 100px; left: 16px; right: 16px; background: #ff5c5c; color: white; padding: 12px; border-radius: 12px; text-align: center; z-index: 200; animation: fadeIn 0.2s; }
-        .total-info { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            background: #f0f0f0; 
-            padding: 12px 16px; 
-            border-top: 1px solid #ddd; 
-            text-align: center; 
-            font-weight: 500; 
-            z-index: 100; 
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .total-info .stats { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-        .total-info .badge { background: #2481cc; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; }
+        .total-info { position: fixed; bottom: 0; left: 0; right: 0; background: #f0f0f0; padding: 12px 16px; border-top: 1px solid #ddd; text-align: center; font-weight: 500; z-index: 100; font-size: 13px; }
         .empty-state { text-align: center; padding: 40px; color: #999; }
         .sync-status {
             font-size: 12px;
@@ -119,41 +100,8 @@
         .sync-online { background: rgba(0, 184, 148, 0.15); color: #00b894; }
         .sync-offline { background: rgba(255, 92, 92, 0.15); color: #ff5c5c; }
         .sync-waiting { background: rgba(36, 129, 204, 0.15); color: #2481cc; }
-        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
         .refresh-btn { padding: 8px 16px; font-size: 14px; width: auto; background: #2481cc; color: white; border: none; border-radius: 20px; cursor: pointer; }
-        .clear-filter-btn { padding: 8px 16px; font-size: 14px; width: auto; background: #ff5c5c; color: white; border: none; border-radius: 20px; cursor: pointer; }
-        .scroll-top-btn {
-            position: fixed;
-            bottom: 80px;
-            right: 16px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #2481cc;
-            color: white;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            z-index: 150;
-            display: none;
-        }
-        .scroll-top-btn.show { display: block; }
-        .photo-upload-btn {
-            background: #e0e0e0;
-            color: #333;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: inline-block;
-            font-size: 14px;
-            border: none;
-            width: auto;
-        }
-        @media (max-width: 600px) {
-            .total-info { flex-direction: column; padding: 10px; }
-            .total-info .stats { flex-direction: column; align-items: center; gap: 4px; }
-        }
     </style>
 </head>
 <body>
@@ -184,9 +132,6 @@
             <select id="productCategory">
                 <option value="Джинсы">👖 Джинсы</option>
                 <option value="Шорты">🩳 Шорты</option>
-                <option value="Футболки">👕 Футболки</option>
-                <option value="Куртки">🧥 Куртки</option>
-                <option value="Обувь">👟 Обувь</option>
             </select>
         </div>
         <div class="input-group">
@@ -212,20 +157,16 @@
             <span class="chip active" data-cat="all">📋 Все</span>
             <span class="chip" data-cat="Джинсы">👖 Джинсы</span>
             <span class="chip" data-cat="Шорты">🩳 Шорты</span>
-            <span class="chip" data-cat="Футболки">👕 Футболки</span>
-            <span class="chip" data-cat="Куртки">🧥 Куртки</span>
-            <span class="chip" data-cat="Обувь">👟 Обувь</span>
         </div>
     </div>
 
     <div id="productsList"></div>
     <div id="totalInfo" class="total-info"></div>
     <div id="notificationContainer"></div>
-    <button class="scroll-top-btn" id="scrollTopBtn">⬆</button>
 
     <script>
         // ==================================================
-        // ✅ FIREBASE КОНФИГ
+        // ✅ ТВОЙ FIREBASE КОНФИГ (УЖЕ ВСТАВЛЕН) ✅
         // ==================================================
         const firebaseConfig = {
             apiKey: "AIzaSyC-a15NM1nzH8ELTqlBc6SDtQIIAQ2qu0g",
@@ -236,21 +177,14 @@
             appId: "1:617217671865:web:2a75647e9369d032bb1168"
         };
         
+        // Инициализация Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        
-        // Настройки Firestore для лучшей производительности
-        db.settings({
-            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
-        });
-        db.enablePersistence({ synchronizeTabs: true })
-            .catch(err => console.warn('Офлайн-режим:', err));
         
         let products = [];
         let currentFilter = 'all';
         let searchQuery = '';
         let unsubscribe = null;
-        let isLoading = false;
 
         function updateSyncStatus(text, status = 'waiting') {
             const el = document.getElementById('syncStatus');
@@ -268,28 +202,28 @@
             notif.style.background = isWarning ? '#ff5c5c' : '#00b894';
             notif.innerHTML = message;
             container.appendChild(notif);
-            setTimeout(() => notif.remove(), 3000);
+            setTimeout(() => notif.remove(), 2000);
         }
 
         // ============================================
-        // ПОДКЛЮЧЕНИЕ К FIREBASE - БЕЗ ОГРАНИЧЕНИЙ
+        // ПОДКЛЮЧЕНИЕ К FIREBASE (РЕАЛЬНОЕ ВРЕМЯ)
         // ============================================
         function listenToFirebase() {
-            updateSyncStatus('🔄 Загрузка данных...', 'waiting');
+            updateSyncStatus('🔄 Синхронизация...', 'waiting');
             
             if (unsubscribe) {
                 unsubscribe();
             }
             
-            // Убираем все orderBy и limit - получаем ВСЕ товары
+            // Убрали orderBy - теперь загружаются ВСЕ товары без ограничений
             unsubscribe = db.collection('products')
                 .onSnapshot((snapshot) => {
-                    const newProducts = [];
+                    products = [];
                     snapshot.forEach((doc) => {
                         const data = doc.data();
-                        newProducts.push({
+                        products.push({
                             id: doc.id,
-                            name: data.name || 'Без названия',
+                            name: data.name || '',
                             quantity: data.quantity || 0,
                             category: data.category || 'Джинсы',
                             minStock: data.minStock || 5,
@@ -298,26 +232,18 @@
                         });
                     });
                     
-                    // Сортируем на клиенте (новые сверху)
-                    newProducts.sort((a, b) => {
+                    // Сортируем вручную на клиенте (новые сверху)
+                    products.sort((a, b) => {
                         if (a.createdAt > b.createdAt) return -1;
                         if (a.createdAt < b.createdAt) return 1;
                         return 0;
                     });
                     
-                    products = newProducts;
                     renderProducts();
-                    
-                    const count = products.length;
-                    updateSyncStatus(`✅ ${count} товаров`, 'online');
-                    
-                    if (count > 400) {
-                        showNotification(`📦 Загружено ${count} товаров`, false);
-                    }
+                    updateSyncStatus(`✅ ${products.length} товаров`, 'online');
                 }, (error) => {
                     console.error('Ошибка Firebase:', error);
                     updateSyncStatus('⚠️ Ошибка подключения', 'offline');
-                    showNotification('❌ Ошибка загрузки данных', true);
                 });
         }
 
@@ -325,11 +251,6 @@
         // ДОБАВЛЕНИЕ ТОВАРА
         // ============================================
         async function addProductLogic(name, quantity, category, minStock, photoData) {
-            if (products.length >= 1000) {
-                showNotification('⚠️ Достигнут лимит 1000 товаров', true);
-                return;
-            }
-            
             showNotification(`📤 Сохранение "${name}"...`, false);
             
             try {
@@ -439,7 +360,7 @@
         }
 
         // ============================================
-        // ФИЛЬТРАЦИЯ И ОТОБРАЖЕНИЕ
+        // ФИЛЬТРАЦИЯ
         // ============================================
         function getFiltered() {
             return products.filter(p => {
@@ -456,32 +377,21 @@
             if (!container) return;
             
             if (filtered.length === 0) {
-                container.innerHTML = products.length === 0 
-                    ? '<div class="empty-state">📦 Склад пуст. Добавьте первый товар!</div>'
-                    : '<div class="empty-state">🔍 Товары не найдены</div>';
-                if (totalSpan) {
-                    totalSpan.innerHTML = `
-                        <span class="stats">📊 Всего: ${products.length}</span>
-                        <span class="badge">${products.length} позиций</span>
-                    `;
-                }
+                container.innerHTML = '<div class="empty-state">✨ Товары не найдены ✨</div>';
+                totalSpan.innerHTML = `📊 Всего товаров: ${products.length}`;
                 return;
             }
             
             let totalQty = 0;
-            let lowStockCount = 0;
             let html = '';
-            
             for (let p of filtered) {
                 totalQty += p.quantity;
-                if (p.quantity <= p.minStock) lowStockCount++;
-                
                 const isLow = p.quantity <= p.minStock;
-                const catEmoji = getCategoryEmoji(p.category);
+                const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
                 html += `
                     <div class="product-card ${isLow ? 'low-stock' : ''}">
                         <div class="product-header">
-                            ${p.photo ? `<img class="product-photo" src="${p.photo}" loading="lazy">` : '<div class="product-photo">📷</div>'}
+                            ${p.photo ? `<img class="product-photo" src="${p.photo}">` : '<div class="product-photo">📷</div>'}
                             <div class="product-info">
                                 <div class="product-name">${escapeHtml(p.name)}</div>
                                 <div class="product-category">${catEmoji} ${p.category}</div>
@@ -493,38 +403,14 @@
                             <button class="action-btn minus" onclick="changeQuantity('${p.id}', -1)">−</button>
                             <input type="number" value="${p.quantity}" onchange="setQuantity('${p.id}', this.value)" min="0">
                             <button class="action-btn plus" onclick="changeQuantity('${p.id}', 1)">+</button>
-                            ${isLow ? '<span style="color:#ff5c5c; font-weight:600;">⚠️ Мало!</span>' : ''}
+                            ${isLow ? '<span style="color:#ff5c5c;">⚠️ Мало!</span>' : ''}
                         </div>
-                        <div style="font-size:11px; color:#999; margin-top:4px;">Мин. остаток: ${p.minStock} шт.</div>
+                        <div style="font-size:11px; color:#999;">Мин. остаток: ${p.minStock} шт.</div>
                     </div>
                 `;
             }
-            
             container.innerHTML = html;
-            
-            if (totalSpan) {
-                totalSpan.innerHTML = `
-                    <span class="stats">
-                        📊 Всего: ${products.length} | 
-                        На складе: ${totalQty} шт. | 
-                        Показано: ${filtered.length}
-                    </span>
-                    <span class="badge">
-                        ${lowStockCount > 0 ? `⚠️ ${lowStockCount} мало` : '✅ Всё в норме'}
-                    </span>
-                `;
-            }
-        }
-
-        function getCategoryEmoji(category) {
-            const map = {
-                'Джинсы': '👖',
-                'Шорты': '🩳',
-                'Футболки': '👕',
-                'Куртки': '🧥',
-                'Обувь': '👟'
-            };
-            return map[category] || '📦';
+            totalSpan.innerHTML = `📊 Всего: ${products.length} | На складе: ${totalQty} шт. | Показано: ${filtered.length}`;
         }
 
         function escapeHtml(str) { 
@@ -560,34 +446,13 @@
                 });
             });
         }
-
-        // ============================================
-        // ПРОКРУТКА НАВЕРХ
-        // ============================================
-        function setupScrollTop() {
-            const btn = document.getElementById('scrollTopBtn');
-            if (!btn) return;
-            
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 400) {
-                    btn.classList.add('show');
-                } else {
-                    btn.classList.remove('show');
-                }
-            });
-            
-            btn.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-        }
-
+        
         // ============================================
         // ЗАПУСК
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             setupPhotoPreview();
             setupCategoryFilter();
-            setupScrollTop();
             listenToFirebase();
             
             document.getElementById('addBtn')?.addEventListener('click', addProduct);
@@ -595,13 +460,8 @@
                 listenToFirebase();
                 showNotification('🔄 Данные обновлены', false);
             });
-            document.getElementById('searchInput')?.addEventListener('input', (e) => { 
-                searchQuery = e.target.value; 
-                renderProducts(); 
-            });
-            document.getElementById('productName')?.addEventListener('keypress', (e) => { 
-                if (e.key === 'Enter') addProduct(); 
-            });
+            document.getElementById('searchInput')?.addEventListener('input', (e) => { searchQuery = e.target.value; renderProducts(); });
+            document.getElementById('productName')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') addProduct(); });
         });
     </script>
 </body>
