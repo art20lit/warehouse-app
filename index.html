@@ -7,6 +7,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -17,26 +18,147 @@
             padding-bottom: 100px;
         }
 
-        /* ===== СВЕТЛАЯ ТЕМА (по умолчанию) ===== */
+        /* ===== ТЁМНАЯ ТЕМА ===== */
+        @media (prefers-color-scheme: dark) {
+            body { background: #1a1a1a; color: #ffffff; }
+            .add-form, .product-card, .search-section, .category-filter, .auth-panel, .user-management { background: #2d2d2d !important; }
+            input, select { background: #1a1a1a; color: #ffffff; border-color: #444; }
+            .total-info { background: #2d2d2d; border-top-color: #444; }
+            .product-name { color: #ffffff !important; }
+            .product-category { color: #aaaaaa !important; }
+            .modal-content { background: #2d2d2d; }
+        }
+
+        /* ===== СВЕТЛАЯ ТЕМА ===== */
         .product-name { 
             font-weight: 600; 
             font-size: 18px; 
             margin-bottom: 4px; 
-            color: #000000; /* ЧЁРНЫЙ для светлой темы (БЕЗ !important) */
+            color: #000000;
         }
 
-        /* ===== ТЁМНАЯ ТЕМА ===== */
-        @media (prefers-color-scheme: dark) {
-            body { background: #1a1a1a; color: #ffffff; }
-            .add-form, .product-card, .search-section, .category-filter { background: #2d2d2d !important; }
-            input, select { background: #1a1a1a; color: #ffffff; border-color: #444; }
-            .total-info { background: #2d2d2d; border-top-color: #444; }
-            
-            /* ★ В тёмной теме — БЕЛЫЙ текст (с !important, чтобы перебить светлую тему) */
-            .product-name { 
-                color: #ffffff !important; 
-            }
-            .product-category { color: #aaaaaa !important; }
+        /* Стили для авторизации */
+        .auth-panel {
+            background: #f0f0f0;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        .auth-panel .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .auth-panel .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2481cc;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .auth-panel .user-details {
+            flex: 1;
+        }
+        .auth-panel .user-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .auth-panel .user-role {
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+        .role-admin { background: #ff6b6b; color: white; }
+        .role-manager { background: #feca57; color: #333; }
+        .role-viewer { background: #54a0ff; color: white; }
+        .role-it { background: #a29bfe; color: white; }
+        .auth-panel .auth-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            width: auto;
+        }
+        .auth-btn.login { background: #2481cc; color: white; }
+        .auth-btn.logout { background: #ff5c5c; color: white; }
+        .auth-btn.google { background: #ffffff; color: #333; border: 1px solid #ddd; }
+        .auth-btn.it { background: #a29bfe; color: white; }
+
+        /* Управление пользователями */
+        .user-management {
+            background: #f0f0f0;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .user-management.show {
+            display: block;
+        }
+        .user-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        .user-item .user-email {
+            font-size: 14px;
+            flex: 1;
+        }
+        .user-item select {
+            width: auto;
+            padding: 4px 8px;
+            font-size: 12px;
+            margin: 0 8px;
+        }
+        .user-item .save-role-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            width: auto;
+            background: #00b894;
+        }
+        .user-item .delete-user-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            width: auto;
+            background: #ff5c5c;
+            margin-left: 4px;
+        }
+
+        /* Ограничения доступа */
+        .disabled-feature {
+            opacity: 0.5;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+        .access-denied {
+            background: rgba(255, 92, 92, 0.1);
+            border: 1px solid #ff5c5c;
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: #ff5c5c;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+        .access-denied.show {
+            display: block;
         }
 
         /* остальные стили */
@@ -71,6 +193,10 @@
             width: 100%;
         }
         button:active { opacity: 0.7; }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         .photo-preview { margin-top: 10px; text-align: center; }
         .photo-preview img { max-width: 100px; max-height: 100px; border-radius: 12px; }
         .product-card {
@@ -93,11 +219,13 @@
         .action-btn.minus { background: rgba(255, 92, 92, 0.2); color: #ff5c5c; }
         .action-btn.plus { background: rgba(0, 184, 148, 0.2); color: #00b894; }
         .delete-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; margin-left: auto; }
+        .delete-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         .search-box { display: flex; gap: 8px; align-items: center; }
         .search-box input { flex: 1; }
         .category-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .chip { padding: 6px 12px; border-radius: 20px; background: white; color: black; font-size: 13px; cursor: pointer; border: 1px solid #ccc; }
         .chip.active { background: #2481cc; color: white; border-color: #2481cc; }
+        .chip:disabled { opacity: 0.5; cursor: not-allowed; }
         .notification { position: fixed; bottom: 100px; left: 16px; right: 16px; background: #ff5c5c; color: white; padding: 12px; border-radius: 12px; text-align: center; z-index: 200; animation: fadeIn 0.2s; }
         .total-info { 
             position: fixed; 
@@ -128,7 +256,7 @@
         .sync-online { background: rgba(0, 184, 148, 0.15); color: #00b894; }
         .sync-offline { background: rgba(255, 92, 92, 0.15); color: #ff5c5c; }
         .sync-waiting { background: rgba(36, 129, 204, 0.15); color: #2481cc; }
-        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
         .refresh-btn { padding: 8px 16px; font-size: 14px; width: auto; background: #2481cc; color: white; border: none; border-radius: 20px; cursor: pointer; }
         .compress-info {
             font-size: 11px;
@@ -137,9 +265,108 @@
             text-align: center;
         }
         .compress-info span { background: #2481cc20; padding: 2px 8px; border-radius: 10px; }
+        
+        /* Модальное окно для входа */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+        }
+        .modal-content h2 { margin-bottom: 20px; }
+        .modal-content .auth-btn {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 12px;
+            font-size: 16px;
+        }
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: auto;
+            color: #999;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+        .role-badge.admin { background: #ff6b6b; color: white; }
+        .role-badge.manager { background: #feca57; color: #333; }
+        .role-badge.viewer { background: #54a0ff; color: white; }
+        .role-badge.it { background: #a29bfe; color: white; }
+        .it-badge { 
+            background: #a29bfe; 
+            color: white; 
+            padding: 2px 8px; 
+            border-radius: 10px; 
+            font-size: 10px;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
+    <!-- Модальное окно входа -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeAuthModal()">✕</button>
+            <h2>🔐 Вход в систему</h2>
+            <p style="color:#666; margin-bottom:20px;">Выберите способ входа</p>
+            <button class="auth-btn google" onclick="signInWithGoogle()">
+                <span style="font-size:20px; margin-right:8px;">🅶</span> Войти через Google
+            </button>
+            <div style="margin:15px 0; color:#999;">или</div>
+            <div class="input-group">
+                <label>📧 Email</label>
+                <input type="email" id="loginEmail" placeholder="email@example.com">
+            </div>
+            <div class="input-group">
+                <label>🔑 Пароль</label>
+                <input type="password" id="loginPassword" placeholder="Пароль">
+            </div>
+            <button class="auth-btn login" onclick="signInWithEmail()">Войти</button>
+            <div style="margin-top:15px; font-size:13px; color:#666;">
+                Нет аккаунта? <span style="color:#2481cc; cursor:pointer;" onclick="showRegister()">Зарегистрироваться</span>
+            </div>
+            <div id="registerForm" style="display:none; margin-top:20px; border-top:1px solid #ddd; padding-top:20px;">
+                <h3>📝 Регистрация</h3>
+                <div class="input-group">
+                    <label>📧 Email</label>
+                    <input type="email" id="registerEmail" placeholder="email@example.com">
+                </div>
+                <div class="input-group">
+                    <label>🔑 Пароль</label>
+                    <input type="password" id="registerPassword" placeholder="Минимум 6 символов">
+                </div>
+                <button class="auth-btn login" onclick="registerUser()">Зарегистрироваться</button>
+            </div>
+        </div>
+    </div>
+
     <div class="header">
         <h1>👖🩳 Общий склад</h1>
         <div style="text-align: center;">
@@ -152,7 +379,37 @@
         </div>
     </div>
 
-    <div class="add-form">
+    <!-- Панель авторизации -->
+    <div class="auth-panel" id="authPanel">
+        <div id="unauthorized" style="text-align:center; padding:10px;">
+            <p style="margin-bottom:10px;">👋 Для работы со складом необходимо войти</p>
+            <button class="auth-btn login" onclick="openAuthModal()" style="width:auto; padding:10px 30px;">🔑 Войти</button>
+        </div>
+        <div id="authorized" style="display:none;">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">👤</div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Пользователь</div>
+                    <div>
+                        <span class="user-role" id="userRole">Наблюдатель</span>
+                        <span class="role-badge" id="roleBadge">👀</span>
+                        <span class="it-badge" id="itBadge" style="display:none;">👨‍💻 IT</span>
+                    </div>
+                </div>
+                <button class="auth-btn logout" onclick="signOut()">🚪 Выйти</button>
+            </div>
+            <div class="access-denied" id="accessDenied">⛔ У вас нет прав для этого действия</div>
+        </div>
+    </div>
+
+    <!-- Панель управления пользователями (только для IT) -->
+    <div class="user-management" id="userManagement">
+        <h3>👨‍💻 Управление пользователями</h3>
+        <p style="font-size:13px; color:#666; margin-bottom:10px;">Измените роли пользователей системы</p>
+        <div class="user-list" id="userList"></div>
+    </div>
+
+    <div class="add-form" id="addForm">
         <div class="input-group">
             <label>📷 Фото товара</label>
             <input type="file" id="productPhoto" accept="image/*">
@@ -181,6 +438,7 @@
             <input type="number" id="productMinStock" value="5" min="0">
         </div>
         <button id="addBtn">➕ Добавить товар</button>
+        <div class="access-denied" id="addAccessDenied">⛔ Только администраторы, менеджеры и IT могут добавлять товары</div>
     </div>
 
     <div class="search-section">
@@ -204,7 +462,7 @@
 
     <script>
         // ==================================================
-        // ✅ ТВОЙ FIREBASE КОНФИГ
+        // ✅ FIREBASE КОНФИГ
         // ==================================================
         const firebaseConfig = {
             apiKey: "AIzaSyC-a15NM1nzH8ELTqlBc6SDtQIIAQ2qu0g",
@@ -217,14 +475,341 @@
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
         
         let products = [];
         let currentFilter = 'all';
         let searchQuery = '';
         let unsubscribe = null;
+        let currentUser = null;
+        let currentUserRole = 'viewer';
+        let allUsers = {};
 
         // ============================================
-        // 🔥 СЖАТИЕ ИЗОБРАЖЕНИЙ
+        // РОЛИ И ПРАВА ДОСТУПА
+        // ============================================
+        const ROLES = {
+            IT: 'it',
+            ADMIN: 'admin',
+            MANAGER: 'manager',
+            VIEWER: 'viewer'
+        };
+
+        const ROLE_NAMES = {
+            'it': '👨‍💻 Айтишник',
+            'admin': '👑 Администратор',
+            'manager': '👤 Менеджер',
+            'viewer': '👀 Наблюдатель'
+        };
+
+        const ROLE_COLORS = {
+            'it': 'role-it',
+            'admin': 'role-admin',
+            'manager': 'role-manager',
+            'viewer': 'role-viewer'
+        };
+
+        function hasPermission(action) {
+            if (!currentUser) return false;
+            
+            switch(action) {
+                case 'add_product':
+                case 'edit_product':
+                    return ['it', 'admin', 'manager'].includes(currentUserRole);
+                case 'delete_product':
+                    return ['it', 'admin'].includes(currentUserRole);
+                case 'manage_users':
+                    return currentUserRole === 'it';
+                case 'view':
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        function checkPermission(action) {
+            if (!hasPermission(action)) {
+                showAccessDenied(`⛔ У вас нет прав для этого действия (нужна роль: ${getRequiredRole(action)})`);
+                return false;
+            }
+            return true;
+        }
+
+        function getRequiredRole(action) {
+            switch(action) {
+                case 'add_product':
+                case 'edit_product':
+                    return 'Менеджер, Администратор или IT';
+                case 'delete_product':
+                    return 'Администратор или IT';
+                case 'manage_users':
+                    return 'IT';
+                default:
+                    return 'неизвестно';
+            }
+        }
+
+        function showAccessDenied(message) {
+            const el = document.getElementById('accessDenied');
+            el.textContent = message;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        // ============================================
+        // АВТОРИЗАЦИЯ
+        // ============================================
+        function openAuthModal() {
+            document.getElementById('authModal').classList.add('show');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('show');
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        function showRegister() {
+            const form = document.getElementById('registerForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function signInWithGoogle() {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                await auth.signInWithPopup(provider);
+                closeAuthModal();
+                showNotification('✅ Вход выполнен', false);
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                showNotification('❌ Ошибка входа: ' + error.message, true);
+            }
+        }
+
+        async function signInWithEmail() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showNotification('❌ Введите email и пароль', true);
+                return;
+            }
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                closeAuthModal();
+                showNotification('✅ Вход выполнен', false);
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                showNotification('❌ Ошибка входа: ' + error.message, true);
+            }
+        }
+
+        async function registerUser() {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            if (!email || !password) {
+                showNotification('❌ Введите email и пароль', true);
+                return;
+            }
+            
+            if (password.length < 6) {
+                showNotification('❌ Пароль должен быть минимум 6 символов', true);
+                return;
+            }
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                // При регистрации даём роль VIEWER
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    email: email,
+                    role: 'viewer',
+                    createdAt: new Date().toISOString()
+                });
+                closeAuthModal();
+                showNotification('✅ Регистрация успешна! Роль: Наблюдатель', false);
+            } catch (error) {
+                console.error('Ошибка регистрации:', error);
+                showNotification('❌ Ошибка регистрации: ' + error.message, true);
+            }
+        }
+
+        async function signOut() {
+            try {
+                await auth.signOut();
+                showNotification('👋 Выход выполнен', false);
+            } catch (error) {
+                console.error('Ошибка выхода:', error);
+            }
+        }
+
+        // ============================================
+        // УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ (ТОЛЬКО ДЛЯ IT)
+        // ============================================
+        async function loadUsers() {
+            if (!hasPermission('manage_users')) return;
+            
+            try {
+                const snapshot = await db.collection('users').get();
+                const userList = document.getElementById('userList');
+                userList.innerHTML = '';
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (doc.id === currentUser.uid) return; // Пропускаем текущего пользователя
+                    
+                    const div = document.createElement('div');
+                    div.className = 'user-item';
+                    div.innerHTML = `
+                        <span class="user-email">${data.email}</span>
+                        <select class="role-select" data-uid="${doc.id}">
+                            <option value="viewer" ${data.role === 'viewer' ? 'selected' : ''}>👀 Наблюдатель</option>
+                            <option value="manager" ${data.role === 'manager' ? 'selected' : ''}>👤 Менеджер</option>
+                            <option value="admin" ${data.role === 'admin' ? 'selected' : ''}>👑 Администратор</option>
+                            <option value="it" ${data.role === 'it' ? 'selected' : ''}>👨‍💻 IT</option>
+                        </select>
+                        <button class="save-role-btn" onclick="updateUserRole('${doc.id}')">💾</button>
+                        <button class="delete-user-btn" onclick="deleteUser('${doc.id}')">🗑️</button>
+                    `;
+                    userList.appendChild(div);
+                });
+                
+                document.getElementById('userManagement').classList.add('show');
+            } catch (error) {
+                console.error('Ошибка загрузки пользователей:', error);
+            }
+        }
+
+        async function updateUserRole(uid) {
+            if (!hasPermission('manage_users')) return;
+            
+            const select = document.querySelector(`.role-select[data-uid="${uid}"]`);
+            if (!select) return;
+            
+            const newRole = select.value;
+            
+            try {
+                await db.collection('users').doc(uid).update({
+                    role: newRole
+                });
+                showNotification(`✅ Роль пользователя обновлена на ${ROLE_NAMES[newRole]}`, false);
+                loadUsers(); // Обновляем список
+            } catch (error) {
+                console.error('Ошибка обновления роли:', error);
+                showNotification('❌ Ошибка обновления роли', true);
+            }
+        }
+
+        async function deleteUser(uid) {
+            if (!hasPermission('manage_users')) return;
+            
+            if (!confirm('⚠️ Удалить этого пользователя?')) return;
+            
+            try {
+                await db.collection('users').doc(uid).delete();
+                showNotification('✅ Пользователь удалён', false);
+                loadUsers();
+            } catch (error) {
+                console.error('Ошибка удаления пользователя:', error);
+                showNotification('❌ Ошибка удаления пользователя', true);
+            }
+        }
+
+        // ============================================
+        // СЛУШАТЕЛЬ АВТОРИЗАЦИИ
+        // ============================================
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                
+                // Получаем роль пользователя
+                try {
+                    const doc = await db.collection('users').doc(user.uid).get();
+                    if (doc.exists) {
+                        currentUserRole = doc.data().role || 'viewer';
+                    } else {
+                        // Если пользователь новый, создаём запись
+                        await db.collection('users').doc(user.uid).set({
+                            email: user.email,
+                            role: 'viewer',
+                            createdAt: new Date().toISOString()
+                        });
+                        currentUserRole = 'viewer';
+                    }
+                } catch (error) {
+                    console.error('Ошибка получения роли:', error);
+                    currentUserRole = 'viewer';
+                }
+                
+                updateUIForAuth();
+                
+                // Если IT - показываем управление пользователями
+                if (currentUserRole === 'it') {
+                    loadUsers();
+                }
+                
+                // Подключаемся к Firebase
+                listenToFirebase();
+            } else {
+                currentUser = null;
+                currentUserRole = 'viewer';
+                updateUIForAuth();
+                if (unsubscribe) {
+                    unsubscribe();
+                    unsubscribe = null;
+                }
+                products = [];
+                renderProducts();
+                updateSyncStatus('⛔ Не авторизован', 'offline');
+            }
+        });
+
+        function updateUIForAuth() {
+            if (currentUser) {
+                document.getElementById('unauthorized').style.display = 'none';
+                document.getElementById('authorized').style.display = 'block';
+                document.getElementById('userName').textContent = currentUser.displayName || currentUser.email;
+                document.getElementById('userAvatar').textContent = (currentUser.displayName || currentUser.email)[0].toUpperCase();
+                
+                const roleEl = document.getElementById('userRole');
+                roleEl.textContent = ROLE_NAMES[currentUserRole] || 'Наблюдатель';
+                roleEl.className = `user-role ${ROLE_COLORS[currentUserRole] || 'role-viewer'}`;
+                
+                const badge = document.getElementById('roleBadge');
+                badge.textContent = currentUserRole === 'it' ? '👨‍💻' : 
+                                   currentUserRole === 'admin' ? '👑' : 
+                                   currentUserRole === 'manager' ? '👤' : '👀';
+                badge.className = `role-badge ${currentUserRole}`;
+                
+                // Показываем IT бейдж
+                document.getElementById('itBadge').style.display = currentUserRole === 'it' ? 'inline' : 'none';
+                
+                // Обновляем доступ к функциям
+                updateFeatureAccess();
+            } else {
+                document.getElementById('unauthorized').style.display = 'block';
+                document.getElementById('authorized').style.display = 'none';
+            }
+        }
+
+        function updateFeatureAccess() {
+            const addForm = document.getElementById('addForm');
+            const addBtn = document.getElementById('addBtn');
+            const addAccess = document.getElementById('addAccessDenied');
+            
+            if (hasPermission('add_product')) {
+                addForm.classList.remove('disabled-feature');
+                addBtn.disabled = false;
+                addAccess.classList.remove('show');
+            } else {
+                addForm.classList.add('disabled-feature');
+                addBtn.disabled = true;
+                addAccess.classList.add('show');
+            }
+        }
+
+        // ============================================
+        // ОСНОВНЫЕ ФУНКЦИИ СКЛАДА
         // ============================================
         function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.6) {
             return new Promise((resolve, reject) => {
@@ -257,11 +842,6 @@
                         ctx.drawImage(img, 0, 0, width, height);
                         
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-                        
-                        const originalSize = (file.size / 1024).toFixed(1);
-                        const compressedSize = ((compressedDataUrl.length * 3) / 4 / 1024).toFixed(1);
-                        console.log(`📸 Сжатие: ${originalSize}KB → ${compressedSize}KB (${width}x${height})`);
-                        
                         resolve(compressedDataUrl);
                     };
                     img.onerror = reject;
@@ -287,13 +867,12 @@
             notif.style.background = isWarning ? '#ff5c5c' : '#00b894';
             notif.innerHTML = message;
             container.appendChild(notif);
-            setTimeout(() => notif.remove(), 2000);
+            setTimeout(() => notif.remove(), 3000);
         }
 
-        // ============================================
-        // ПОДКЛЮЧЕНИЕ К FIREBASE
-        // ============================================
         function listenToFirebase() {
+            if (!currentUser) return;
+            
             updateSyncStatus('🔄 Синхронизация...', 'waiting');
             
             if (unsubscribe) {
@@ -330,9 +909,6 @@
                 });
         }
 
-        // ============================================
-        // ДОБАВЛЕНИЕ ТОВАРА (С СЖАТИЕМ)
-        // ============================================
         async function addProductLogic(name, quantity, category, minStock, photoData) {
             showNotification(`📤 Сохранение "${name}"...`, false);
             
@@ -343,7 +919,8 @@
                     category: category,
                     minStock: minStock,
                     photo: photoData,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    createdBy: currentUser ? currentUser.email : 'unknown'
                 });
                 
                 showNotification(`✅ Добавлен: ${name}`, false);
@@ -356,6 +933,8 @@
         }
 
         async function addProduct() {
+            if (!checkPermission('add_product')) return;
+            
             const name = document.getElementById('productName').value.trim();
             const quantity = parseInt(document.getElementById('productQuantity').value, 10) || 0;
             const category = document.getElementById('productCategory').value;
@@ -397,10 +976,9 @@
             document.getElementById('photoPreview').innerHTML = '';
         }
 
-        // ============================================
-        // УДАЛЕНИЕ
-        // ============================================
         async function deleteProduct(id) {
+            if (!checkPermission('delete_product')) return;
+            
             const product = products.find(p => p.id === id);
             if (product && confirm(`Удалить "${product.name}"?`)) {
                 showNotification(`📤 Удаление "${product.name}"...`, false);
@@ -415,10 +993,9 @@
             }
         }
 
-        // ============================================
-        // ИЗМЕНЕНИЕ КОЛИЧЕСТВА
-        // ============================================
         async function changeQuantity(id, delta) {
+            if (!checkPermission('edit_product')) return;
+            
             const p = products.find(p => p.id === id);
             if (p) {
                 const newQuantity = Math.max(0, p.quantity + delta);
@@ -438,6 +1015,8 @@
         }
 
         async function setQuantity(id, newValue) {
+            if (!checkPermission('edit_product')) return;
+            
             const p = products.find(p => p.id === id);
             if (p) {
                 const quantity = Math.max(0, parseInt(newValue, 10) || 0);
@@ -457,7 +1036,7 @@
         }
 
         // ============================================
-        // ФИЛЬТРАЦИЯ
+        // ФИЛЬТРАЦИЯ И ОТОБРАЖЕНИЕ
         // ============================================
         function getFiltered() {
             return products.filter(p => {
@@ -485,6 +1064,9 @@
                 totalQty += p.quantity;
                 const isLow = p.quantity <= p.minStock;
                 const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
+                const canDelete = hasPermission('delete_product');
+                const canEdit = hasPermission('edit_product');
+                
                 html += `
                     <div class="product-card ${isLow ? 'low-stock' : ''}">
                         <div class="product-header">
@@ -494,12 +1076,12 @@
                                 <div class="product-category">${catEmoji} ${p.category}</div>
                                 <div class="product-quantity">${p.quantity} шт.</div>
                             </div>
-                            <button class="delete-btn" onclick="deleteProduct('${p.id}')">🗑️</button>
+                            <button class="delete-btn" onclick="deleteProduct('${p.id}')" ${!canDelete ? 'disabled' : ''}>🗑️</button>
                         </div>
                         <div class="quantity-control">
-                            <button class="action-btn minus" onclick="changeQuantity('${p.id}', -1)">−</button>
-                            <input type="number" value="${p.quantity}" onchange="setQuantity('${p.id}', this.value)" min="0">
-                            <button class="action-btn plus" onclick="changeQuantity('${p.id}', 1)">+</button>
+                            <button class="action-btn minus" onclick="changeQuantity('${p.id}', -1)" ${!canEdit ? 'disabled' : ''}>−</button>
+                            <input type="number" value="${p.quantity}" onchange="setQuantity('${p.id}', this.value)" min="0" ${!canEdit ? 'disabled' : ''}>
+                            <button class="action-btn plus" onclick="changeQuantity('${p.id}', 1)" ${!canEdit ? 'disabled' : ''}>+</button>
                             ${isLow ? '<span style="color:#ff5c5c;">⚠️ Мало!</span>' : ''}
                         </div>
                         <div style="font-size:11px; color:#999;">Мин. остаток: ${p.minStock} шт.</div>
@@ -550,12 +1132,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             setupPhotoPreview();
             setupCategoryFilter();
-            listenToFirebase();
             
             document.getElementById('addBtn')?.addEventListener('click', addProduct);
             document.getElementById('refreshBtn')?.addEventListener('click', () => {
-                listenToFirebase();
-                showNotification('🔄 Данные обновлены', false);
+                if (currentUser) {
+                    listenToFirebase();
+                    showNotification('🔄 Данные обновлены', false);
+                }
             });
             document.getElementById('searchInput')?.addEventListener('input', (e) => { searchQuery = e.target.value; renderProducts(); });
             document.getElementById('productName')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') addProduct(); });
