@@ -38,7 +38,6 @@
             .modal-content { background: #2d2d2d !important; }
             .modal-product-item { border-bottom-color: #444 !important; }
             .modal-product-item .item-details { color: #aaaaaa !important; }
-            .modal-quantity-control input { background: #1a1a1a; color: #ffffff; border-color: #444; }
         }
 
         /* ===== СТАТИСТИКА ===== */
@@ -642,31 +641,28 @@
         // 🪟 МОДАЛЬНОЕ ОКНО ДЛЯ КАТЕГОРИЙ
         // ============================================
         function showCategoryModal(categoryType) {
+            console.log('showCategoryModal вызвана, categoryType:', categoryType);
+            
             let filteredProducts = [];
             let title = '';
             let icon = '';
-            let color = '';
             
             if (categoryType === 'all') {
                 filteredProducts = products;
                 title = 'Все товары';
                 icon = '📦';
-                color = '#6c5ce7';
             } else if (categoryType === 'Джинсы') {
                 filteredProducts = products.filter(p => p.category === 'Джинсы');
-                title = '👖 Джинсы';
+                title = 'Джинсы';
                 icon = '👖';
-                color = '#2481cc';
             } else if (categoryType === 'Шорты') {
                 filteredProducts = products.filter(p => p.category === 'Шорты');
-                title = '🩳 Шорты';
+                title = 'Шорты';
                 icon = '🩳';
-                color = '#00b894';
             } else if (categoryType === 'other') {
                 filteredProducts = products.filter(p => p.category !== 'Джинсы' && p.category !== 'Шорты');
-                title = '👕 Другие товары';
+                title = 'Другие товары';
                 icon = '👕';
-                color = '#fdcb6e';
             }
             
             // Сортируем по дате добавления (сначала новые)
@@ -681,6 +677,11 @@
             const titleEl = document.getElementById('categoryModalTitle');
             const iconEl = document.getElementById('categoryModalIcon');
             const countEl = document.getElementById('categoryModalCount');
+            
+            if (!modal || !list) {
+                console.error('Модальное окно не найдено!');
+                return;
+            }
             
             titleEl.textContent = title;
             iconEl.textContent = icon;
@@ -728,10 +729,17 @@
         // 🪟 МОДАЛЬНОЕ ОКНО ДЛЯ ТОВАРОВ С НИЗКИМ ОСТАТКОМ
         // ============================================
         function showLowStockModal() {
+            console.log('showLowStockModal вызвана');
+            
             const lowStock = products.filter(p => p.quantity <= p.minStock);
             const modal = document.getElementById('lowStockModal');
             const list = document.getElementById('lowStockModalList');
             const countEl = document.getElementById('lowModalCount');
+            
+            if (!modal || !list) {
+                console.error('Модальное окно не найдено!');
+                return;
+            }
             
             countEl.textContent = `(${lowStock.length} шт.)`;
             
