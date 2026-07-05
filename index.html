@@ -257,7 +257,7 @@
         .modal-content {
             background: white;
             border-radius: 20px;
-            max-width: 600px;
+            max-width: 650px;
             width: 100%;
             max-height: 85vh;
             overflow-y: auto;
@@ -290,25 +290,14 @@
         }
         .modal-header .close-btn:hover { color: #ff5c5c; }
 
-        /* ===== МОДАЛЬНОЕ ОКНО ЭКСПОРТ/ИМПОРТ ===== */
+        /* ===== МОДАЛЬНЫЕ ОКНА ЭКСПОРТ/ИМПОРТ ===== */
         .import-export-modal .modal-content {
             max-width: 500px;
             text-align: center;
         }
-        .import-export-modal .modal-content .ie-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-        .import-export-modal .modal-content .ie-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .import-export-modal .modal-content .ie-subtitle {
-            font-size: 14px;
-            color: #999;
-            margin-bottom: 20px;
-        }
+        .import-export-modal .modal-content .ie-icon { font-size: 48px; margin-bottom: 12px; }
+        .import-export-modal .modal-content .ie-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .import-export-modal .modal-content .ie-subtitle { font-size: 14px; color: #999; margin-bottom: 20px; }
         .import-export-modal .modal-content .ie-buttons {
             display: flex;
             gap: 12px;
@@ -334,25 +323,13 @@
         }
         .import-export-modal .modal-content .ie-info strong { color: #000; }
 
-        /* ===== МОДАЛЬНОЕ ОКНО ВЫБОРА РЕЖИМА ИМПОРТА ===== */
         .import-mode-modal .modal-content {
             max-width: 420px;
             text-align: center;
         }
-        .import-mode-modal .modal-content .im-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-        .import-mode-modal .modal-content .im-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .import-mode-modal .modal-content .im-subtitle {
-            font-size: 14px;
-            color: #999;
-            margin-bottom: 20px;
-        }
+        .import-mode-modal .modal-content .im-icon { font-size: 48px; margin-bottom: 12px; }
+        .import-mode-modal .modal-content .im-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .import-mode-modal .modal-content .im-subtitle { font-size: 14px; color: #999; margin-bottom: 20px; }
         .import-mode-modal .modal-content .im-buttons {
             display: flex;
             gap: 12px;
@@ -405,10 +382,7 @@
         .import-preview.show { display: block; }
         .import-preview .ip-filename { font-weight: 600; }
         .import-preview .ip-count { font-size: 13px; color: #666; }
-        .import-preview .ip-status {
-            margin-top: 8px;
-            font-size: 13px;
-        }
+        .import-preview .ip-status { margin-top: 8px; font-size: 13px; }
         .import-preview .ip-status .ok { color: #00b894; }
         .import-preview .ip-status .err { color: #ff5c5c; }
         .import-progress {
@@ -489,6 +463,14 @@
         .product-item .p-info { flex: 1; }
         .product-item .p-name { font-weight: 600; font-size: 14px; }
         .product-item .p-details { font-size: 12px; color: #999; }
+        .product-item .p-sku-size {
+            font-size: 11px;
+            color: #666;
+            background: rgba(0,0,0,0.05);
+            padding: 1px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
         .product-item .p-qty {
             font-weight: 700;
             font-size: 16px;
@@ -583,6 +565,7 @@
             .import-export-modal .modal-content .ie-buttons button { min-width: auto; }
             .import-mode-modal .modal-content .im-buttons { flex-direction: column; }
             .import-mode-modal .modal-content .im-buttons button { min-width: auto; }
+            .modal-content { max-width: 100%; }
         }
     </style>
 </head>
@@ -636,9 +619,9 @@
             </div>
             
             <div class="ie-info">
-                <strong>📋 Формат файла:</strong><br>
-                Название | Артикул | Размеры | Категория | Подкатегория | Количество | Мин.остаток<br>
-                <span style="font-size:12px; color:#999;">* Артикул используется для обновления количества</span>
+                <strong>📋 Ключевые поля:</strong><br>
+                <strong>Артикул + Размер</strong> — уникальная комбинация для каждого товара<br>
+                <span style="font-size:12px; color:#999;">* По этим полям обновляется количество</span>
             </div>
         </div>
     </div>
@@ -666,7 +649,7 @@
             <div class="im-info">
                 <span class="add-color">➕ ДОБАВИТЬ</span> — прибавляет количество из файла к существующему<br>
                 <span class="sub-color">➖ УБАВИТЬ</span> — вычитает количество из файла из существующего<br>
-                <span style="font-size:12px; color:#999; display:block; margin-top:6px;">* Если товара нет в системе — он будет создан с указанным количеством</span>
+                <span style="font-size:12px; color:#999; display:block; margin-top:6px;">* Поиск по комбинации <strong>Артикул + Размер</strong></span>
             </div>
         </div>
     </div>
@@ -760,9 +743,9 @@
             <div class="add-product-row">
                 <input type="text" id="subModalProductName" placeholder="Название товара">
                 <input type="text" id="subModalProductSku" placeholder="Артикул" style="flex:0.7;">
-                <input type="text" id="subModalProductSizes" placeholder="Размеры (S,M,L)" style="flex:0.7;">
-                <input type="number" id="subModalProductQty" placeholder="Кол-во" value="1" style="flex:0.5; min-width:60px;">
-                <input type="number" id="subModalProductMinStock" placeholder="Мин. остаток" value="5" style="flex:0.5; min-width:60px;">
+                <input type="text" id="subModalProductSize" placeholder="Размер (S,M,L)" style="flex:0.5;">
+                <input type="number" id="subModalProductQty" placeholder="Кол-во" value="1" style="flex:0.4; min-width:60px;">
+                <input type="number" id="subModalProductMinStock" placeholder="Мин. остаток" value="5" style="flex:0.4; min-width:60px;">
                 <input type="file" id="subModalProductPhoto" accept="image/*" style="display:none;" onchange="previewProductPhoto(this)">
                 <button class="photo-btn" onclick="document.getElementById('subModalProductPhoto').click()">📷</button>
                 <img class="photo-preview" id="subModalProductPreview" style="display:none; width:40px; height:40px; border-radius:8px;">
@@ -912,6 +895,13 @@
         }
 
         // ============================================
+        // ПОИСК ТОВАРА ПО АРТИКУЛУ + РАЗМЕРУ
+        // ============================================
+        function findProductBySkuAndSize(sku, size) {
+            return products.find(p => p.sku === sku && p.size === size);
+        }
+
+        // ============================================
         // ЭКСПОРТ В EXCEL
         // ============================================
         function exportToExcel() {
@@ -922,14 +912,14 @@
 
             try {
                 const data = [];
-                data.push(['Название', 'Артикул', 'Размеры', 'Категория', 'Подкатегория', 'Количество', 'Мин.остаток']);
+                data.push(['Название', 'Артикул', 'Размер', 'Категория', 'Подкатегория', 'Количество', 'Мин.остаток']);
                 
                 products.forEach(p => {
                     const sub = subcategories.find(s => s.id === p.subcategoryId);
                     data.push([
                         p.name || '',
                         p.sku || '',
-                        p.sizes || '',
+                        p.size || '',
                         p.category || '',
                         sub ? sub.name : '',
                         p.quantity || 0,
@@ -940,7 +930,7 @@
                 const wb = XLSX.utils.book_new();
                 const ws = XLSX.utils.aoa_to_sheet(data);
                 ws['!cols'] = [
-                    { wch: 30 }, { wch: 15 }, { wch: 15 }, 
+                    { wch: 30 }, { wch: 15 }, { wch: 10 },
                     { wch: 15 }, { wch: 20 }, { wch: 12 }, { wch: 14 }
                 ];
                 XLSX.utils.book_append_sheet(wb, ws, 'Товары');
@@ -998,7 +988,7 @@
                         <button class="success small" onclick="processImport()" style="margin-top:8px;">
                             ✅ Импортировать (${modeText}) ${jsonData.length} товаров
                         </button>
-                        <span style="margin-left:8px; font-size:12px; color:#999;">(обновит количество по артикулу)</span>
+                        <span style="margin-left:8px; font-size:12px; color:#999;">(обновит количество по Артикул+Размер)</span>
                     `;
                     
                 } catch (e) {
@@ -1027,9 +1017,9 @@
 
             const headers = Object.keys(importFileData[0]);
             const skuKey = headers.find(h => h.toLowerCase().includes('артикул') || h.toLowerCase().includes('sku'));
+            const sizeKey = headers.find(h => h.toLowerCase().includes('размер') || h.toLowerCase().includes('size'));
             const qtyKey = headers.find(h => h.toLowerCase().includes('количеств') || h.toLowerCase().includes('qty'));
             const nameKey = headers.find(h => h.toLowerCase().includes('назван') || h.toLowerCase().includes('name'));
-            const sizeKey = headers.find(h => h.toLowerCase().includes('размер') || h.toLowerCase().includes('size'));
             const catKey = headers.find(h => h.toLowerCase().includes('категор') || h.toLowerCase().includes('category'));
             const subKey = headers.find(h => h.toLowerCase().includes('подкатегор') || h.toLowerCase().includes('subcategory'));
             const minStockKey = headers.find(h => h.toLowerCase().includes('мин') || h.toLowerCase().includes('min'));
@@ -1052,6 +1042,7 @@
             for (let row of importFileData) {
                 try {
                     const sku = String(row[skuKey] || '').trim();
+                    const size = String(row[sizeKey] || '').trim().toUpperCase();
                     const fileQty = parseInt(row[qtyKey]) || 0;
                     
                     if (!sku) {
@@ -1062,7 +1053,8 @@
                         continue;
                     }
 
-                    const existingProduct = products.find(p => p.sku === sku);
+                    // Ищем товар по комбинации Артикул + Размер
+                    const existingProduct = findProductBySkuAndSize(sku, size);
 
                     if (existingProduct) {
                         let newQty;
@@ -1078,12 +1070,12 @@
                     } else {
                         // Создаём новый товар
                         const name = row[nameKey] || sku;
-                        const sizes = row[sizeKey] || '';
                         const category = row[catKey] || 'Другое';
                         const subcategoryName = row[subKey] || '';
                         const minStock = parseInt(row[minStockKey]) || 5;
                         const qty = importMode === 'add' ? fileQty : Math.max(0, fileQty);
                         
+                        // Ищем подкатегорию
                         let subcategoryId = '';
                         if (subcategoryName) {
                             const foundSub = subcategories.find(s => s.name === subcategoryName && s.category === category);
@@ -1095,7 +1087,7 @@
                         await db.collection('products').add({
                             name: name,
                             sku: sku,
-                            sizes: sizes,
+                            size: size,
                             quantity: qty,
                             category: category,
                             subcategoryId: subcategoryId,
@@ -1474,7 +1466,10 @@
                             <div class="p-photo">${photoHtml}</div>
                             <div class="p-info">
                                 <div class="p-name">${escapeHtml(p.name)}</div>
-                                ${p.sku ? `<div class="p-details">🔢 ${escapeHtml(p.sku)}</div>` : ''}
+                                <div>
+                                    <span class="p-sku-size">🔢 ${escapeHtml(p.sku)}</span>
+                                    <span class="p-sku-size">📏 ${escapeHtml(p.size)}</span>
+                                </div>
                                 ${p.sizes ? `<div class="p-details">📏 ${escapeHtml(p.sizes)}</div>` : ''}
                                 <div class="p-min-stock">Мин. остаток: ${minStock} шт.</div>
                             </div>
@@ -1494,7 +1489,7 @@
             document.body.style.overflow = 'hidden';
             document.getElementById('subModalProductName').value = '';
             document.getElementById('subModalProductSku').value = '';
-            document.getElementById('subModalProductSizes').value = '';
+            document.getElementById('subModalProductSize').value = '';
             document.getElementById('subModalProductQty').value = '1';
             document.getElementById('subModalProductMinStock').value = '5';
             document.getElementById('subModalProductPreview').style.display = 'none';
@@ -1514,11 +1509,20 @@
             if (!currentSubModalId) { showNotification('Ошибка: подкатегория не выбрана', 'error'); return; }
             const name = document.getElementById('subModalProductName').value.trim();
             const sku = document.getElementById('subModalProductSku').value.trim();
-            const sizes = document.getElementById('subModalProductSizes').value.trim();
+            const size = document.getElementById('subModalProductSize').value.trim().toUpperCase();
             const qty = parseInt(document.getElementById('subModalProductQty').value) || 0;
             const minStock = parseInt(document.getElementById('subModalProductMinStock').value) || 5;
             
             if (!name) { showNotification('Введите название товара', 'error'); return; }
+            if (!sku) { showNotification('Введите артикул', 'error'); return; }
+            if (!size) { showNotification('Введите размер', 'error'); return; }
+            
+            // Проверка на дубликат Артикул+Размер
+            const existing = findProductBySkuAndSize(sku, size);
+            if (existing) {
+                showNotification(`❌ Товар с артикулом "${sku}" и размером "${size}" уже существует!`, 'error');
+                return;
+            }
             
             try {
                 let photoData = null;
@@ -1529,14 +1533,14 @@
                 await db.collection('products').add({
                     name: name,
                     sku: sku,
-                    sizes: sizes,
+                    size: size,
                     quantity: qty,
                     subcategoryId: currentSubModalId,
                     minStock: minStock,
                     photo: photoData,
                     createdAt: new Date().toISOString()
                 });
-                showNotification(`✅ Товар "${name}" добавлен`, 'success');
+                showNotification(`✅ Товар "${name}" (${sku} / ${size}) добавлен`, 'success');
                 openSubcategoryModal(currentSubModalId);
             } catch (e) { showNotification('Ошибка добавления', 'error'); console.error(e); }
         }
@@ -1551,7 +1555,7 @@
             try {
                 await db.collection('products').doc(productId).update({ quantity: newQty });
                 if (newQty <= (p.minStock || 5)) {
-                    showNotification(`⚠️ ${p.name}: осталось ${newQty} шт.`, 'error');
+                    showNotification(`⚠️ ${p.name} (${p.sku} / ${p.size}): осталось ${newQty} шт.`, 'error');
                 }
                 if (currentSubModalId) openSubcategoryModal(currentSubModalId);
             } catch (e) { console.error(e); }
@@ -1563,7 +1567,7 @@
         async function deleteProduct(productId) {
             const p = products.find(p => p.id === productId);
             if (!p) return;
-            if (!confirm(`Удалить товар "${p.name}"?`)) return;
+            if (!confirm(`Удалить товар "${p.name}" (${p.sku} / ${p.size})?`)) return;
             try {
                 await db.collection('products').doc(productId).delete();
                 showNotification(`✅ "${p.name}" удалён`, 'success');
@@ -1593,8 +1597,10 @@
                             <div class="p-photo">${photoHtml}</div>
                             <div class="p-info">
                                 <div class="p-name">${escapeHtml(p.name)}</div>
-                                ${p.sku ? `<div class="p-details">🔢 ${escapeHtml(p.sku)}</div>` : ''}
-                                ${p.sizes ? `<div class="p-details">📏 ${escapeHtml(p.sizes)}</div>` : ''}
+                                <div>
+                                    <span class="p-sku-size">🔢 ${escapeHtml(p.sku)}</span>
+                                    <span class="p-sku-size">📏 ${escapeHtml(p.size)}</span>
+                                </div>
                                 <div class="p-min-stock">Мин. остаток: ${minStock} шт.</div>
                             </div>
                             <div class="p-qty ${isLow ? 'low' : ''}">${p.quantity}</div>
@@ -1639,8 +1645,10 @@
                             <div class="p-photo">${photoHtml}</div>
                             <div class="p-info">
                                 <div class="p-name">${escapeHtml(p.name)}</div>
-                                ${p.sku ? `<div class="p-details">🔢 ${escapeHtml(p.sku)}</div>` : ''}
-                                ${p.sizes ? `<div class="p-details">📏 ${escapeHtml(p.sizes)}</div>` : ''}
+                                <div>
+                                    <span class="p-sku-size">🔢 ${escapeHtml(p.sku)}</span>
+                                    <span class="p-sku-size">📏 ${escapeHtml(p.size)}</span>
+                                </div>
                                 <div class="p-min-stock" style="color:#ff5c5c;">⚠️ Осталось: ${p.quantity} шт. (мин. ${minStock})</div>
                             </div>
                             <div class="p-qty low">${p.quantity}</div>
