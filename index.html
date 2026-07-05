@@ -9,8 +9,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <!-- Библиотека для работы с Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Библиотека для скачивания файлов -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -32,6 +30,8 @@
             .side-menu-overlay { background: rgba(0,0,0,0.7) !important; }
             .menu-btn { color: #ffffff !important; }
             .import-export-modal .modal-content { background: #2d2d2d !important; }
+            .file-drop-zone { border-color: #555 !important; }
+            .file-drop-zone:hover { border-color: #2481cc !important; }
         }
 
         .card {
@@ -87,6 +87,7 @@
         button.warning { background: #fdcb6e; color: #333; }
         button.small { padding: 6px 14px; font-size: 13px; width: auto; }
         button.purple { background: #6c5ce7; }
+        button.orange { background: #e17055; }
 
         /* ===== БОКОВОЕ МЕНЮ ===== */
         .side-menu-overlay {
@@ -291,7 +292,7 @@
 
         /* ===== МОДАЛЬНОЕ ОКНО ЭКСПОРТ/ИМПОРТ ===== */
         .import-export-modal .modal-content {
-            max-width: 450px;
+            max-width: 500px;
             text-align: center;
         }
         .import-export-modal .modal-content .ie-icon {
@@ -332,6 +333,100 @@
             color: #666;
         }
         .import-export-modal .modal-content .ie-info strong { color: #000; }
+
+        /* ===== МОДАЛЬНОЕ ОКНО ВЫБОРА РЕЖИМА ИМПОРТА ===== */
+        .import-mode-modal .modal-content {
+            max-width: 420px;
+            text-align: center;
+        }
+        .import-mode-modal .modal-content .im-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .import-mode-modal .modal-content .im-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .import-mode-modal .modal-content .im-subtitle {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+        .import-mode-modal .modal-content .im-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .import-mode-modal .modal-content .im-buttons button {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px;
+            font-size: 15px;
+            border-radius: 14px;
+        }
+        .import-mode-modal .modal-content .im-buttons .add-btn { background: #00b894; }
+        .import-mode-modal .modal-content .im-buttons .sub-btn { background: #e17055; }
+        .import-mode-modal .modal-content .im-info {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        .import-mode-modal .modal-content .im-info .add-color { color: #00b894; font-weight: 600; }
+        .import-mode-modal .modal-content .im-info .sub-color { color: #e17055; font-weight: 600; }
+
+        /* ===== ФАЙЛОВАЯ ЗОНА ===== */
+        .file-drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin: 12px 0;
+            transition: border-color 0.3s, background 0.3s;
+            cursor: pointer;
+        }
+        .file-drop-zone:hover { border-color: #2481cc; background: rgba(36, 129, 204, 0.05); }
+        .file-drop-zone.dragover { border-color: #00b894; background: rgba(0, 184, 148, 0.1); }
+        .file-drop-zone .fz-icon { font-size: 48px; margin-bottom: 8px; }
+        .file-drop-zone .fz-text { font-size: 14px; color: #666; }
+        .file-drop-zone .fz-text strong { color: #2481cc; }
+        #importFileInput { display: none; }
+        .import-preview {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(0, 184, 148, 0.1);
+            border-radius: 10px;
+            display: none;
+        }
+        .import-preview.show { display: block; }
+        .import-preview .ip-filename { font-weight: 600; }
+        .import-preview .ip-count { font-size: 13px; color: #666; }
+        .import-preview .ip-status {
+            margin-top: 8px;
+            font-size: 13px;
+        }
+        .import-preview .ip-status .ok { color: #00b894; }
+        .import-preview .ip-status .err { color: #ff5c5c; }
+        .import-progress {
+            margin-top: 12px;
+            height: 6px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+        }
+        .import-progress.show { display: block; }
+        .import-progress .ip-bar {
+            height: 100%;
+            background: #2481cc;
+            border-radius: 4px;
+            transition: width 0.3s;
+            width: 0%;
+        }
 
         /* ===== ТОВАРЫ В МОДАЛКЕ ===== */
         .add-product-row {
@@ -486,55 +581,8 @@
             .side-menu { width: 280px; right: -290px; }
             .import-export-modal .modal-content .ie-buttons { flex-direction: column; }
             .import-export-modal .modal-content .ie-buttons button { min-width: auto; }
-        }
-
-        /* Стили для импорта */
-        .file-drop-zone {
-            border: 2px dashed #ccc;
-            border-radius: 16px;
-            padding: 30px;
-            text-align: center;
-            margin: 12px 0;
-            transition: border-color 0.3s, background 0.3s;
-            cursor: pointer;
-        }
-        .file-drop-zone:hover { border-color: #2481cc; background: rgba(36, 129, 204, 0.05); }
-        .file-drop-zone.dragover { border-color: #00b894; background: rgba(0, 184, 148, 0.1); }
-        .file-drop-zone .fz-icon { font-size: 48px; margin-bottom: 8px; }
-        .file-drop-zone .fz-text { font-size: 14px; color: #666; }
-        .file-drop-zone .fz-text strong { color: #2481cc; }
-        #importFileInput { display: none; }
-        .import-preview {
-            margin-top: 12px;
-            padding: 12px;
-            background: rgba(0, 184, 148, 0.1);
-            border-radius: 10px;
-            display: none;
-        }
-        .import-preview.show { display: block; }
-        .import-preview .ip-filename { font-weight: 600; }
-        .import-preview .ip-count { font-size: 13px; color: #666; }
-        .import-preview .ip-status {
-            margin-top: 8px;
-            font-size: 13px;
-        }
-        .import-preview .ip-status .ok { color: #00b894; }
-        .import-preview .ip-status .err { color: #ff5c5c; }
-        .import-progress {
-            margin-top: 12px;
-            height: 6px;
-            background: #eee;
-            border-radius: 4px;
-            overflow: hidden;
-            display: none;
-        }
-        .import-progress.show { display: block; }
-        .import-progress .ip-bar {
-            height: 100%;
-            background: #2481cc;
-            border-radius: 4px;
-            transition: width 0.3s;
-            width: 0%;
+            .import-mode-modal .modal-content .im-buttons { flex-direction: column; }
+            .import-mode-modal .modal-content .im-buttons button { min-width: auto; }
         }
     </style>
 </head>
@@ -584,30 +632,76 @@
             
             <div class="ie-buttons">
                 <button class="export-btn" onclick="exportToExcel()">📤 ЭКСПОРТ</button>
-                <button class="import-btn" onclick="document.getElementById('importFileInput').click()">📥 ИМПОРТ</button>
-            </div>
-            
-            <!-- Зона для импорта -->
-            <div class="file-drop-zone" id="fileDropZone" onclick="document.getElementById('importFileInput').click()">
-                <div class="fz-icon">📂</div>
-                <div class="fz-text">Нажмите или перетащите файл <strong>Excel (.xlsx, .xls)</strong></div>
-            </div>
-            <input type="file" id="importFileInput" accept=".xlsx,.xls" onchange="handleImportFile(event)">
-            
-            <div class="import-preview" id="importPreview">
-                <div class="ip-filename" id="importFileName"></div>
-                <div class="ip-count" id="importFileCount"></div>
-                <div class="ip-status" id="importStatus"></div>
-            </div>
-            
-            <div class="import-progress" id="importProgress">
-                <div class="ip-bar" id="importProgressBar"></div>
+                <button class="import-btn" onclick="openImportModeModal()">📥 ИМПОРТ</button>
             </div>
             
             <div class="ie-info">
                 <strong>📋 Формат файла:</strong><br>
                 Название | Артикул | Размеры | Категория | Подкатегория | Количество | Мин.остаток<br>
                 <span style="font-size:12px; color:#999;">* Артикул используется для обновления количества</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ВЫБОРА РЕЖИМА ИМПОРТА ===== -->
+    <div class="modal-overlay import-mode-modal" id="importModeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="icon">📥</span>
+                    <span>Выберите режим импорта</span>
+                </div>
+                <button class="close-btn" onclick="closeImportModeModal()">✕</button>
+            </div>
+            
+            <div class="im-icon">⚙️</div>
+            <div class="im-title">Как обновить количество?</div>
+            <div class="im-subtitle">Выберите действие с товарами из файла</div>
+            
+            <div class="im-buttons">
+                <button class="add-btn" onclick="startImport('add')">➕ <strong>ДОБАВИТЬ</strong></button>
+                <button class="sub-btn" onclick="startImport('subtract')">➖ <strong>УБАВИТЬ</strong></button>
+            </div>
+            
+            <div class="im-info">
+                <span class="add-color">➕ ДОБАВИТЬ</span> — прибавляет количество из файла к существующему<br>
+                <span class="sub-color">➖ УБАВИТЬ</span> — вычитает количество из файла из существующего<br>
+                <span style="font-size:12px; color:#999; display:block; margin-top:6px;">* Если товара нет в системе — он будет создан с указанным количеством</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ЗАГРУЗКИ ФАЙЛА ===== -->
+    <div class="modal-overlay import-mode-modal" id="importFileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="icon" id="importFileTitleIcon">📥</span>
+                    <span id="importFileTitle">Загрузка файла</span>
+                </div>
+                <button class="close-btn" onclick="closeImportFileModal()">✕</button>
+            </div>
+            
+            <div id="importFileContent">
+                <div class="im-icon" id="importFileIcon">📂</div>
+                <div class="im-title" id="importFileModeTitle">Режим: ДОБАВИТЬ</div>
+                <div class="im-subtitle">Загрузите Excel файл для импорта</div>
+                
+                <div class="file-drop-zone" id="fileDropZone" onclick="document.getElementById('importFileInput').click()">
+                    <div class="fz-icon">📂</div>
+                    <div class="fz-text">Нажмите или перетащите файл <strong>Excel (.xlsx, .xls)</strong></div>
+                </div>
+                <input type="file" id="importFileInput" accept=".xlsx,.xls" onchange="handleImportFile(event)">
+                
+                <div class="import-preview" id="importPreview">
+                    <div class="ip-filename" id="importFileName"></div>
+                    <div class="ip-count" id="importFileCount"></div>
+                    <div class="ip-status" id="importStatus"></div>
+                </div>
+                
+                <div class="import-progress" id="importProgress">
+                    <div class="ip-bar" id="importProgressBar"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -737,6 +831,7 @@
         let unsubProducts = null;
         let currentSubModalId = null;
         let importFileData = null;
+        let importMode = 'add'; // 'add' или 'subtract'
 
         // ============================================
         // МЕНЮ
@@ -753,21 +848,67 @@
         }
 
         // ============================================
-        // МОДАЛЬНОЕ ОКНО ЭКСПОРТ/ИМПОРТ
+        // МОДАЛЬНЫЕ ОКНА ЭКСПОРТ/ИМПОРТ
         // ============================================
         function openImportExportModal() {
             document.getElementById('importExportModal').classList.add('show');
             document.body.style.overflow = 'hidden';
-            // Сбрасываем состояние импорта
-            document.getElementById('importPreview').classList.remove('show');
-            document.getElementById('importProgress').classList.remove('show');
-            document.getElementById('importFileInput').value = '';
-            importFileData = null;
         }
 
         function closeImportExportModal() {
             document.getElementById('importExportModal').classList.remove('show');
             document.body.style.overflow = 'auto';
+        }
+
+        function openImportModeModal() {
+            closeImportExportModal();
+            document.getElementById('importModeModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImportModeModal() {
+            document.getElementById('importModeModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openImportFileModal(mode) {
+            closeImportModeModal();
+            importMode = mode;
+            
+            const title = document.getElementById('importFileTitle');
+            const icon = document.getElementById('importFileIcon');
+            const modeTitle = document.getElementById('importFileModeTitle');
+            
+            if (mode === 'add') {
+                title.textContent = 'Импорт: ДОБАВИТЬ';
+                modeTitle.textContent = 'Режим: ➕ ДОБАВИТЬ';
+                icon.textContent = '➕';
+                document.getElementById('importFileTitleIcon').textContent = '➕';
+            } else {
+                title.textContent = 'Импорт: УБАВИТЬ';
+                modeTitle.textContent = 'Режим: ➖ УБАВИТЬ';
+                icon.textContent = '➖';
+                document.getElementById('importFileTitleIcon').textContent = '➖';
+            }
+            
+            document.getElementById('importFileModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            // Сбрасываем состояние
+            document.getElementById('importPreview').classList.remove('show');
+            document.getElementById('importProgress').classList.remove('show');
+            document.getElementById('importFileInput').value = '';
+            importFileData = null;
+            document.getElementById('importStatus').innerHTML = '';
+        }
+
+        function closeImportFileModal() {
+            document.getElementById('importFileModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        function startImport(mode) {
+            openImportFileModal(mode);
         }
 
         // ============================================
@@ -780,12 +921,9 @@
             }
 
             try {
-                // Подготавливаем данные для Excel
                 const data = [];
-                // Заголовки
                 data.push(['Название', 'Артикул', 'Размеры', 'Категория', 'Подкатегория', 'Количество', 'Мин.остаток']);
                 
-                // Данные
                 products.forEach(p => {
                     const sub = subcategories.find(s => s.id === p.subcategoryId);
                     data.push([
@@ -799,40 +937,25 @@
                     ]);
                 });
 
-                // Создаем книгу Excel
                 const wb = XLSX.utils.book_new();
                 const ws = XLSX.utils.aoa_to_sheet(data);
-                
-                // Устанавливаем ширину колонок
                 ws['!cols'] = [
-                    { wch: 30 }, // Название
-                    { wch: 15 }, // Артикул
-                    { wch: 15 }, // Размеры
-                    { wch: 15 }, // Категория
-                    { wch: 20 }, // Подкатегория
-                    { wch: 12 }, // Количество
-                    { wch: 14 }  // Мин.остаток
+                    { wch: 30 }, { wch: 15 }, { wch: 15 }, 
+                    { wch: 15 }, { wch: 20 }, { wch: 12 }, { wch: 14 }
                 ];
-
                 XLSX.utils.book_append_sheet(wb, ws, 'Товары');
                 
-                // Создаем файл и скачиваем
                 const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
                 const blob = new Blob([wbout], { type: 'application/octet-stream' });
                 const fileName = `склад_${new Date().toISOString().slice(0,10)}.xlsx`;
                 
-                // Скачиваем через FileSaver или через ссылку
-                if (typeof saveAs === 'function') {
-                    saveAs(blob, fileName);
-                } else {
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = fileName;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(link.href);
-                }
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
                 
                 showNotification(`✅ Экспортировано ${products.length} товаров`, 'success');
                 closeImportExportModal();
@@ -862,7 +985,6 @@
                         return;
                     }
                     
-                    // Показываем превью
                     const preview = document.getElementById('importPreview');
                     document.getElementById('importFileName').textContent = `📄 ${file.name}`;
                     document.getElementById('importFileCount').textContent = `Найдено ${jsonData.length} строк`;
@@ -870,11 +992,11 @@
                     
                     importFileData = jsonData;
                     
-                    // Показываем кнопку импорта
                     const status = document.getElementById('importStatus');
+                    const modeText = importMode === 'add' ? '➕ ДОБАВИТЬ' : '➖ УБАВИТЬ';
                     status.innerHTML = `
                         <button class="success small" onclick="processImport()" style="margin-top:8px;">
-                            ✅ Импортировать ${jsonData.length} товаров
+                            ✅ Импортировать (${modeText}) ${jsonData.length} товаров
                         </button>
                         <span style="margin-left:8px; font-size:12px; color:#999;">(обновит количество по артикулу)</span>
                     `;
@@ -893,7 +1015,6 @@
                 return;
             }
 
-            // Показываем прогресс
             const progress = document.getElementById('importProgress');
             const bar = document.getElementById('importProgressBar');
             progress.classList.add('show');
@@ -904,7 +1025,6 @@
             let errors = 0;
             const errorsList = [];
 
-            // Определяем заголовки (ищем по ключам)
             const headers = Object.keys(importFileData[0]);
             const skuKey = headers.find(h => h.toLowerCase().includes('артикул') || h.toLowerCase().includes('sku'));
             const qtyKey = headers.find(h => h.toLowerCase().includes('количеств') || h.toLowerCase().includes('qty'));
@@ -932,7 +1052,7 @@
             for (let row of importFileData) {
                 try {
                     const sku = String(row[skuKey] || '').trim();
-                    const qty = parseInt(row[qtyKey]) || 0;
+                    const fileQty = parseInt(row[qtyKey]) || 0;
                     
                     if (!sku) {
                         errors++;
@@ -942,13 +1062,17 @@
                         continue;
                     }
 
-                    // Ищем товар по артикулу
                     const existingProduct = products.find(p => p.sku === sku);
 
                     if (existingProduct) {
-                        // Обновляем количество
+                        let newQty;
+                        if (importMode === 'add') {
+                            newQty = existingProduct.quantity + fileQty;
+                        } else {
+                            newQty = Math.max(0, existingProduct.quantity - fileQty);
+                        }
                         await db.collection('products').doc(existingProduct.id).update({
-                            quantity: qty
+                            quantity: newQty
                         });
                         updated++;
                     } else {
@@ -958,8 +1082,8 @@
                         const category = row[catKey] || 'Другое';
                         const subcategoryName = row[subKey] || '';
                         const minStock = parseInt(row[minStockKey]) || 5;
+                        const qty = importMode === 'add' ? fileQty : Math.max(0, fileQty);
                         
-                        // Ищем подкатегорию по имени
                         let subcategoryId = '';
                         if (subcategoryName) {
                             const foundSub = subcategories.find(s => s.name === subcategoryName && s.category === category);
@@ -990,9 +1114,9 @@
                 bar.style.width = `${(processed / total) * 100}%`;
             }
 
-            // Показываем результат
             const status = document.getElementById('importStatus');
-            let resultMsg = `✅ Импорт завершён!\n`;
+            const modeText = importMode === 'add' ? '➕ ДОБАВИТЬ' : '➖ УБАВИТЬ';
+            let resultMsg = `✅ Импорт (${modeText}) завершён!\n`;
             resultMsg += `🔄 Обновлено: ${updated} товаров\n`;
             resultMsg += `➕ Добавлено: ${added} товаров\n`;
             if (errors > 0) {
@@ -1004,12 +1128,11 @@
                     ${resultMsg.replace(/\n/g, '<br>')}
                 </div>
                 ${errorsList.length > 0 ? `<div style="font-size:12px; color:#999; margin-top:4px;">${errorsList.slice(0, 3).join('<br>')}${errorsList.length > 3 ? `<br>... и ещё ${errorsList.length - 3}` : ''}</div>` : ''}
-                <button class="small" onclick="closeImportExportModal();" style="margin-top:8px;">✕ Закрыть</button>
+                <button class="small" onclick="closeImportFileModal();" style="margin-top:8px;">✕ Закрыть</button>
             `;
             
             showNotification(`✅ Импорт завершён: обновлено ${updated}, добавлено ${added}`, 'success');
             
-            // Сбрасываем через 2 секунды (очищаем прогресс)
             setTimeout(() => {
                 progress.classList.remove('show');
             }, 3000);
@@ -1551,6 +1674,10 @@
             if (e.target === lowModal) closeLowStockModal();
             const ieModal = document.getElementById('importExportModal');
             if (e.target === ieModal) closeImportExportModal();
+            const imModal = document.getElementById('importModeModal');
+            if (e.target === imModal) closeImportModeModal();
+            const ifModal = document.getElementById('importFileModal');
+            if (e.target === ifModal) closeImportFileModal();
         });
 
         // Закрытие по ESC
@@ -1560,6 +1687,8 @@
                 closeAllProductsModal();
                 closeLowStockModal();
                 closeImportExportModal();
+                closeImportModeModal();
+                closeImportFileModal();
                 closeMenu();
             }
         });
