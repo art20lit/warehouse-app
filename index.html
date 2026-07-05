@@ -447,14 +447,6 @@
             <span class="icon">📦</span>
             <span class="label">Все товары</span>
         </div>
-        <div class="menu-item" onclick="closeMenu(); showCategoryProducts('Джинсы');">
-            <span class="icon">👖</span>
-            <span class="label">Джинсы</span>
-        </div>
-        <div class="menu-item" onclick="closeMenu(); showCategoryProducts('Шорты');">
-            <span class="icon">🩳</span>
-            <span class="label">Шорты</span>
-        </div>
         <div class="menu-divider"></div>
         <div class="menu-item" onclick="closeMenu(); showLowStockModal();">
             <span class="icon">⚠️</span>
@@ -533,21 +525,6 @@
         </div>
     </div>
 
-    <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ТОВАРОВ С НИЗКИМ ОСТАТКОМ ===== -->
-    <div class="modal-overlay" id="lowStockModal">
-        <div class="modal-content">
-            <div class="modal-header" style="border-bottom-color: #ff5c5c;">
-                <div class="modal-title">
-                    <span class="icon">⚠️</span>
-                    <span style="color:#ff5c5c;">Товары с низким остатком</span>
-                    <span class="count" id="lowModalCount"></span>
-                </div>
-                <button class="close-btn" onclick="closeLowStockModal()">✕</button>
-            </div>
-            <div id="lowStockModalList"></div>
-        </div>
-    </div>
-
     <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ВСЕХ ТОВАРОВ ===== -->
     <div class="modal-overlay" id="allProductsModal">
         <div class="modal-content">
@@ -560,6 +537,21 @@
                 <button class="close-btn" onclick="closeAllProductsModal()">✕</button>
             </div>
             <div id="allProductsList"></div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ТОВАРОВ С НИЗКИМ ОСТАТКОМ ===== -->
+    <div class="modal-overlay" id="lowStockModal">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom-color: #ff5c5c;">
+                <div class="modal-title">
+                    <span class="icon">⚠️</span>
+                    <span style="color:#ff5c5c;">Товары с низким остатком</span>
+                    <span class="count" id="lowModalCount"></span>
+                </div>
+                <button class="close-btn" onclick="closeLowStockModal()">✕</button>
+            </div>
+            <div id="lowStockModalList"></div>
         </div>
     </div>
 
@@ -1060,57 +1052,6 @@
         function closeAllProductsModal() {
             document.getElementById('allProductsModal').classList.remove('show');
             document.body.style.overflow = 'auto';
-        }
-
-        // ============================================
-        // ПОКАЗ ТОВАРОВ ПО КАТЕГОРИИ (из меню)
-        // ============================================
-        function showCategoryProducts(categoryName) {
-            const cat = categories.find(c => c.name === categoryName);
-            if (!cat) {
-                showNotification(`Категория "${categoryName}" не найдена`, 'error');
-                return;
-            }
-            const subs = subcategories.filter(s => s.categoryId === cat.id);
-            const subIds = subs.map(s => s.id);
-            const filtered = products.filter(p => subIds.includes(p.subcategoryId));
-            
-            const modal = document.getElementById('allProductsModal');
-            const list = document.getElementById('allProductsList');
-            document.getElementById('allProductsTitle').textContent = `${cat.emoji || '📂'} ${cat.name}`;
-            document.getElementById('allProductsCount').textContent = `(${filtered.length} шт.)`;
-            
-            if (filtered.length === 0) {
-                list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Нет товаров в этой категории</p></div>';
-            } else {
-                let html = '';
-                filtered.forEach(p => {
-                    const minStock = p.minStock || 5;
-                    const isLow = p.quantity <= minStock;
-                    const photoHtml = p.photo ? `<img src="${p.photo}">` : '📷';
-                    html += `
-                        <div class="product-item">
-                            <div class="p-photo">${photoHtml}</div>
-                            <div class="p-info">
-                                <div class="p-name">${escapeHtml(p.name)}</div>
-                                ${p.sku ? `<div class="p-details">🔢 ${escapeHtml(p.sku)}</div>` : ''}
-                                ${p.sizes ? `<div class="p-details">📏 ${escapeHtml(p.sizes)}</div>` : ''}
-                                <div class="p-min-stock">Мин. остаток: ${minStock} шт.</div>
-                            </div>
-                            <div class="p-qty ${isLow ? 'low' : ''}">${p.quantity}</div>
-                            <div class="p-controls">
-                                <button class="minus" onclick="changeProductQty('${p.id}', -1)">−</button>
-                                <button class="plus" onclick="changeProductQty('${p.id}', 1)">+</button>
-                            </div>
-                            <button class="p-delete" onclick="deleteProduct('${p.id}')">✕</button>
-                        </div>
-                    `;
-                });
-                list.innerHTML = html;
-            }
-            
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
         }
 
         // ============================================
