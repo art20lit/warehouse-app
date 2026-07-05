@@ -28,7 +28,8 @@
         /* ===== ТЁМНАЯ ТЕМА ===== */
         @media (prefers-color-scheme: dark) {
             body { background: #1a1a1a; color: #ffffff; }
-            .add-form, .product-card, .search-section, .stats-grid .stat-card { background: #2d2d2d !important; }
+            .add-form, .product-card, .search-section, .stats-grid .stat-card,
+            .subcategory-manager { background: #2d2d2d !important; }
             input, select { background: #1a1a1a; color: #ffffff; border-color: #444; }
             .total-info { background: #2d2d2d; border-top-color: #444; }
             .product-name { color: #ffffff !important; }
@@ -39,6 +40,8 @@
             .modal-product-item { border-bottom-color: #444 !important; }
             .modal-product-item .item-details { color: #aaaaaa !important; }
             .modal-quantity-control input { background: #1a1a1a; color: #ffffff; border-color: #444; }
+            .subcategory-chip { background: #1a1a1a !important; }
+            .subcategory-chip .delete-sub { color: #ff6b6b; }
         }
 
         /* ===== СТАТИСТИКА ===== */
@@ -57,26 +60,11 @@
             cursor: pointer;
             user-select: none;
         }
-        .stat-card:active {
-            transform: scale(0.95);
-        }
-        .stat-card:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .stat-card .stat-icon {
-            font-size: 24px;
-            margin-bottom: 4px;
-        }
-        .stat-card .stat-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: #000000;
-        }
-        .stat-card .stat-label {
-            font-size: 11px;
-            color: #666;
-            margin-top: 2px;
-        }
+        .stat-card:active { transform: scale(0.95); }
+        .stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .stat-card .stat-icon { font-size: 24px; margin-bottom: 4px; }
+        .stat-card .stat-value { font-size: 20px; font-weight: 700; color: #000000; }
+        .stat-card .stat-label { font-size: 11px; color: #666; margin-top: 2px; }
         .stat-card .stat-value.jeans { color: #2481cc; }
         .stat-card .stat-value.shorts { color: #00b894; }
         .stat-card .stat-value.low { color: #ff5c5c; }
@@ -85,9 +73,7 @@
             border: 2px solid #ff5c5c;
             position: relative;
         }
-        .stat-card.low-stock-card .stat-value.low {
-            animation: pulse 2s infinite;
-        }
+        .stat-card.low-stock-card .stat-value.low { animation: pulse 2s infinite; }
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -108,6 +94,109 @@
             font-weight: 700;
         }
 
+        /* ===== УПРАВЛЕНИЕ ПОДКАТЕГОРИЯМИ ===== */
+        .subcategory-manager {
+            background: #f0f0f0;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        .subcategory-manager .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .subcategory-manager .header-row label {
+            font-weight: 600;
+            margin: 0;
+            font-size: 16px;
+        }
+        .subcategory-manager .header-row .hint {
+            font-size: 12px;
+            color: #999;
+        }
+        .subcategory-manager .add-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .subcategory-manager .add-row select {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        .subcategory-manager .add-row input {
+            flex: 2;
+            min-width: 150px;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        .subcategory-manager .add-row button {
+            width: auto;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        .subcategory-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .subcategory-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            background: #e8f0fe;
+            border-radius: 16px;
+            font-size: 13px;
+            border: 1px solid #ddd;
+            transition: all 0.2s;
+        }
+        .subcategory-chip .sub-emoji { font-size: 14px; }
+        .subcategory-chip .sub-name { font-weight: 500; }
+        .subcategory-chip .sub-category-label {
+            font-size: 10px;
+            color: #999;
+            background: rgba(0,0,0,0.05);
+            padding: 1px 8px;
+            border-radius: 10px;
+        }
+        .subcategory-chip .delete-sub {
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s, transform 0.2s;
+            background: none;
+            border: none;
+            width: auto;
+            padding: 0 2px;
+            color: #ff5c5c;
+            font-weight: 700;
+        }
+        .subcategory-chip .delete-sub:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        .subcategory-chip .delete-sub:active {
+            transform: scale(0.8);
+        }
+        .subcategory-empty {
+            color: #999;
+            font-size: 13px;
+            padding: 8px 0;
+        }
+
         /* ===== МОДАЛЬНОЕ ОКНО ===== */
         .modal-overlay {
             display: none;
@@ -123,9 +212,7 @@
             padding: 40px 16px;
             overflow-y: auto;
         }
-        .modal-overlay.show {
-            display: flex;
-        }
+        .modal-overlay.show { display: flex; }
         .modal-content {
             background: white;
             border-radius: 20px;
@@ -138,14 +225,8 @@
             animation: modalSlideIn 0.3s ease;
         }
         @keyframes modalSlideIn {
-            from {
-                transform: translateY(-30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         .modal-header {
             display: flex;
@@ -155,18 +236,9 @@
             padding-bottom: 12px;
             border-bottom: 2px solid #2481cc;
         }
-        .modal-header .modal-title {
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .modal-header .modal-title .icon {
-            margin-right: 8px;
-        }
-        .modal-header .modal-title .count {
-            font-size: 14px;
-            font-weight: 400;
-            color: #999;
-        }
+        .modal-header .modal-title { font-size: 20px; font-weight: 700; }
+        .modal-header .modal-title .icon { margin-right: 8px; }
+        .modal-header .modal-title .count { font-size: 14px; font-weight: 400; color: #999; }
         .modal-header .close-btn {
             background: none;
             border: none;
@@ -176,9 +248,7 @@
             width: auto;
             padding: 0 8px;
         }
-        .modal-header .close-btn:hover {
-            color: #ff5c5c;
-        }
+        .modal-header .close-btn:hover { color: #ff5c5c; }
         .modal-product-item {
             display: flex;
             align-items: center;
@@ -186,9 +256,7 @@
             padding: 10px 0;
             border-bottom: 1px solid #eee;
         }
-        .modal-product-item:last-child {
-            border-bottom: none;
-        }
+        .modal-product-item:last-child { border-bottom: none; }
         .modal-product-item .item-photo {
             width: 40px;
             height: 40px;
@@ -207,17 +275,9 @@
             object-fit: cover;
             border-radius: 8px;
         }
-        .modal-product-item .item-info {
-            flex: 1;
-        }
-        .modal-product-item .item-name {
-            font-weight: 600;
-            font-size: 15px;
-        }
-        .modal-product-item .item-details {
-            font-size: 12px;
-            color: #666;
-        }
+        .modal-product-item .item-info { flex: 1; }
+        .modal-product-item .item-name { font-weight: 600; font-size: 15px; }
+        .modal-product-item .item-details { font-size: 12px; color: #666; }
         .modal-quantity-control {
             display: flex;
             align-items: center;
@@ -236,14 +296,8 @@
             justify-content: center;
             padding: 0;
         }
-        .modal-quantity-control .qty-btn.minus {
-            background: rgba(255, 92, 92, 0.15);
-            color: #ff5c5c;
-        }
-        .modal-quantity-control .qty-btn.plus {
-            background: rgba(0, 184, 148, 0.15);
-            color: #00b894;
-        }
+        .modal-quantity-control .qty-btn.minus { background: rgba(255, 92, 92, 0.15); color: #ff5c5c; }
+        .modal-quantity-control .qty-btn.plus { background: rgba(0, 184, 148, 0.15); color: #00b894; }
         .modal-quantity-control input {
             width: 50px;
             text-align: center;
@@ -255,19 +309,9 @@
             background: white;
             color: #000000 !important;
         }
-        .modal-quantity-control input:focus {
-            outline: none;
-            border-color: #2481cc;
-        }
-        .modal-empty {
-            text-align: center;
-            padding: 30px 0;
-            color: #999;
-        }
-        .modal-empty .empty-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
+        .modal-quantity-control input:focus { outline: none; border-color: #2481cc; }
+        .modal-empty { text-align: center; padding: 30px 0; color: #999; }
+        .modal-empty .empty-icon { font-size: 48px; margin-bottom: 12px; }
 
         /* ===== ОСТАЛЬНЫЕ СТИЛИ ===== */
         .header { margin-bottom: 20px; text-align: center; }
@@ -301,6 +345,9 @@
             width: 100%;
         }
         button:active { opacity: 0.7; }
+        button.success { background: #00b894; }
+        button.danger { background: #ff5c5c; }
+        button.small-btn { width: auto; padding: 8px 16px; font-size: 14px; }
         .photo-preview { margin-top: 10px; text-align: center; }
         .photo-preview img { max-width: 100px; max-height: 100px; border-radius: 12px; }
         .product-card {
@@ -316,11 +363,8 @@
         .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .product-info { flex: 1; }
         .product-category { font-size: 12px; color: #666; margin-bottom: 4px; }
-        .product-quantity { 
-            font-size: 20px; 
-            font-weight: bold; 
-            color: #000000 !important; 
-        }
+        .product-subcategory { font-size: 11px; color: #999; margin-bottom: 2px; }
+        .product-quantity { font-size: 20px; font-weight: bold; color: #000000 !important; }
         .quantity-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
         .quantity-control input { width: 80px; text-align: center; padding: 8px; color: #000000; }
         .action-btn { width: 40px; height: 40px; border-radius: 20px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; }
@@ -370,27 +414,14 @@
         .compress-info span { background: #2481cc20; padding: 2px 8px; border-radius: 10px; }
         
         @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-            .stat-card .stat-value {
-                font-size: 18px;
-            }
-            .stat-card .stat-icon {
-                font-size: 20px;
-            }
-            .modal-content {
-                padding: 16px;
-                max-height: 90vh;
-            }
-            .modal-product-item {
-                flex-wrap: wrap;
-            }
-            .modal-product-item .modal-quantity-control {
-                width: 100%;
-                justify-content: flex-end;
-            }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-card .stat-value { font-size: 18px; }
+            .stat-card .stat-icon { font-size: 20px; }
+            .modal-content { padding: 16px; max-height: 90vh; }
+            .modal-product-item { flex-wrap: wrap; }
+            .modal-product-item .modal-quantity-control { width: 100%; justify-content: flex-end; }
+            .subcategory-manager .add-row { flex-direction: column; }
+            .subcategory-manager .add-row button { width: 100%; }
         }
     </style>
 </head>
@@ -407,7 +438,7 @@
         </div>
     </div>
 
-    <!-- ===== БЛОК СТАТИСТИКИ (4 карточки) ===== -->
+    <!-- ===== БЛОК СТАТИСТИКИ ===== -->
     <div class="stats-grid">
         <div class="stat-card" id="statTotal" onclick="showCategoryModal('all')">
             <div class="stat-icon">📦</div>
@@ -432,6 +463,25 @@
         </div>
     </div>
 
+    <!-- ===== УПРАВЛЕНИЕ ПОДКАТЕГОРИЯМИ ===== -->
+    <div class="subcategory-manager">
+        <div class="header-row">
+            <label>📂 Управление подкатегориями</label>
+            <span class="hint">➕ Добавляйте и удаляйте подкатегории</span>
+        </div>
+        <div class="add-row">
+            <select id="subcategoryParent">
+                <option value="Джинсы">👖 Джинсы</option>
+                <option value="Шорты">🩳 Шорты</option>
+            </select>
+            <input type="text" id="newSubcategoryName" placeholder="Название подкатегории (например: Slim, Classic)">
+            <button class="small-btn success" onclick="addSubcategory()">➕ Добавить</button>
+        </div>
+        <div class="subcategory-list" id="subcategoryList">
+            <!-- Подкатегории будут загружены сюда -->
+        </div>
+    </div>
+
     <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ КАТЕГОРИЙ ===== -->
     <div class="modal-overlay" id="categoryModal">
         <div class="modal-content">
@@ -443,9 +493,7 @@
                 </div>
                 <button class="close-btn" onclick="closeCategoryModal()">✕</button>
             </div>
-            <div id="categoryModalList">
-                <!-- Список товаров будет вставлен сюда -->
-            </div>
+            <div id="categoryModalList"></div>
         </div>
     </div>
 
@@ -460,9 +508,7 @@
                 </div>
                 <button class="close-btn" onclick="closeLowStockModal()">✕</button>
             </div>
-            <div id="lowStockModalList">
-                <!-- Список товаров будет вставлен сюда -->
-            </div>
+            <div id="lowStockModalList"></div>
         </div>
     </div>
 
@@ -477,13 +523,19 @@
         </div>
         <div class="input-group">
             <label>📝 Название товара</label>
-            <input type="text" id="productName" placeholder="Например: Джинсы slim">
+            <input type="text" id="productName" placeholder="Например: Джинсы Slim Blue">
         </div>
         <div class="input-group">
             <label>📁 Категория</label>
             <select id="productCategory">
                 <option value="Джинсы">👖 Джинсы</option>
                 <option value="Шорты">🩳 Шорты</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>📂 Подкатегория</label>
+            <select id="productSubcategory">
+                <option value="">Без подкатегории</option>
             </select>
         </div>
         <div class="input-group">
@@ -524,8 +576,164 @@
         const db = firebase.firestore();
         
         let products = [];
+        let subcategories = [];
         let searchQuery = '';
         let unsubscribe = null;
+        let subcategoriesUnsubscribe = null;
+
+        // ============================================
+        // 📂 РАБОТА С ПОДКАТЕГОРИЯМИ
+        // ============================================
+        function listenSubcategories() {
+            if (subcategoriesUnsubscribe) {
+                subcategoriesUnsubscribe();
+            }
+            
+            subcategoriesUnsubscribe = db.collection('subcategories')
+                .onSnapshot((snapshot) => {
+                    subcategories = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        subcategories.push({
+                            id: doc.id,
+                            name: data.name || 'Без названия',
+                            category: data.category || 'Джинсы',
+                            createdAt: data.createdAt || new Date().toISOString()
+                        });
+                    });
+                    
+                    subcategories.sort((a, b) => a.name.localeCompare(b.name));
+                    renderSubcategories();
+                    updateSubcategorySelect();
+                }, (error) => {
+                    console.error('Ошибка загрузки подкатегорий:', error);
+                });
+        }
+
+        function renderSubcategories() {
+            const container = document.getElementById('subcategoryList');
+            if (!container) return;
+            
+            if (subcategories.length === 0) {
+                container.innerHTML = '<div class="subcategory-empty">📭 Нет подкатегорий. Добавьте первую!</div>';
+                return;
+            }
+            
+            let html = '';
+            // Группировка по категориям
+            const grouped = {};
+            subcategories.forEach(sub => {
+                if (!grouped[sub.category]) grouped[sub.category] = [];
+                grouped[sub.category].push(sub);
+            });
+            
+            // Сортируем категории: сначала Джинсы, потом Шорты
+            const catOrder = ['Джинсы', 'Шорты'];
+            for (let cat of catOrder) {
+                if (grouped[cat] && grouped[cat].length > 0) {
+                    const emoji = cat === 'Джинсы' ? '👖' : '🩳';
+                    html += `<div style="margin-bottom:6px; width:100%;"><span style="font-size:13px; font-weight:600;">${emoji} ${cat}:</span> `;
+                    grouped[cat].forEach(sub => {
+                        html += `
+                            <span class="subcategory-chip">
+                                <span class="sub-emoji">📂</span>
+                                <span class="sub-name">${escapeHtml(sub.name)}</span>
+                                <button class="delete-sub" onclick="deleteSubcategory('${sub.id}')" title="Удалить подкатегорию">✕</button>
+                            </span>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+            }
+            container.innerHTML = html;
+        }
+
+        function updateSubcategorySelect() {
+            const select = document.getElementById('productSubcategory');
+            if (!select) return;
+            
+            const currentValue = select.value;
+            const category = document.getElementById('productCategory').value;
+            select.innerHTML = '<option value="">Без подкатегории</option>';
+            
+            const subcats = subcategories.filter(s => s.category === category);
+            subcats.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.id;
+                option.textContent = sub.name;
+                select.appendChild(option);
+            });
+            
+            if (currentValue && subcats.some(s => s.id === currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
+        async function addSubcategory() {
+            const parentSelect = document.getElementById('subcategoryParent');
+            const nameInput = document.getElementById('newSubcategoryName');
+            const category = parentSelect.value;
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                showNotification('❌ Введите название подкатегории', true);
+                return;
+            }
+            
+            // Проверка на дубликат
+            const exists = subcategories.some(s => s.category === category && s.name.toLowerCase() === name.toLowerCase());
+            if (exists) {
+                showNotification(`❌ Подкатегория "${name}" уже существует в ${category}`, true);
+                return;
+            }
+            
+            try {
+                await db.collection('subcategories').add({
+                    name: name,
+                    category: category,
+                    createdAt: new Date().toISOString()
+                });
+                nameInput.value = '';
+                showNotification(`✅ Подкатегория "${name}" добавлена в ${category}`, false);
+                
+                // Обновляем статистику и списки
+                updateStats();
+            } catch (error) {
+                console.error('Ошибка добавления подкатегории:', error);
+                showNotification('❌ Ошибка добавления подкатегории', true);
+            }
+        }
+
+        async function deleteSubcategory(subcategoryId) {
+            const sub = subcategories.find(s => s.id === subcategoryId);
+            if (!sub) return;
+            
+            // Проверяем, есть ли товары с этой подкатегорией
+            const productsWithSub = products.filter(p => p.subcategoryId === subcategoryId);
+            let confirmMsg = `Удалить подкатегорию "${sub.name}" из ${sub.category}?`;
+            if (productsWithSub.length > 0) {
+                confirmMsg += `\n\n⚠️ ВНИМАНИЕ: ${productsWithSub.length} товаров используют эту подкатегорию. Они будут перенесены в "Без подкатегории". Продолжить?`;
+            }
+            
+            if (!confirm(confirmMsg)) return;
+            
+            try {
+                // Удаляем подкатегорию
+                await db.collection('subcategories').doc(subcategoryId).delete();
+                
+                // Обновляем товары (убираем подкатегорию)
+                for (let p of productsWithSub) {
+                    await db.collection('products').doc(p.id).update({
+                        subcategoryId: ''
+                    });
+                }
+                
+                showNotification(`✅ Подкатегория "${sub.name}" удалена`, false);
+            } catch (error) {
+                console.error('Ошибка удаления подкатегории:', error);
+                showNotification('❌ Ошибка удаления подкатегории', true);
+            }
+        }
 
         // ============================================
         // 🔥 СЖАТИЕ ИЗОБРАЖЕНИЙ
@@ -561,11 +769,6 @@
                         ctx.drawImage(img, 0, 0, width, height);
                         
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-                        
-                        const originalSize = (file.size / 1024).toFixed(1);
-                        const compressedSize = ((compressedDataUrl.length * 3) / 4 / 1024).toFixed(1);
-                        console.log(`📸 Сжатие: ${originalSize}KB → ${compressedSize}KB (${width}x${height})`);
-                        
                         resolve(compressedDataUrl);
                     };
                     img.onerror = reject;
@@ -614,6 +817,7 @@
                             name: data.name || '',
                             quantity: data.quantity || 0,
                             category: data.category || 'Джинсы',
+                            subcategoryId: data.subcategoryId || '',
                             minStock: data.minStock || 5,
                             photo: data.photo || null,
                             createdAt: data.createdAt || new Date().toISOString()
@@ -724,7 +928,6 @@
                 icon = '🩳';
             }
             
-            // Сортируем по дате добавления (сначала новые)
             filteredProducts.sort((a, b) => {
                 if (a.createdAt > b.createdAt) return -1;
                 if (a.createdAt < b.createdAt) return 1;
@@ -752,6 +955,8 @@
                 let html = '';
                 filteredProducts.forEach(p => {
                     const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
+                    const sub = subcategories.find(s => s.id === p.subcategoryId);
+                    const subText = sub ? ` → ${sub.name}` : '';
                     const isLow = p.quantity <= p.minStock;
                     const photoHtml = p.photo 
                         ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` 
@@ -761,7 +966,7 @@
                             <div class="item-photo">${photoHtml}</div>
                             <div class="item-info">
                                 <div class="item-name">${escapeHtml(p.name)}</div>
-                                <div class="item-details">${catEmoji} ${p.category} • Мин. остаток: ${p.minStock} шт.</div>
+                                <div class="item-details">${catEmoji} ${p.category}${subText} • Мин. остаток: ${p.minStock} шт.</div>
                             </div>
                             <div class="modal-quantity-control">
                                 <button class="qty-btn minus" onclick="modalChangeQuantity('${p.id}', -1)">−</button>
@@ -808,6 +1013,8 @@
                 let html = '';
                 lowStock.forEach(p => {
                     const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
+                    const sub = subcategories.find(s => s.id === p.subcategoryId);
+                    const subText = sub ? ` → ${sub.name}` : '';
                     const photoHtml = p.photo 
                         ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` 
                         : '📷';
@@ -816,7 +1023,7 @@
                             <div class="item-photo">${photoHtml}</div>
                             <div class="item-info">
                                 <div class="item-name">${escapeHtml(p.name)}</div>
-                                <div class="item-details">${catEmoji} ${p.category} • Мин. остаток: ${p.minStock} шт.</div>
+                                <div class="item-details">${catEmoji} ${p.category}${subText} • Мин. остаток: ${p.minStock} шт.</div>
                             </div>
                             <div class="modal-quantity-control">
                                 <button class="qty-btn minus" onclick="modalChangeQuantity('${p.id}', -1)">−</button>
@@ -863,7 +1070,7 @@
         // ============================================
         // ДОБАВЛЕНИЕ ТОВАРА
         // ============================================
-        async function addProductLogic(name, quantity, category, minStock, photoData) {
+        async function addProductLogic(name, quantity, category, subcategoryId, minStock, photoData) {
             showNotification(`📤 Сохранение "${name}"...`, false);
             
             try {
@@ -871,6 +1078,7 @@
                     name: name,
                     quantity: quantity,
                     category: category,
+                    subcategoryId: subcategoryId || '',
                     minStock: minStock,
                     photo: photoData,
                     createdAt: new Date().toISOString()
@@ -889,6 +1097,7 @@
             const name = document.getElementById('productName').value.trim();
             const quantity = parseInt(document.getElementById('productQuantity').value, 10) || 0;
             const category = document.getElementById('productCategory').value;
+            const subcategoryId = document.getElementById('productSubcategory').value;
             const minStock = parseInt(document.getElementById('productMinStock').value, 10) || 5;
             const photoInput = document.getElementById('productPhoto');
             
@@ -908,7 +1117,7 @@
                 }
                 
                 btn.textContent = '💾 Сохранение...';
-                await addProductLogic(name, quantity, category, minStock, photoData);
+                await addProductLogic(name, quantity, category, subcategoryId, minStock, photoData);
                 
             } catch (error) {
                 console.error('Ошибка:', error);
@@ -1014,13 +1223,16 @@
                 totalQty += p.quantity;
                 const isLow = p.quantity <= p.minStock;
                 const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
+                const sub = subcategories.find(s => s.id === p.subcategoryId);
+                const subText = sub ? ` → ${sub.name}` : '';
+                
                 html += `
                     <div class="product-card ${isLow ? 'low-stock' : ''}">
                         <div class="product-header">
                             ${p.photo ? `<img class="product-photo" src="${p.photo}" loading="lazy">` : '<div class="product-photo">📷</div>'}
                             <div class="product-info">
                                 <div class="product-name">${escapeHtml(p.name)}</div>
-                                <div class="product-category">${catEmoji} ${p.category}</div>
+                                <div class="product-category">${catEmoji} ${p.category}${subText}</div>
                                 <div class="product-quantity">${p.quantity} шт.</div>
                             </div>
                             <button class="delete-btn" onclick="deleteProduct('${p.id}')">🗑️</button>
@@ -1061,11 +1273,22 @@
             };
         }
         
+        function setupSelectHandlers() {
+            const categorySelect = document.getElementById('productCategory');
+            if (categorySelect) {
+                categorySelect.addEventListener('change', function() {
+                    updateSubcategorySelect();
+                });
+            }
+        }
+        
         // ============================================
         // ЗАПУСК
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             setupPhotoPreview();
+            setupSelectHandlers();
+            listenSubcategories();
             listenToFirebase();
             
             document.getElementById('addBtn')?.addEventListener('click', addProduct);
