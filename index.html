@@ -42,6 +42,7 @@
             .modal-quantity-control input { background: #1a1a1a; color: #ffffff; border-color: #444; }
             .subcategory-chip { background: #1a1a1a !important; }
             .subcategory-chip .delete-sub { color: #ff6b6b; }
+            .subcategory-chip.long-press { background: #3d3d3d !important; border-color: #ff5c5c !important; }
         }
 
         /* ===== СТАТИСТИКА ===== */
@@ -160,8 +161,14 @@
             background: #e8f0fe;
             border-radius: 16px;
             font-size: 13px;
-            border: 1px solid #ddd;
+            border: 2px solid transparent;
             transition: all 0.2s;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        .subcategory-chip:hover {
+            border-color: #2481cc;
         }
         .subcategory-chip .sub-emoji { font-size: 14px; }
         .subcategory-chip .sub-name { font-weight: 500; }
@@ -183,10 +190,47 @@
             padding: 0 2px;
             color: #ff5c5c;
             font-weight: 700;
+            display: none;
         }
-        .subcategory-chip .delete-sub:hover { opacity: 1; transform: scale(1.2); }
-        .subcategory-chip .delete-sub:active { transform: scale(0.8); }
+        .subcategory-chip.long-press .delete-sub {
+            display: inline-flex;
+        }
+        .subcategory-chip.long-press {
+            border-color: #ff5c5c;
+            background: rgba(255, 92, 92, 0.1);
+        }
+        .subcategory-chip .delete-sub:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        .subcategory-chip .delete-sub:active {
+            transform: scale(0.8);
+        }
+        .subcategory-chip .sub-count {
+            font-size: 10px;
+            color: #999;
+            background: rgba(0,0,0,0.05);
+            padding: 1px 6px;
+            border-radius: 10px;
+        }
         .subcategory-empty { color: #999; font-size: 13px; padding: 8px 0; }
+        .subcategory-chip .long-press-hint {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: #ff5c5c;
+            background: rgba(255, 92, 92, 0.1);
+            padding: 2px 8px;
+            border-radius: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .subcategory-chip.long-press .long-press-hint {
+            opacity: 1;
+        }
 
         /* ===== МОДАЛЬНОЕ ОКНО ===== */
         .modal-overlay {
@@ -473,8 +517,8 @@
     <!-- ===== УПРАВЛЕНИЕ ПОДКАТЕГОРИЯМИ ===== -->
     <div class="subcategory-manager">
         <div class="header-row">
-            <label>📂 Управление подкатегориями</label>
-            <span class="hint">➕ Добавляйте и удаляйте подкатегории</span>
+            <label>📂 Подкатегории</label>
+            <span class="hint">👆 Нажмите на подкатегорию для просмотра товаров • Зажмите для удаления</span>
         </div>
         <div class="add-row">
             <select id="subcategoryParent">
@@ -485,6 +529,21 @@
             <button class="small-btn success" onclick="addSubcategory()">➕ Добавить</button>
         </div>
         <div class="subcategory-list" id="subcategoryList"></div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ПОДКАТЕГОРИЙ (ТОВАРЫ В ПОДКАТЕГОРИИ) ===== -->
+    <div class="modal-overlay" id="subcategoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="icon" id="subcategoryModalIcon">📂</span>
+                    <span id="subcategoryModalTitle">Подкатегория</span>
+                    <span class="count" id="subcategoryModalCount"></span>
+                </div>
+                <button class="close-btn" onclick="closeSubcategoryModal()">✕</button>
+            </div>
+            <div id="subcategoryModalList"></div>
+        </div>
     </div>
 
     <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ КАТЕГОРИЙ ===== -->
@@ -593,6 +652,7 @@
         let searchQuery = '';
         let unsubscribe = null;
         let subcategoriesUnsubscribe = null;
+        let longPressTimers = {};
 
         // ============================================
         // 📂 РАБОТА С ПОДКАТЕГОРИЯМИ
@@ -645,11 +705,22 @@
                     const emoji = cat === 'Джинсы' ? '👖' : '🩳';
                     html += `<div style="margin-bottom:6px; width:100%;"><span style="font-size:13px; font-weight:600;">${emoji} ${cat}:</span> `;
                     grouped[cat].forEach(sub => {
+                        const productCount = products.filter(p => p.subcategoryId === sub.id).length;
                         html += `
-                            <span class="subcategory-chip">
+                            <span class="subcategory-chip" 
+                                  data-sub-id="${sub.id}"
+                                  onclick="showSubcategoryProducts('${sub.id}')"
+                                  onmousedown="startLongPress(event, '${sub.id}')"
+                                  onmouseup="cancelLongPress('${sub.id}')"
+                                  onmouseleave="cancelLongPress('${sub.id}')"
+                                  ontouchstart="startLongPressTouch(event, '${sub.id}')"
+                                  ontouchend="cancelLongPress('${sub.id}')"
+                                  ontouchmove="cancelLongPress('${sub.id}')">
                                 <span class="sub-emoji">📂</span>
                                 <span class="sub-name">${escapeHtml(sub.name)}</span>
-                                <button class="delete-sub" onclick="deleteSubcategory('${sub.id}')" title="Удалить подкатегорию">✕</button>
+                                <span class="sub-count">${productCount} шт.</span>
+                                <button class="delete-sub" onclick="event.stopPropagation(); deleteSubcategory('${sub.id}')">✕</button>
+                                <span class="long-press-hint">Зажмите для удаления</span>
                             </span>
                         `;
                     });
@@ -657,6 +728,111 @@
                 }
             }
             container.innerHTML = html;
+        }
+
+        // ============================================
+        // ДОЛГОЕ НАЖАТИЕ ДЛЯ УДАЛЕНИЯ ПОДКАТЕГОРИИ
+        // ============================================
+        function startLongPress(event, subId) {
+            const chip = event.currentTarget;
+            longPressTimers[subId] = setTimeout(() => {
+                chip.classList.add('long-press');
+                // Вибрация если поддерживается
+                if (navigator.vibrate) navigator.vibrate(20);
+            }, 500);
+        }
+
+        function startLongPressTouch(event, subId) {
+            const touch = event.touches[0];
+            const chip = event.currentTarget;
+            longPressTimers[subId] = setTimeout(() => {
+                chip.classList.add('long-press');
+                if (navigator.vibrate) navigator.vibrate(20);
+            }, 500);
+        }
+
+        function cancelLongPress(subId) {
+            if (longPressTimers[subId]) {
+                clearTimeout(longPressTimers[subId]);
+                delete longPressTimers[subId];
+            }
+            const chips = document.querySelectorAll('.subcategory-chip');
+            chips.forEach(chip => {
+                chip.classList.remove('long-press');
+            });
+        }
+
+        // ============================================
+        // ПОКАЗ ТОВАРОВ В ПОДКАТЕГОРИИ
+        // ============================================
+        function showSubcategoryProducts(subcategoryId) {
+            const sub = subcategories.find(s => s.id === subcategoryId);
+            if (!sub) return;
+            
+            // Проверяем, не в режиме ли долгого нажатия
+            const chip = document.querySelector(`.subcategory-chip[data-sub-id="${subcategoryId}"]`);
+            if (chip && chip.classList.contains('long-press')) {
+                return;
+            }
+            
+            const filteredProducts = products.filter(p => p.subcategoryId === subcategoryId);
+            
+            const modal = document.getElementById('subcategoryModal');
+            const list = document.getElementById('subcategoryModalList');
+            const titleEl = document.getElementById('subcategoryModalTitle');
+            const iconEl = document.getElementById('subcategoryModalIcon');
+            const countEl = document.getElementById('subcategoryModalCount');
+            
+            const catEmoji = sub.category === 'Джинсы' ? '👖' : '🩳';
+            titleEl.textContent = `${catEmoji} ${sub.category} → ${sub.name}`;
+            iconEl.textContent = '📂';
+            countEl.textContent = `(${filteredProducts.length} шт.)`;
+            
+            if (filteredProducts.length === 0) {
+                list.innerHTML = `
+                    <div class="modal-empty">
+                        <div class="empty-icon">📭</div>
+                        <p>В этой подкатегории пока нет товаров</p>
+                        <p style="font-size:13px; color:#999;">Добавьте товары через форму ниже</p>
+                    </div>
+                `;
+            } else {
+                let html = '';
+                filteredProducts.forEach(p => {
+                    const isLow = p.quantity <= p.minStock;
+                    const photoHtml = p.photo 
+                        ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` 
+                        : '📷';
+                    html += `
+                        <div class="modal-product-item" data-product-id="${p.id}">
+                            <div class="item-photo">${photoHtml}</div>
+                            <div class="item-info">
+                                <div class="item-name">${escapeHtml(p.name)}</div>
+                                ${p.sku ? `<div class="item-sku">🔢 Артикул: ${escapeHtml(p.sku)}</div>` : ''}
+                                ${p.sizes ? `<div class="item-sizes">📏 Размеры: ${escapeHtml(p.sizes)}</div>` : ''}
+                                <div style="font-size:12px; color:#666;">Мин. остаток: ${p.minStock} шт.</div>
+                            </div>
+                            <div class="modal-quantity-control">
+                                <button class="qty-btn minus" onclick="modalChangeQuantity('${p.id}', -1)">−</button>
+                                <input type="number" id="modal-qty-${p.id}" value="${p.quantity}" min="0" 
+                                       onchange="modalSetQuantity('${p.id}', this.value)" 
+                                       onfocus="this.select()">
+                                <button class="qty-btn plus" onclick="modalChangeQuantity('${p.id}', 1)">+</button>
+                            </div>
+                            <button class="item-delete-btn" onclick="deleteProductFromModal('${p.id}')" title="Удалить товар">🗑️</button>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            }
+            
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSubcategoryModal() {
+            document.getElementById('subcategoryModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
         }
 
         function updateSubcategorySelect() {
@@ -712,6 +888,9 @@
         }
 
         async function deleteSubcategory(subcategoryId) {
+            // Отменяем долгое нажатие
+            cancelLongPress(subcategoryId);
+            
             const sub = subcategories.find(s => s.id === subcategoryId);
             if (!sub) return;
             
@@ -836,6 +1015,8 @@
                     
                     renderProducts();
                     updateStats();
+                    // Обновляем подкатегории с количеством товаров
+                    renderSubcategories();
                     updateSyncStatus(`✅ ${products.length} товаров`, 'online');
                 }, (error) => {
                     console.error('Ошибка Firebase:', error);
@@ -1078,6 +1259,10 @@
 
         // Закрытие модалок по клику на оверлей
         document.addEventListener('click', function(e) {
+            const subModal = document.getElementById('subcategoryModal');
+            if (e.target === subModal) {
+                closeSubcategoryModal();
+            }
             const categoryModal = document.getElementById('categoryModal');
             if (e.target === categoryModal) {
                 closeCategoryModal();
@@ -1091,6 +1276,7 @@
         // Закрытие по ESC
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
+                closeSubcategoryModal();
                 closeCategoryModal();
                 closeLowStockModal();
             }
