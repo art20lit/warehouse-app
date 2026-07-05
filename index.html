@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Общий склад - Редактирование товаров</title>
+    <title>Общий склад - Категории и подкатегории</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Библиотека для работы с Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -15,14 +17,20 @@
             color: #000000;
             padding: 16px;
             padding-bottom: 100px;
+            transition: margin-right 0.3s;
         }
 
         @media (prefers-color-scheme: dark) {
             body { background: #1a1a1a; color: #ffffff; }
-            .card, .modal-content, .product-item { background: #2d2d2d !important; }
+            .card, .category-card, .subcategory-card, .modal-content, .side-menu { background: #2d2d2d !important; }
             input, select, textarea { background: #1a1a1a; color: #ffffff; border-color: #444; }
             .total-info { background: #2d2d2d; border-top-color: #444; }
-            .product-item { border-bottom-color: #444 !important; }
+            .product-name { color: #ffffff !important; }
+            .product-category { color: #aaaaaa !important; }
+            .side-menu-overlay { background: rgba(0,0,0,0.7) !important; }
+            .menu-btn { color: #ffffff !important; }
+            .file-drop-zone { border-color: #555 !important; }
+            .file-drop-zone:hover { border-color: #2481cc !important; }
         }
 
         .card {
@@ -33,8 +41,33 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
         .header h1 { font-size: 24px; font-weight: 700; }
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 4px 8px;
+            width: auto;
+            color: #333;
+        }
+
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #666; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 15px;
+        }
+        textarea { resize: vertical; min-height: 60px; font-family: inherit; }
 
         button {
             background: #2481cc;
@@ -52,37 +85,180 @@
         button.danger { background: #ff5c5c; }
         button.warning { background: #fdcb6e; color: #333; }
         button.small { padding: 6px 14px; font-size: 13px; width: auto; }
+        button.purple { background: #6c5ce7; }
+        button.orange { background: #e17055; }
 
-        .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #666; }
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-size: 15px;
+        /* ===== БОКОВОЕ МЕНЮ ===== */
+        .side-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 999;
         }
-        textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+        .side-menu-overlay.open { display: block; }
+        .side-menu {
+            position: fixed;
+            top: 0; right: -320px;
+            width: 300px;
+            height: 100%;
+            background: white;
+            z-index: 1000;
+            padding: 24px 20px;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+        }
+        .side-menu.open { right: 0; }
+        .side-menu .close-menu {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            float: right;
+            width: auto;
+            color: #999;
+        }
+        .side-menu .menu-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+        .side-menu .menu-item {
+            padding: 14px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+        .side-menu .menu-item:hover { background: rgba(0,0,0,0.05); }
+        .side-menu .menu-item .icon { font-size: 22px; }
+        .side-menu .menu-item .label { font-weight: 500; }
+        .side-menu .menu-item .badge {
+            margin-left: auto;
+            background: #ff5c5c;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 20px;
+            text-align: center;
+        }
+        .side-menu .menu-divider {
+            height: 1px;
+            background: #ddd;
+            margin: 8px 0;
+        }
 
-        /* ===== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ===== */
+        /* ===== КАТЕГОРИИ ===== */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .category-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            position: relative;
+        }
+        .category-card:active { transform: scale(0.95); }
+        .category-card.active { border-color: #2481cc; }
+        .category-card .cat-emoji { font-size: 32px; }
+        .category-card .cat-name { font-weight: 600; font-size: 14px; margin-top: 4px; }
+        .category-card .cat-count { font-size: 12px; color: #999; }
+        .category-card .cat-delete {
+            position: absolute;
+            top: 4px; right: 8px;
+            background: none;
+            border: none;
+            color: #ff5c5c;
+            font-size: 16px;
+            cursor: pointer;
+            opacity: 0.4;
+            width: auto;
+            padding: 0 4px;
+        }
+        .category-card .cat-delete:hover { opacity: 1; }
+
+        /* ===== ПОДКАТЕГОРИИ ===== */
+        .subcategory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .subcategory-card {
+            background: white;
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            position: relative;
+        }
+        .subcategory-card:active { transform: scale(0.95); }
+        .subcategory-card .sub-photo {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin: 0 auto 6px;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+        .subcategory-card .sub-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        .subcategory-card .sub-name { font-weight: 600; font-size: 13px; }
+        .subcategory-card .sub-count { font-size: 11px; color: #999; }
+        .subcategory-card .sub-delete {
+            position: absolute;
+            top: 4px; right: 8px;
+            background: none;
+            border: none;
+            color: #ff5c5c;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.4;
+            width: auto;
+            padding: 0 4px;
+        }
+        .subcategory-card .sub-delete:hover { opacity: 1; }
+
+        /* ===== ТОВАРЫ В МОДАЛКЕ ===== */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.5);
             z-index: 1000;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 20px;
+            padding: 30px 16px;
             overflow-y: auto;
         }
         .modal-overlay.show { display: flex; }
         .modal-content {
             background: white;
             border-radius: 20px;
-            max-width: 500px;
+            max-width: 650px;
             width: 100%;
-            max-height: 90vh;
+            max-height: 85vh;
             overflow-y: auto;
             padding: 24px;
             animation: slideIn 0.25s ease;
@@ -100,6 +276,8 @@
             border-bottom: 2px solid #2481cc;
         }
         .modal-header .modal-title { font-size: 20px; font-weight: 700; }
+        .modal-header .modal-title .icon { margin-right: 6px; }
+        .modal-header .modal-title .count { font-size: 14px; font-weight: 400; color: #999; }
         .modal-header .close-btn {
             background: none;
             border: none;
@@ -111,22 +289,37 @@
         }
         .modal-header .close-btn:hover { color: #ff5c5c; }
 
-        .edit-photo-preview {
-            text-align: center;
-            margin: 8px 0;
-        }
-        .edit-photo-preview img {
-            max-width: 120px;
-            max-height: 120px;
+        .add-product-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 12px 0;
+            padding: 12px;
+            background: rgba(36, 129, 204, 0.05);
             border-radius: 12px;
-            border: 1px solid #ddd;
+            align-items: center;
         }
-        .edit-photo-preview .no-photo {
-            color: #999;
+        .add-product-row input { flex: 1; min-width: 80px; padding: 8px 12px; font-size: 14px; }
+        .add-product-row input[type="file"] { display: none; }
+        .add-product-row .photo-btn {
+            padding: 8px 12px;
             font-size: 14px;
+            background: #6c5ce7;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            width: auto;
         }
+        .add-product-row .photo-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #e0e0e0;
+        }
+        .add-product-row button { width: auto; padding: 8px 16px; font-size: 14px; }
 
-        /* ===== ТОВАРЫ ===== */
         .product-item {
             display: flex;
             align-items: center;
@@ -140,6 +333,7 @@
         }
         .product-item:hover { background: rgba(36, 129, 204, 0.05); }
         .product-item:active { background: rgba(36, 129, 204, 0.1); }
+        .product-item:last-child { border-bottom: none; }
         .product-item .p-photo {
             width: 44px;
             height: 44px;
@@ -161,6 +355,15 @@
         .product-item .p-info { flex: 1; }
         .product-item .p-name { font-weight: 600; font-size: 14px; }
         .product-item .p-details { font-size: 12px; color: #999; }
+        .product-item .p-sku-size {
+            font-size: 11px;
+            color: #666;
+            background: rgba(0,0,0,0.05);
+            padding: 1px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-right: 4px;
+        }
         .product-item .p-qty {
             font-weight: 700;
             font-size: 16px;
@@ -172,10 +375,13 @@
         .product-item .p-edit-icon {
             font-size: 18px;
             color: #999;
-            opacity: 0.4;
+            opacity: 0.3;
             transition: opacity 0.2s;
+            padding: 4px 8px;
+            cursor: pointer;
         }
         .product-item:hover .p-edit-icon { opacity: 1; }
+        .product-item .p-min-stock { font-size: 11px; color: #999; }
 
         .empty-state { text-align: center; padding: 30px 0; color: #999; }
         .empty-state .icon { font-size: 48px; margin-bottom: 8px; }
@@ -218,6 +424,10 @@
         .photo-preview { margin-top: 8px; text-align: center; }
         .photo-preview img { max-width: 120px; max-height: 120px; border-radius: 12px; }
 
+        .edit-photo-preview { text-align: center; margin: 8px 0; }
+        .edit-photo-preview img { max-width: 120px; max-height: 120px; border-radius: 12px; border: 1px solid #ddd; }
+        .edit-photo-preview .no-photo { color: #999; font-size: 14px; }
+
         .edit-actions {
             display: flex;
             gap: 8px;
@@ -226,33 +436,171 @@
         }
         .edit-actions button { flex: 1; min-width: 100px; }
 
-        .sku-size-badge {
-            display: inline-block;
-            font-size: 11px;
-            color: #666;
+        /* ===== МОДАЛЬНЫЕ ОКНА ЭКСПОРТ/ИМПОРТ ===== */
+        .import-export-modal .modal-content {
+            max-width: 500px;
+            text-align: center;
+        }
+        .import-export-modal .modal-content .ie-icon { font-size: 48px; margin-bottom: 12px; }
+        .import-export-modal .modal-content .ie-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .import-export-modal .modal-content .ie-subtitle { font-size: 14px; color: #999; margin-bottom: 20px; }
+        .import-export-modal .modal-content .ie-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .import-export-modal .modal-content .ie-buttons button {
+            flex: 1;
+            min-width: 140px;
+            padding: 16px;
+            font-size: 16px;
+            border-radius: 14px;
+        }
+        .import-export-modal .modal-content .ie-buttons .export-btn { background: #00b894; }
+        .import-export-modal .modal-content .ie-buttons .import-btn { background: #6c5ce7; }
+        .import-export-modal .modal-content .ie-info {
+            margin-top: 16px;
+            padding: 12px;
             background: rgba(0,0,0,0.05);
-            padding: 1px 8px;
             border-radius: 10px;
-            margin-right: 4px;
+            font-size: 13px;
+            color: #666;
+        }
+        .import-export-modal .modal-content .ie-info strong { color: #000; }
+
+        .import-mode-modal .modal-content {
+            max-width: 420px;
+            text-align: center;
+        }
+        .import-mode-modal .modal-content .im-icon { font-size: 48px; margin-bottom: 12px; }
+        .import-mode-modal .modal-content .im-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .import-mode-modal .modal-content .im-subtitle { font-size: 14px; color: #999; margin-bottom: 20px; }
+        .import-mode-modal .modal-content .im-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .import-mode-modal .modal-content .im-buttons button {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px;
+            font-size: 15px;
+            border-radius: 14px;
+        }
+        .import-mode-modal .modal-content .im-buttons .add-btn { background: #00b894; }
+        .import-mode-modal .modal-content .im-buttons .sub-btn { background: #e17055; }
+        .import-mode-modal .modal-content .im-info {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        .import-mode-modal .modal-content .im-info .add-color { color: #00b894; font-weight: 600; }
+        .import-mode-modal .modal-content .im-info .sub-color { color: #e17055; font-weight: 600; }
+
+        .file-drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin: 12px 0;
+            transition: border-color 0.3s, background 0.3s;
+            cursor: pointer;
+        }
+        .file-drop-zone:hover { border-color: #2481cc; background: rgba(36, 129, 204, 0.05); }
+        .file-drop-zone.dragover { border-color: #00b894; background: rgba(0, 184, 148, 0.1); }
+        .file-drop-zone .fz-icon { font-size: 48px; margin-bottom: 8px; }
+        .file-drop-zone .fz-text { font-size: 14px; color: #666; }
+        .file-drop-zone .fz-text strong { color: #2481cc; }
+        #importFileInput { display: none; }
+        .import-preview {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(0, 184, 148, 0.1);
+            border-radius: 10px;
+            display: none;
+        }
+        .import-preview.show { display: block; }
+        .import-preview .ip-filename { font-weight: 600; }
+        .import-preview .ip-count { font-size: 13px; color: #666; }
+        .import-preview .ip-status { margin-top: 8px; font-size: 13px; }
+        .import-preview .ip-status .ok { color: #00b894; }
+        .import-preview .ip-status .err { color: #ff5c5c; }
+        .import-progress {
+            margin-top: 12px;
+            height: 6px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+        }
+        .import-progress.show { display: block; }
+        .import-progress .ip-bar {
+            height: 100%;
+            background: #2481cc;
+            border-radius: 4px;
+            transition: width 0.3s;
+            width: 0%;
         }
 
         @media (prefers-color-scheme: dark) {
-            .sku-size-badge { color: #aaa; background: rgba(255,255,255,0.05); }
+            .product-item .p-sku-size { color: #aaa; background: rgba(255,255,255,0.05); }
         }
 
         @media (max-width: 480px) {
-            .modal-content { padding: 16px; }
+            .category-grid { grid-template-columns: repeat(2, 1fr); }
+            .subcategory-grid { grid-template-columns: repeat(2, 1fr); }
             .product-item { flex-wrap: wrap; }
+            .product-item .p-controls { width: 100%; justify-content: flex-end; }
+            .add-product-row { flex-direction: column; }
+            .add-product-row button { width: 100%; }
+            .side-menu { width: 280px; right: -290px; }
+            .modal-content { padding: 16px; max-width: 100%; }
             .edit-actions { flex-direction: column; }
             .edit-actions button { min-width: auto; }
+            .import-export-modal .modal-content .ie-buttons { flex-direction: column; }
+            .import-export-modal .modal-content .ie-buttons button { min-width: auto; }
+            .import-mode-modal .modal-content .im-buttons { flex-direction: column; }
+            .import-mode-modal .modal-content .im-buttons button { min-width: auto; }
         }
     </style>
 </head>
 <body>
 
+    <!-- ===== БОКОВОЕ МЕНЮ ===== -->
+    <div class="side-menu-overlay" id="sideOverlay" onclick="closeMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <button class="close-menu" onclick="closeMenu()">✕</button>
+        <div class="menu-title">📋 Меню</div>
+        <div class="menu-item" onclick="closeMenu(); showAllProducts();">
+            <span class="icon">📦</span>
+            <span class="label">Все товары</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="closeMenu(); showLowStockModal();">
+            <span class="icon">⚠️</span>
+            <span class="label">Мало</span>
+            <span class="badge" id="menuLowBadge">0</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="closeMenu(); openImportExportModal();">
+            <span class="icon">📊</span>
+            <span class="label">ЭКСПОРТ/ИМПОРТ</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="closeMenu(); location.reload();">
+            <span class="icon">🔄</span>
+            <span class="label">Обновить</span>
+        </div>
+    </div>
+
     <div class="header">
         <h1>📦 Управление складом</h1>
-        <button class="small" onclick="location.reload()">🔄 Обновить</button>
+        <button class="menu-btn" onclick="openMenu()">☰</button>
     </div>
     <div style="text-align:center; margin-bottom:12px;">
         <span class="sync-status sync-waiting" id="syncStatus">🔄 Подключение...</span>
@@ -359,143 +707,129 @@
         </div>
     </div>
 
+    <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ВСЕХ ТОВАРОВ ===== -->
+    <div class="modal-overlay" id="allProductsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="icon">📦</span>
+                    <span id="allProductsTitle">Все товары</span>
+                    <span class="count" id="allProductsCount"></span>
+                </div>
+                <button class="close-btn" onclick="closeAllProductsModal()">✕</button>
+            </div>
+            <div id="allProductsList"></div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ТОВАРОВ С НИЗКИМ ОСТАТКОМ ===== -->
+    <div class="modal-overlay" id="lowStockModal">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom-color: #ff5c5c;">
+                <div class="modal-title">
+                    <span class="icon">⚠️</span>
+                    <span style="color:#ff5c5c;">Товары с низким остатком</span>
+                    <span class="count" id="lowModalCount"></span>
+                </div>
+                <button class="close-btn" onclick="closeLowStockModal()">✕</button>
+            </div>
+            <div id="lowStockModalList"></div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ЭКСПОРТ/ИМПОРТ ===== -->
+    <div class="modal-overlay import-export-modal" id="importExportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="icon">📊</span>
+                    <span>ЭКСПОРТ / ИМПОРТ</span>
+                </div>
+                <button class="close-btn" onclick="closeImportExportModal()">✕</button>
+            </div>
+            
+            <div class="ie-icon">📁</div>
+            <div class="ie-title">Управление данными</div>
+            <div class="ie-subtitle">Экспортируйте или импортируйте товары через Excel</div>
+            
+            <div class="ie-buttons">
+                <button class="export-btn" onclick="exportToExcel()">📤 ЭКСПОРТ</button>
+                <button class="import-btn" onclick="openImportModeModal()">📥 ИМПОРТ</button>
+            </div>
+            
+            <div class="ie-info">
+                <strong>📋 Ключевые поля:</strong><br>
+                <strong>Артикул + Размер</strong> — уникальная комбинация для каждого товара<br>
+                <span style="font-size:12px; color:#999;">* По этим полям обновляется количество</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ВЫБОРА РЕЖИМА ИМПОРТА ===== -->
+    <div class="modal-overlay import-mode-modal" id="importModeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="icon">📥</span>
+                    <span>Выберите режим импорта</span>
+                </div>
+                <button class="close-btn" onclick="closeImportModeModal()">✕</button>
+            </div>
+            
+            <div class="im-icon">⚙️</div>
+            <div class="im-title">Как обновить количество?</div>
+            <div class="im-subtitle">Выберите действие с товарами из файла</div>
+            
+            <div class="im-buttons">
+                <button class="add-btn" onclick="startImport('add')">➕ <strong>ДОБАВИТЬ</strong></button>
+                <button class="sub-btn" onclick="startImport('subtract')">➖ <strong>УБАВИТЬ</strong></button>
+            </div>
+            
+            <div class="im-info">
+                <span class="add-color">➕ ДОБАВИТЬ</span> — прибавляет количество из файла к существующему<br>
+                <span class="sub-color">➖ УБАВИТЬ</span> — вычитает количество из файла из существующего<br>
+                <span style="font-size:12px; color:#999; display:block; margin-top:6px;">* Поиск по комбинации <strong>Артикул + Размер</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ЗАГРУЗКИ ФАЙЛА ===== -->
+    <div class="modal-overlay import-mode-modal" id="importFileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="icon" id="importFileTitleIcon">📥</span>
+                    <span id="importFileTitle">Загрузка файла</span>
+                </div>
+                <button class="close-btn" onclick="closeImportFileModal()">✕</button>
+            </div>
+            
+            <div id="importFileContent">
+                <div class="im-icon" id="importFileIcon">📂</div>
+                <div class="im-title" id="importFileModeTitle">Режим: ДОБАВИТЬ</div>
+                <div class="im-subtitle">Загрузите Excel файл для импорта</div>
+                
+                <div class="file-drop-zone" id="fileDropZone" onclick="document.getElementById('importFileInput').click()">
+                    <div class="fz-icon">📂</div>
+                    <div class="fz-text">Нажмите или перетащите файл <strong>Excel (.xlsx, .xls)</strong></div>
+                </div>
+                <input type="file" id="importFileInput" accept=".xlsx,.xls" onchange="handleImportFile(event)">
+                
+                <div class="import-preview" id="importPreview">
+                    <div class="ip-filename" id="importFileName"></div>
+                    <div class="ip-count" id="importFileCount"></div>
+                    <div class="ip-status" id="importStatus"></div>
+                </div>
+                
+                <div class="import-progress" id="importProgress">
+                    <div class="ip-bar" id="importProgressBar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="notificationContainer"></div>
     <div id="totalInfo" class="total-info">📊 Загрузка...</div>
-
-    <style>
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-        .category-card {
-            background: white;
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            position: relative;
-        }
-        .category-card:active { transform: scale(0.95); }
-        .category-card.active { border-color: #2481cc; }
-        .category-card .cat-emoji { font-size: 32px; }
-        .category-card .cat-name { font-weight: 600; font-size: 14px; margin-top: 4px; }
-        .category-card .cat-count { font-size: 12px; color: #999; }
-        .category-card .cat-delete {
-            position: absolute;
-            top: 4px; right: 8px;
-            background: none;
-            border: none;
-            color: #ff5c5c;
-            font-size: 16px;
-            cursor: pointer;
-            opacity: 0.4;
-            width: auto;
-            padding: 0 4px;
-        }
-        .category-card .cat-delete:hover { opacity: 1; }
-
-        .subcategory-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-        .subcategory-card {
-            background: white;
-            border-radius: 16px;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-            position: relative;
-        }
-        .subcategory-card:active { transform: scale(0.95); }
-        .subcategory-card .sub-photo {
-            width: 70px;
-            height: 70px;
-            border-radius: 12px;
-            object-fit: cover;
-            margin: 0 auto 6px;
-            background: #e0e0e0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-        }
-        .subcategory-card .sub-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 12px;
-        }
-        .subcategory-card .sub-name { font-weight: 600; font-size: 13px; }
-        .subcategory-card .sub-count { font-size: 11px; color: #999; }
-        .subcategory-card .sub-delete {
-            position: absolute;
-            top: 4px; right: 8px;
-            background: none;
-            border: none;
-            color: #ff5c5c;
-            font-size: 14px;
-            cursor: pointer;
-            opacity: 0.4;
-            width: auto;
-            padding: 0 4px;
-        }
-        .subcategory-card .sub-delete:hover { opacity: 1; }
-
-        .add-product-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 12px 0;
-            padding: 12px;
-            background: rgba(36, 129, 204, 0.05);
-            border-radius: 12px;
-            align-items: center;
-        }
-        .add-product-row input { flex: 1; min-width: 80px; padding: 8px 12px; font-size: 14px; }
-        .add-product-row input[type="file"] { display: none; }
-        .add-product-row .photo-btn {
-            padding: 8px 12px;
-            font-size: 14px;
-            background: #6c5ce7;
-            color: white;
-            border-radius: 10px;
-            cursor: pointer;
-            border: none;
-            width: auto;
-        }
-        .add-product-row .photo-preview {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: #e0e0e0;
-        }
-        .add-product-row button { width: auto; padding: 8px 16px; font-size: 14px; }
-
-        .product-item .p-edit-icon {
-            font-size: 18px;
-            color: #999;
-            opacity: 0.3;
-            transition: opacity 0.2s;
-            padding: 4px 8px;
-            cursor: pointer;
-        }
-        .product-item:hover .p-edit-icon { opacity: 1; }
-        .product-item .p-sku-size { font-size: 11px; color: #666; background: rgba(0,0,0,0.05); padding: 1px 8px; border-radius: 10px; display: inline-block; margin-right: 4px; }
-        @media (prefers-color-scheme: dark) {
-            .product-item .p-sku-size { color: #aaa; background: rgba(255,255,255,0.05); }
-        }
-    </style>
 
     <script>
         // ==================================================
@@ -525,6 +859,344 @@
         let unsubSubcategories = null;
         let unsubProducts = null;
         let currentSubModalId = null;
+        let importFileData = null;
+        let importMode = 'add';
+
+        // ============================================
+        // МЕНЮ
+        // ============================================
+        function openMenu() {
+            document.getElementById('sideMenu').classList.add('open');
+            document.getElementById('sideOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMenu() {
+            document.getElementById('sideMenu').classList.remove('open');
+            document.getElementById('sideOverlay').classList.remove('open');
+            document.body.style.overflow = 'auto';
+        }
+
+        // ============================================
+        // МОДАЛЬНЫЕ ОКНА ЭКСПОРТ/ИМПОРТ
+        // ============================================
+        function openImportExportModal() {
+            closeMenu();
+            document.getElementById('importExportModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImportExportModal() {
+            document.getElementById('importExportModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openImportModeModal() {
+            closeImportExportModal();
+            document.getElementById('importModeModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImportModeModal() {
+            document.getElementById('importModeModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openImportFileModal(mode) {
+            closeImportModeModal();
+            importMode = mode;
+            
+            const title = document.getElementById('importFileTitle');
+            const icon = document.getElementById('importFileIcon');
+            const modeTitle = document.getElementById('importFileModeTitle');
+            
+            if (mode === 'add') {
+                title.textContent = 'Импорт: ДОБАВИТЬ';
+                modeTitle.textContent = 'Режим: ➕ ДОБАВИТЬ';
+                icon.textContent = '➕';
+                document.getElementById('importFileTitleIcon').textContent = '➕';
+            } else {
+                title.textContent = 'Импорт: УБАВИТЬ';
+                modeTitle.textContent = 'Режим: ➖ УБАВИТЬ';
+                icon.textContent = '➖';
+                document.getElementById('importFileTitleIcon').textContent = '➖';
+            }
+            
+            document.getElementById('importFileModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            document.getElementById('importPreview').classList.remove('show');
+            document.getElementById('importProgress').classList.remove('show');
+            document.getElementById('importFileInput').value = '';
+            importFileData = null;
+            document.getElementById('importStatus').innerHTML = '';
+        }
+
+        function closeImportFileModal() {
+            document.getElementById('importFileModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        function startImport(mode) {
+            openImportFileModal(mode);
+        }
+
+        // ============================================
+        // ЭКСПОРТ
+        // ============================================
+        function exportToExcel() {
+            if (products.length === 0) {
+                showNotification('⚠️ Нет товаров для экспорта', 'error');
+                return;
+            }
+
+            try {
+                const data = [];
+                data.push(['Название', 'Артикул', 'Размер', 'Категория', 'Подкатегория', 'Количество', 'Мин.остаток']);
+                
+                products.forEach(p => {
+                    const sub = subcategories.find(s => s.id === p.subcategoryId);
+                    data.push([
+                        p.name || '',
+                        p.sku || '',
+                        p.size || '',
+                        p.category || '',
+                        sub ? sub.name : '',
+                        p.quantity || 0,
+                        p.minStock || 5
+                    ]);
+                });
+
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [
+                    { wch: 30 }, { wch: 15 }, { wch: 10 },
+                    { wch: 15 }, { wch: 20 }, { wch: 12 }, { wch: 14 }
+                ];
+                XLSX.utils.book_append_sheet(wb, ws, 'Товары');
+                
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const fileName = `склад_${new Date().toISOString().slice(0,10)}.xlsx`;
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+                
+                showNotification(`✅ Экспортировано ${products.length} товаров`, 'success');
+                closeImportExportModal();
+            } catch (e) {
+                console.error('Ошибка экспорта:', e);
+                showNotification('❌ Ошибка экспорта: ' + e.message, 'error');
+            }
+        }
+
+        // ============================================
+        // ИМПОРТ
+        // ============================================
+        function findProductBySkuAndSize(sku, size) {
+            return products.find(p => p.sku === sku && p.size === size);
+        }
+
+        function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+                    if (jsonData.length === 0) {
+                        showNotification('❌ Файл пуст или имеет неверный формат', 'error');
+                        return;
+                    }
+                    
+                    const preview = document.getElementById('importPreview');
+                    document.getElementById('importFileName').textContent = `📄 ${file.name}`;
+                    document.getElementById('importFileCount').textContent = `Найдено ${jsonData.length} строк`;
+                    preview.classList.add('show');
+                    
+                    importFileData = jsonData;
+                    
+                    const status = document.getElementById('importStatus');
+                    const modeText = importMode === 'add' ? '➕ ДОБАВИТЬ' : '➖ УБАВИТЬ';
+                    status.innerHTML = `
+                        <button class="success small" onclick="processImport()" style="margin-top:8px;">
+                            ✅ Импортировать (${modeText}) ${jsonData.length} товаров
+                        </button>
+                        <span style="margin-left:8px; font-size:12px; color:#999;">(обновит количество по Артикул+Размер)</span>
+                    `;
+                    
+                } catch (e) {
+                    console.error('Ошибка чтения файла:', e);
+                    showNotification('❌ Ошибка чтения файла: ' + e.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function processImport() {
+            if (!importFileData || importFileData.length === 0) {
+                showNotification('❌ Нет данных для импорта', 'error');
+                return;
+            }
+
+            const progress = document.getElementById('importProgress');
+            const bar = document.getElementById('importProgressBar');
+            progress.classList.add('show');
+            bar.style.width = '0%';
+
+            let updated = 0;
+            let added = 0;
+            let errors = 0;
+            const errorsList = [];
+
+            const headers = Object.keys(importFileData[0]);
+            const skuKey = headers.find(h => h.toLowerCase().includes('артикул') || h.toLowerCase().includes('sku'));
+            const sizeKey = headers.find(h => h.toLowerCase().includes('размер') || h.toLowerCase().includes('size'));
+            const qtyKey = headers.find(h => h.toLowerCase().includes('количеств') || h.toLowerCase().includes('qty'));
+            const nameKey = headers.find(h => h.toLowerCase().includes('назван') || h.toLowerCase().includes('name'));
+            const catKey = headers.find(h => h.toLowerCase().includes('категор') || h.toLowerCase().includes('category'));
+            const subKey = headers.find(h => h.toLowerCase().includes('подкатегор') || h.toLowerCase().includes('subcategory'));
+            const minStockKey = headers.find(h => h.toLowerCase().includes('мин') || h.toLowerCase().includes('min'));
+
+            if (!skuKey) {
+                showNotification('❌ В файле не найдена колонка "Артикул"', 'error');
+                progress.classList.remove('show');
+                return;
+            }
+
+            if (!qtyKey) {
+                showNotification('❌ В файле не найдена колонка "Количество"', 'error');
+                progress.classList.remove('show');
+                return;
+            }
+
+            const total = importFileData.length;
+            let processed = 0;
+
+            for (let row of importFileData) {
+                try {
+                    const sku = String(row[skuKey] || '').trim();
+                    const size = String(row[sizeKey] || '').trim().toUpperCase();
+                    const fileQty = parseInt(row[qtyKey]) || 0;
+                    
+                    if (!sku) {
+                        errors++;
+                        errorsList.push(`Пропущена строка: нет артикула`);
+                        processed++;
+                        bar.style.width = `${(processed / total) * 100}%`;
+                        continue;
+                    }
+
+                    const existingProduct = findProductBySkuAndSize(sku, size);
+
+                    if (existingProduct) {
+                        let newQty;
+                        if (importMode === 'add') {
+                            newQty = existingProduct.quantity + fileQty;
+                        } else {
+                            newQty = Math.max(0, existingProduct.quantity - fileQty);
+                        }
+                        await db.collection('products').doc(existingProduct.id).update({
+                            quantity: newQty
+                        });
+                        updated++;
+                    } else {
+                        const name = row[nameKey] || sku;
+                        const category = row[catKey] || 'Другое';
+                        const subcategoryName = row[subKey] || '';
+                        const minStock = parseInt(row[minStockKey]) || 5;
+                        const qty = importMode === 'add' ? fileQty : Math.max(0, fileQty);
+                        
+                        let subcategoryId = '';
+                        if (subcategoryName) {
+                            const foundSub = subcategories.find(s => s.name === subcategoryName && s.category === category);
+                            if (foundSub) {
+                                subcategoryId = foundSub.id;
+                            }
+                        }
+                        
+                        await db.collection('products').add({
+                            name: name,
+                            sku: sku,
+                            size: size,
+                            quantity: qty,
+                            category: category,
+                            subcategoryId: subcategoryId,
+                            minStock: minStock,
+                            photo: null,
+                            createdAt: new Date().toISOString()
+                        });
+                        added++;
+                    }
+                } catch (e) {
+                    errors++;
+                    errorsList.push(`Ошибка: ${e.message}`);
+                }
+                
+                processed++;
+                bar.style.width = `${(processed / total) * 100}%`;
+            }
+
+            const status = document.getElementById('importStatus');
+            const modeText = importMode === 'add' ? '➕ ДОБАВИТЬ' : '➖ УБАВИТЬ';
+            let resultMsg = `✅ Импорт (${modeText}) завершён!\n`;
+            resultMsg += `🔄 Обновлено: ${updated} товаров\n`;
+            resultMsg += `➕ Добавлено: ${added} товаров\n`;
+            if (errors > 0) {
+                resultMsg += `⚠️ Ошибок: ${errors}`;
+            }
+            
+            status.innerHTML = `
+                <div style="font-weight:600; margin-top:8px; color:${errors > 0 ? '#ff5c5c' : '#00b894'}">
+                    ${resultMsg.replace(/\n/g, '<br>')}
+                </div>
+                ${errorsList.length > 0 ? `<div style="font-size:12px; color:#999; margin-top:4px;">${errorsList.slice(0, 3).join('<br>')}${errorsList.length > 3 ? `<br>... и ещё ${errorsList.length - 3}` : ''}</div>` : ''}
+                <button class="small" onclick="closeImportFileModal();" style="margin-top:8px;">✕ Закрыть</button>
+            `;
+            
+            showNotification(`✅ Импорт завершён: обновлено ${updated}, добавлено ${added}`, 'success');
+            
+            setTimeout(() => {
+                progress.classList.remove('show');
+            }, 3000);
+        }
+
+        // ============================================
+        // DRAG AND DROP
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('fileDropZone');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const input = document.getElementById('importFileInput');
+                    input.files = files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        });
 
         // ============================================
         // УВЕДОМЛЕНИЯ
@@ -801,7 +1473,16 @@
                     products.sort((a, b) => a.createdAt > b.createdAt ? -1 : 1);
                     renderSubcategories();
                     updateTotal();
+                    updateLowBadge();
                 });
+        }
+
+        // ============================================
+        // БЭЙДЖ ДЛЯ КНОПКИ "МАЛО"
+        // ============================================
+        function updateLowBadge() {
+            const low = products.filter(p => p.quantity <= (p.minStock || 5));
+            document.getElementById('menuLowBadge').textContent = low.length;
         }
 
         // ============================================
@@ -842,7 +1523,7 @@
                                     <span class="p-sku-size">🔢 ${escapeHtml(p.sku)}</span>
                                     <span class="p-sku-size">📏 ${escapeHtml(p.size)}</span>
                                 </div>
-                                <div class="p-min-stock" style="font-size:11px; color:#999;">Мин. остаток: ${minStock} шт.</div>
+                                <div class="p-min-stock">Мин. остаток: ${minStock} шт.</div>
                             </div>
                             <div class="p-qty ${isLow ? 'low' : ''}">${p.quantity}</div>
                             <span class="p-edit-icon">✏️</span>
@@ -854,7 +1535,6 @@
             
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
-            // Очищаем форму добавления
             document.getElementById('subModalProductName').value = '';
             document.getElementById('subModalProductSku').value = '';
             document.getElementById('subModalProductSize').value = '';
@@ -885,7 +1565,6 @@
             if (!sku) { showNotification('Введите артикул', 'error'); return; }
             if (!size) { showNotification('Введите размер', 'error'); return; }
             
-            // Проверка на дубликат
             const existing = products.find(p => p.sku === sku && p.size === size);
             if (existing) {
                 showNotification(`❌ Товар с артикулом "${sku}" и размером "${size}" уже существует!`, 'error');
@@ -928,7 +1607,6 @@
             document.getElementById('editQty').value = product.quantity || 0;
             document.getElementById('editMinStock').value = product.minStock || 5;
             
-            // Фото
             const preview = document.getElementById('editPhotoPreview');
             if (product.photo) {
                 preview.innerHTML = `<img src="${product.photo}">`;
@@ -1009,20 +1687,125 @@
         }
 
         // ============================================
-        // ИЗМЕНЕНИЕ КОЛИЧЕСТВА (быстрое)
+        // МОДАЛЬНОЕ ОКНО ДЛЯ ВСЕХ ТОВАРОВ
         // ============================================
-        async function changeProductQty(productId, delta) {
-            const p = products.find(p => p.id === productId);
-            if (!p) return;
-            const newQty = Math.max(0, p.quantity + delta);
-            try {
-                await db.collection('products').doc(productId).update({ quantity: newQty });
-                if (newQty <= (p.minStock || 5)) {
-                    showNotification(`⚠️ ${p.name}: осталось ${newQty} шт.`, 'error');
-                }
-                if (currentSubModalId) openSubcategoryModal(currentSubModalId);
-            } catch (e) { console.error(e); }
+        function showAllProducts() {
+            const modal = document.getElementById('allProductsModal');
+            const list = document.getElementById('allProductsList');
+            document.getElementById('allProductsTitle').textContent = '📦 Все товары';
+            document.getElementById('allProductsCount').textContent = `(${products.length} шт.)`;
+            
+            if (products.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Нет товаров</p></div>';
+            } else {
+                let html = '';
+                products.forEach(p => {
+                    const minStock = p.minStock || 5;
+                    const isLow = p.quantity <= minStock;
+                    const photoHtml = p.photo ? `<img src="${p.photo}">` : '📷';
+                    html += `
+                        <div class="product-item" onclick="openEditModal('${p.id}')">
+                            <div class="p-photo">${photoHtml}</div>
+                            <div class="p-info">
+                                <div class="p-name">${escapeHtml(p.name)}</div>
+                                <div>
+                                    <span class="p-sku-size">🔢 ${escapeHtml(p.sku)}</span>
+                                    <span class="p-sku-size">📏 ${escapeHtml(p.size)}</span>
+                                </div>
+                                <div class="p-min-stock">Мин. остаток: ${minStock} шт.</div>
+                            </div>
+                            <div class="p-qty ${isLow ? 'low' : ''}">${p.quantity}</div>
+                            <span class="p-edit-icon">✏️</span>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            }
+            
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
+
+        function closeAllProductsModal() {
+            document.getElementById('allProductsModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        // ============================================
+        // МОДАЛЬНОЕ ОКНО ДЛЯ ТОВАРОВ С НИЗКИМ ОСТАТКОМ
+        // ============================================
+        function showLowStockModal() {
+            const lowStock = products.filter(p => p.quantity <= (p.minStock || 5));
+            const modal = document.getElementById('lowStockModal');
+            const list = document.getElementById('lowStockModalList');
+            document.getElementById('lowModalCount').textContent = `(${lowStock.length} шт.)`;
+            
+            if (lowStock.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="icon">🎉</div><p>Все товары в наличии!</p></div>';
+            } else {
+                let html = '';
+                lowStock.forEach(p => {
+                    const minStock = p.minStock || 5;
+                    const photoHtml = p.photo ? `<img src="${p.photo}">` : '📷';
+                    html += `
+                        <div class="product-item" onclick="openEditModal('${p.id}')">
+                            <div class="p-photo">${photoHtml}</div>
+                            <div class="p-info">
+                                <div class="p-name">${escapeHtml(p.name)}</div>
+                                <div>
+                                    <span class="p-sku-size">🔢 ${escapeHtml(p.sku)}</span>
+                                    <span class="p-sku-size">📏 ${escapeHtml(p.size)}</span>
+                                </div>
+                                <div class="p-min-stock" style="color:#ff5c5c;">⚠️ Осталось: ${p.quantity} шт. (мин. ${minStock})</div>
+                            </div>
+                            <div class="p-qty low">${p.quantity}</div>
+                            <span class="p-edit-icon">✏️</span>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            }
+            
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLowStockModal() {
+            document.getElementById('lowStockModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Закрытие модалок по клику на оверлей
+        document.addEventListener('click', (e) => {
+            const subModal = document.getElementById('subModal');
+            if (e.target === subModal) closeSubModal();
+            const allModal = document.getElementById('allProductsModal');
+            if (e.target === allModal) closeAllProductsModal();
+            const lowModal = document.getElementById('lowStockModal');
+            if (e.target === lowModal) closeLowStockModal();
+            const editModal = document.getElementById('editModal');
+            if (e.target === editModal) closeEditModal();
+            const ieModal = document.getElementById('importExportModal');
+            if (e.target === ieModal) closeImportExportModal();
+            const imModal = document.getElementById('importModeModal');
+            if (e.target === imModal) closeImportModeModal();
+            const ifModal = document.getElementById('importFileModal');
+            if (e.target === ifModal) closeImportFileModal();
+        });
+
+        // Закрытие по ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSubModal();
+                closeAllProductsModal();
+                closeLowStockModal();
+                closeEditModal();
+                closeImportExportModal();
+                closeImportModeModal();
+                closeImportFileModal();
+                closeMenu();
+            }
+        });
 
         // ============================================
         // ОБНОВЛЕНИЕ СТАТИСТИКИ
