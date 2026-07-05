@@ -712,7 +712,7 @@
         </div>
     </div>
 
-    <!-- ===== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ТОВАРА (С МНОЖЕСТВЕННЫМИ АРТИКУЛАМИ) ===== -->
+    <!-- ===== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ТОВАРА ===== -->
     <div class="modal-overlay" id="editModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1050,12 +1050,16 @@
         }
 
         // ============================================
-        // ИМПОРТ
+        // ИМПОРТ (ИСПРАВЛЕННЫЙ)
         // ============================================
         function findProductBySkuAndSize(sku, size) {
             return products.find(p => {
-                const skus = Array.isArray(p.skus) ? p.skus : [p.sku];
-                return skus.includes(sku) && p.size === size;
+                // Проверяем все артикулы товара (массив skus)
+                if (Array.isArray(p.skus) && p.skus.length > 0) {
+                    return p.skus.includes(sku) && p.size === size;
+                }
+                // Если skus нет, проверяем основной sku
+                return p.sku === sku && p.size === size;
             });
         }
 
@@ -1343,10 +1347,12 @@
         }
 
         // ============================================
-        // УПРАВЛЕНИЕ АРТИКУЛАМИ В РЕДАКТИРОВАНИИ
+        // УПРАВЛЕНИЕ АРТИКУЛАМИ В РЕДАКТИРОВАНИИ (ИСПРАВЛЕННОЕ)
         // ============================================
         function renderEditSkuList() {
             const container = document.getElementById('editSkuList');
+            if (!container) return;
+            
             if (!editSkuList || editSkuList.length === 0) {
                 container.innerHTML = '<span style="color:#999; font-size:13px;">Нет артикулов</span>';
                 return;
@@ -1356,7 +1362,7 @@
                 html += `
                     <span class="sku-tag">
                         ${escapeHtml(sku)}
-                        <button class="remove-sku" onclick="removeSkuFromEdit(${index})">✕</button>
+                        <button class="remove-sku" onclick="removeSkuFromEdit(${index})" title="Удалить артикул">✕</button>
                     </span>
                 `;
             });
@@ -1377,11 +1383,16 @@
             editSkuList.push(sku);
             input.value = '';
             renderEditSkuList();
+            showNotification(`✅ Артикул "${sku}" добавлен`, 'success');
         }
 
         function removeSkuFromEdit(index) {
+            const removed = editSkuList[index];
+            if (!removed) return;
+            if (!confirm(`Удалить артикул "${removed}"?`)) return;
             editSkuList.splice(index, 1);
             renderEditSkuList();
+            showNotification(`✅ Артикул "${removed}" удалён`, 'success');
         }
 
         // ============================================
@@ -1694,7 +1705,7 @@
         }
 
         // ============================================
-        // РЕДАКТИРОВАНИЕ ТОВАРА
+        // РЕДАКТИРОВАНИЕ ТОВАРА (ИСПРАВЛЕННОЕ)
         // ============================================
         function openEditModal(productId) {
             const product = products.find(p => p.id === productId);
@@ -1730,19 +1741,32 @@
             editProductId = null;
             currentEditPhotoFile = null;
             editSkuList = [];
+            document.getElementById('editNewSku').value = '';
         }
 
         async function saveEditProduct() {
-            if (!editProductId) return;
+            if (!editProductId) {
+                showNotification('Ошибка: товар не выбран', 'error');
+                return;
+            }
             
             const name = document.getElementById('editName').value.trim();
             const size = document.getElementById('editSize').value.trim().toUpperCase();
             const qty = parseInt(document.getElementById('editQty').value) || 0;
             const minStock = parseInt(document.getElementById('editMinStock').value) || 5;
             
-            if (!name) { showNotification('Введите название', 'error'); return; }
-            if (editSkuList.length === 0) { showNotification('Добавьте хотя бы один артикул', 'error'); return; }
-            if (!size) { showNotification('Введите размер', 'error'); return; }
+            if (!name) {
+                showNotification('Введите название', 'error');
+                return;
+            }
+            if (editSkuList.length === 0) {
+                showNotification('Добавьте хотя бы один артикул', 'error');
+                return;
+            }
+            if (!size) {
+                showNotification('Введите размер', 'error');
+                return;
+            }
             
             try {
                 let photoData = null;
