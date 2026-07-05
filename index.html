@@ -22,26 +22,62 @@
             font-weight: 600; 
             font-size: 18px; 
             margin-bottom: 4px; 
-            color: #000000; /* ЧЁРНЫЙ для светлой темы (БЕЗ !important) */
+            color: #000000;
         }
 
         /* ===== ТЁМНАЯ ТЕМА ===== */
         @media (prefers-color-scheme: dark) {
             body { background: #1a1a1a; color: #ffffff; }
-            .add-form, .product-card, .search-section, .category-filter { background: #2d2d2d !important; }
+            .add-form, .product-card, .search-section, .category-filter, .stats-grid .stat-card { background: #2d2d2d !important; }
             input, select { background: #1a1a1a; color: #ffffff; border-color: #444; }
             .total-info { background: #2d2d2d; border-top-color: #444; }
-            
-            /* ★ В тёмной теме — БЕЛЫЙ текст (с !important, чтобы перебить светлую тему) */
-            .product-name { 
-                color: #ffffff !important; 
-            }
+            .product-name { color: #ffffff !important; }
             .product-category { color: #aaaaaa !important; }
+            .stat-card .stat-label { color: #aaaaaa !important; }
+            .stat-card .stat-value { color: #ffffff !important; }
         }
 
         /* остальные стили */
         .header { margin-bottom: 20px; text-align: center; }
         h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+        
+        /* ===== СТАТИСТИКА ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .stat-card {
+            background: #f0f0f0;
+            padding: 12px 8px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .stat-card:active {
+            transform: scale(0.95);
+        }
+        .stat-card .stat-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        .stat-card .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #000000;
+        }
+        .stat-card .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+        .stat-card .stat-value.jeans { color: #2481cc; }
+        .stat-card .stat-value.shorts { color: #00b894; }
+        .stat-card .stat-value.low { color: #ff5c5c; }
+        .stat-card .stat-value.total { color: #6c5ce7; }
+        
+        /* ===== ОСТАЛЬНЫЕ СТИЛИ ===== */
         .add-form, .search-section, .category-filter {
             background: #f0f0f0;
             padding: 16px;
@@ -128,7 +164,7 @@
         .sync-online { background: rgba(0, 184, 148, 0.15); color: #00b894; }
         .sync-offline { background: rgba(255, 92, 92, 0.15); color: #ff5c5c; }
         .sync-waiting { background: rgba(36, 129, 204, 0.15); color: #2481cc; }
-        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
         .refresh-btn { padding: 8px 16px; font-size: 14px; width: auto; background: #2481cc; color: white; border: none; border-radius: 20px; cursor: pointer; }
         .compress-info {
             font-size: 11px;
@@ -137,6 +173,20 @@
             text-align: center;
         }
         .compress-info span { background: #2481cc20; padding: 2px 8px; border-radius: 10px; }
+        
+        /* Адаптив для статистики */
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            .stat-card .stat-value {
+                font-size: 18px;
+            }
+            .stat-card .stat-icon {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -149,6 +199,30 @@
         </div>
         <div class="button-group">
             <button class="refresh-btn" id="refreshBtn">🔄 Синхронизировать</button>
+        </div>
+    </div>
+
+    <!-- ===== БЛОК СТАТИСТИКИ ===== -->
+    <div class="stats-grid">
+        <div class="stat-card" id="statTotal">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value total" id="totalCount">0</div>
+            <div class="stat-label">Всего товаров</div>
+        </div>
+        <div class="stat-card" id="statJeans">
+            <div class="stat-icon">👖</div>
+            <div class="stat-value jeans" id="jeansCount">0</div>
+            <div class="stat-label">Джинсы</div>
+        </div>
+        <div class="stat-card" id="statShorts">
+            <div class="stat-icon">🩳</div>
+            <div class="stat-value shorts" id="shortsCount">0</div>
+            <div class="stat-label">Шорты</div>
+        </div>
+        <div class="stat-card" id="statLow">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-value low" id="lowStockCount">0</div>
+            <div class="stat-label">Заканчиваются</div>
         </div>
     </div>
 
@@ -323,11 +397,44 @@
                     });
                     
                     renderProducts();
+                    updateStats(); // Обновляем статистику
                     updateSyncStatus(`✅ ${products.length} товаров`, 'online');
                 }, (error) => {
                     console.error('Ошибка Firebase:', error);
                     updateSyncStatus('⚠️ Ошибка подключения', 'offline');
                 });
+        }
+
+        // ============================================
+        // 📊 СТАТИСТИКА
+        // ============================================
+        function updateStats() {
+            // Общее количество товаров
+            document.getElementById('totalCount').textContent = products.length;
+            
+            // Количество джинсов и шорт
+            const jeans = products.filter(p => p.category === 'Джинсы');
+            const shorts = products.filter(p => p.category === 'Шорты');
+            document.getElementById('jeansCount').textContent = jeans.length;
+            document.getElementById('shortsCount').textContent = shorts.length;
+            
+            // Товары с низким остатком
+            const lowStock = products.filter(p => p.quantity <= p.minStock);
+            document.getElementById('lowStockCount').textContent = lowStock.length;
+            
+            // Анимация для статистики (если есть изменения)
+            animateStats();
+        }
+
+        function animateStats() {
+            const cards = document.querySelectorAll('.stat-card');
+            cards.forEach(card => {
+                card.style.transition = 'transform 0.2s';
+                card.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    card.style.transform = 'scale(1)';
+                }, 200);
+            });
         }
 
         // ============================================
