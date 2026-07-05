@@ -38,12 +38,13 @@
             .modal-content { background: #2d2d2d !important; }
             .modal-product-item { border-bottom-color: #444 !important; }
             .modal-product-item .item-details { color: #aaaaaa !important; }
+            .modal-quantity-control input { background: #1a1a1a; color: #ffffff; border-color: #444; }
         }
 
         /* ===== СТАТИСТИКА ===== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             margin-bottom: 16px;
         }
@@ -78,7 +79,6 @@
         }
         .stat-card .stat-value.jeans { color: #2481cc; }
         .stat-card .stat-value.shorts { color: #00b894; }
-        .stat-card .stat-value.other { color: #fdcb6e; }
         .stat-card .stat-value.low { color: #ff5c5c; }
         .stat-card .stat-value.total { color: #6c5ce7; }
         .stat-card.low-stock-card {
@@ -218,17 +218,46 @@
             font-size: 12px;
             color: #666;
         }
-        .modal-product-item .item-quantity-badge {
-            font-weight: 700;
-            color: #2481cc;
-            font-size: 16px;
-            background: rgba(36, 129, 204, 0.1);
-            padding: 4px 12px;
-            border-radius: 12px;
+        .modal-quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .modal-product-item .item-quantity-badge.low {
+        .modal-quantity-control .qty-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .modal-quantity-control .qty-btn.minus {
+            background: rgba(255, 92, 92, 0.15);
             color: #ff5c5c;
-            background: rgba(255, 92, 92, 0.1);
+        }
+        .modal-quantity-control .qty-btn.plus {
+            background: rgba(0, 184, 148, 0.15);
+            color: #00b894;
+        }
+        .modal-quantity-control input {
+            width: 50px;
+            text-align: center;
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            background: white;
+            color: #000000 !important;
+        }
+        .modal-quantity-control input:focus {
+            outline: none;
+            border-color: #2481cc;
         }
         .modal-empty {
             text-align: center;
@@ -287,9 +316,13 @@
         .product-photo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .product-info { flex: 1; }
         .product-category { font-size: 12px; color: #666; margin-bottom: 4px; }
-        .product-quantity { font-size: 20px; font-weight: bold; color: #2481cc; }
+        .product-quantity { 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #000000 !important; 
+        }
         .quantity-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .quantity-control input { width: 80px; text-align: center; padding: 8px; }
+        .quantity-control input { width: 80px; text-align: center; padding: 8px; color: #000000; }
         .action-btn { width: 40px; height: 40px; border-radius: 20px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; }
         .action-btn.minus { background: rgba(255, 92, 92, 0.2); color: #ff5c5c; }
         .action-btn.plus { background: rgba(0, 184, 148, 0.2); color: #00b894; }
@@ -338,7 +371,7 @@
         
         @media (max-width: 480px) {
             .stats-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
                 gap: 8px;
             }
             .stat-card .stat-value {
@@ -354,10 +387,9 @@
             .modal-product-item {
                 flex-wrap: wrap;
             }
-        }
-        @media (max-width: 380px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .modal-product-item .modal-quantity-control {
+                width: 100%;
+                justify-content: flex-end;
             }
         }
     </style>
@@ -375,7 +407,7 @@
         </div>
     </div>
 
-    <!-- ===== БЛОК СТАТИСТИКИ ===== -->
+    <!-- ===== БЛОК СТАТИСТИКИ (4 карточки) ===== -->
     <div class="stats-grid">
         <div class="stat-card" id="statTotal" onclick="showCategoryModal('all')">
             <div class="stat-icon">📦</div>
@@ -391,11 +423,6 @@
             <div class="stat-icon">🩳</div>
             <div class="stat-value shorts" id="shortsCount">0</div>
             <div class="stat-label">Шорты</div>
-        </div>
-        <div class="stat-card" id="statOther" onclick="showCategoryModal('other')">
-            <div class="stat-icon">👕</div>
-            <div class="stat-value other" id="otherCount">0</div>
-            <div class="stat-label">Другие товары</div>
         </div>
         <div class="stat-card low-stock-card" id="statLow" onclick="showLowStockModal()">
             <div class="stat-icon">⚠️</div>
@@ -457,7 +484,6 @@
             <select id="productCategory">
                 <option value="Джинсы">👖 Джинсы</option>
                 <option value="Шорты">🩳 Шорты</option>
-                <option value="Другое">👕 Другое</option>
             </select>
         </div>
         <div class="input-group">
@@ -587,7 +613,7 @@
                             id: doc.id,
                             name: data.name || '',
                             quantity: data.quantity || 0,
-                            category: data.category || 'Другое',
+                            category: data.category || 'Джинсы',
                             minStock: data.minStock || 5,
                             photo: data.photo || null,
                             createdAt: data.createdAt || new Date().toISOString()
@@ -621,9 +647,6 @@
             const shorts = products.filter(p => p.category === 'Шорты');
             document.getElementById('shortsCount').textContent = shorts.length;
             
-            const other = products.filter(p => p.category !== 'Джинсы' && p.category !== 'Шорты');
-            document.getElementById('otherCount').textContent = other.length;
-            
             const lowStock = products.filter(p => p.quantity <= p.minStock);
             const lowCount = lowStock.length;
             document.getElementById('lowStockCount').textContent = lowCount;
@@ -638,11 +661,51 @@
         }
 
         // ============================================
+        // ИЗМЕНЕНИЕ КОЛИЧЕСТВА В МОДАЛКЕ
+        // ============================================
+        async function modalChangeQuantity(id, delta) {
+            const p = products.find(p => p.id === id);
+            if (p) {
+                const newQuantity = Math.max(0, p.quantity + delta);
+                const input = document.getElementById(`modal-qty-${id}`);
+                if (input) {
+                    input.value = newQuantity;
+                }
+                await modalSetQuantity(id, newQuantity);
+            }
+        }
+
+        async function modalSetQuantity(id, newValue) {
+            const p = products.find(p => p.id === id);
+            if (p) {
+                const quantity = Math.max(0, parseInt(newValue, 10) || 0);
+                
+                try {
+                    await db.collection('products').doc(id).update({
+                        quantity: quantity
+                    });
+                    
+                    const input = document.getElementById(`modal-qty-${id}`);
+                    if (input) {
+                        input.value = quantity;
+                    }
+                    
+                    if (quantity <= p.minStock) {
+                        showNotification(`⚠️ ${p.name}: осталось ${quantity} шт.`, true);
+                    } else {
+                        showNotification(`✅ ${p.name}: теперь ${quantity} шт.`, false);
+                    }
+                } catch (error) {
+                    console.error('Ошибка обновления:', error);
+                    showNotification('❌ Ошибка обновления количества', true);
+                }
+            }
+        }
+
+        // ============================================
         // 🪟 МОДАЛЬНОЕ ОКНО ДЛЯ КАТЕГОРИЙ
         // ============================================
         function showCategoryModal(categoryType) {
-            console.log('showCategoryModal вызвана, categoryType:', categoryType);
-            
             let filteredProducts = [];
             let title = '';
             let icon = '';
@@ -653,16 +716,12 @@
                 icon = '📦';
             } else if (categoryType === 'Джинсы') {
                 filteredProducts = products.filter(p => p.category === 'Джинсы');
-                title = 'Джинсы';
+                title = '👖 Джинсы';
                 icon = '👖';
             } else if (categoryType === 'Шорты') {
                 filteredProducts = products.filter(p => p.category === 'Шорты');
-                title = 'Шорты';
+                title = '🩳 Шорты';
                 icon = '🩳';
-            } else if (categoryType === 'other') {
-                filteredProducts = products.filter(p => p.category !== 'Джинсы' && p.category !== 'Шорты');
-                title = 'Другие товары';
-                icon = '👕';
             }
             
             // Сортируем по дате добавления (сначала новые)
@@ -678,11 +737,6 @@
             const iconEl = document.getElementById('categoryModalIcon');
             const countEl = document.getElementById('categoryModalCount');
             
-            if (!modal || !list) {
-                console.error('Модальное окно не найдено!');
-                return;
-            }
-            
             titleEl.textContent = title;
             iconEl.textContent = icon;
             countEl.textContent = `(${filteredProducts.length} шт.)`;
@@ -697,19 +751,25 @@
             } else {
                 let html = '';
                 filteredProducts.forEach(p => {
-                    const catEmoji = p.category === 'Джинсы' ? '👖' : p.category === 'Шорты' ? '🩳' : '👕';
+                    const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
                     const isLow = p.quantity <= p.minStock;
                     const photoHtml = p.photo 
                         ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` 
                         : '📷';
                     html += `
-                        <div class="modal-product-item">
+                        <div class="modal-product-item" data-product-id="${p.id}">
                             <div class="item-photo">${photoHtml}</div>
                             <div class="item-info">
                                 <div class="item-name">${escapeHtml(p.name)}</div>
                                 <div class="item-details">${catEmoji} ${p.category} • Мин. остаток: ${p.minStock} шт.</div>
                             </div>
-                            <div class="item-quantity-badge ${isLow ? 'low' : ''}">${p.quantity} шт.</div>
+                            <div class="modal-quantity-control">
+                                <button class="qty-btn minus" onclick="modalChangeQuantity('${p.id}', -1)">−</button>
+                                <input type="number" id="modal-qty-${p.id}" value="${p.quantity}" min="0" 
+                                       onchange="modalSetQuantity('${p.id}', this.value)" 
+                                       onfocus="this.select()">
+                                <button class="qty-btn plus" onclick="modalChangeQuantity('${p.id}', 1)">+</button>
+                            </div>
                         </div>
                     `;
                 });
@@ -729,17 +789,10 @@
         // 🪟 МОДАЛЬНОЕ ОКНО ДЛЯ ТОВАРОВ С НИЗКИМ ОСТАТКОМ
         // ============================================
         function showLowStockModal() {
-            console.log('showLowStockModal вызвана');
-            
             const lowStock = products.filter(p => p.quantity <= p.minStock);
             const modal = document.getElementById('lowStockModal');
             const list = document.getElementById('lowStockModalList');
             const countEl = document.getElementById('lowModalCount');
-            
-            if (!modal || !list) {
-                console.error('Модальное окно не найдено!');
-                return;
-            }
             
             countEl.textContent = `(${lowStock.length} шт.)`;
             
@@ -754,18 +807,24 @@
             } else {
                 let html = '';
                 lowStock.forEach(p => {
-                    const catEmoji = p.category === 'Джинсы' ? '👖' : p.category === 'Шорты' ? '🩳' : '👕';
+                    const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
                     const photoHtml = p.photo 
                         ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` 
                         : '📷';
                     html += `
-                        <div class="modal-product-item">
+                        <div class="modal-product-item" data-product-id="${p.id}">
                             <div class="item-photo">${photoHtml}</div>
                             <div class="item-info">
                                 <div class="item-name">${escapeHtml(p.name)}</div>
                                 <div class="item-details">${catEmoji} ${p.category} • Мин. остаток: ${p.minStock} шт.</div>
                             </div>
-                            <div class="item-quantity-badge low">${p.quantity} шт.</div>
+                            <div class="modal-quantity-control">
+                                <button class="qty-btn minus" onclick="modalChangeQuantity('${p.id}', -1)">−</button>
+                                <input type="number" id="modal-qty-${p.id}" value="${p.quantity}" min="0" 
+                                       onchange="modalSetQuantity('${p.id}', this.value)" 
+                                       onfocus="this.select()">
+                                <button class="qty-btn plus" onclick="modalChangeQuantity('${p.id}', 1)">+</button>
+                            </div>
                         </div>
                     `;
                 });
@@ -887,7 +946,7 @@
         }
 
         // ============================================
-        // ИЗМЕНЕНИЕ КОЛИЧЕСТВА
+        // ИЗМЕНЕНИЕ КОЛИЧЕСТВА (основное)
         // ============================================
         async function changeQuantity(id, delta) {
             const p = products.find(p => p.id === id);
@@ -954,7 +1013,7 @@
             for (let p of filtered) {
                 totalQty += p.quantity;
                 const isLow = p.quantity <= p.minStock;
-                const catEmoji = p.category === 'Джинсы' ? '👖' : p.category === 'Шорты' ? '🩳' : '👕';
+                const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
                 html += `
                     <div class="product-card ${isLow ? 'low-stock' : ''}">
                         <div class="product-header">
