@@ -35,12 +35,10 @@
             .product-category { color: #aaaaaa !important; }
             .stat-card .stat-label { color: #aaaaaa !important; }
             .stat-card .stat-value { color: #ffffff !important; }
+            .modal-content { background: #2d2d2d !important; }
+            .modal-product-item { border-bottom-color: #444 !important; }
         }
 
-        /* остальные стили */
-        .header { margin-bottom: 20px; text-align: center; }
-        h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-        
         /* ===== СТАТИСТИКА ===== */
         .stats-grid {
             display: grid;
@@ -53,10 +51,15 @@
             padding: 12px 8px;
             border-radius: 12px;
             text-align: center;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            user-select: none;
         }
         .stat-card:active {
             transform: scale(0.95);
+        }
+        .stat-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .stat-card .stat-icon {
             font-size: 24px;
@@ -76,8 +79,149 @@
         .stat-card .stat-value.shorts { color: #00b894; }
         .stat-card .stat-value.low { color: #ff5c5c; }
         .stat-card .stat-value.total { color: #6c5ce7; }
-        
+        .stat-card.low-stock-card {
+            border: 2px solid #ff5c5c;
+            position: relative;
+        }
+        .stat-card.low-stock-card .stat-value.low {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .stat-card.low-stock-card .low-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ff5c5c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        /* ===== МОДАЛЬНОЕ ОКНО ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 16px;
+            overflow-y: auto;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 24px;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #ff5c5c;
+        }
+        .modal-header h2 {
+            font-size: 20px;
+            color: #ff5c5c;
+        }
+        .modal-header .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            width: auto;
+            padding: 0 8px;
+        }
+        .modal-header .close-btn:hover {
+            color: #ff5c5c;
+        }
+        .modal-product-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-product-item:last-child {
+            border-bottom: none;
+        }
+        .modal-product-item .item-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .modal-product-item .item-info {
+            flex: 1;
+        }
+        .modal-product-item .item-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .modal-product-item .item-details {
+            font-size: 12px;
+            color: #666;
+        }
+        .modal-product-item .item-quantity {
+            font-weight: 700;
+            color: #ff5c5c;
+            font-size: 16px;
+            background: rgba(255, 92, 92, 0.1);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        .modal-empty {
+            text-align: center;
+            padding: 30px 0;
+            color: #999;
+        }
+        .modal-empty .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
         /* ===== ОСТАЛЬНЫЕ СТИЛИ ===== */
+        .header { margin-bottom: 20px; text-align: center; }
+        h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
         .add-form, .search-section, .category-filter {
             background: #f0f0f0;
             padding: 16px;
@@ -186,6 +330,10 @@
             .stat-card .stat-icon {
                 font-size: 20px;
             }
+            .modal-content {
+                padding: 16px;
+                max-height: 90vh;
+            }
         }
     </style>
 </head>
@@ -219,10 +367,24 @@
             <div class="stat-value shorts" id="shortsCount">0</div>
             <div class="stat-label">Шорты</div>
         </div>
-        <div class="stat-card" id="statLow">
+        <div class="stat-card low-stock-card" id="statLow" onclick="showLowStockModal()">
             <div class="stat-icon">⚠️</div>
             <div class="stat-value low" id="lowStockCount">0</div>
             <div class="stat-label">Заканчиваются</div>
+            <div class="low-badge" id="lowBadge" style="display:none;">!</div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ===== -->
+    <div class="modal-overlay" id="lowStockModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚠️ Товары заканчиваются</h2>
+                <button class="close-btn" onclick="closeLowStockModal()">✕</button>
+            </div>
+            <div id="modalProductList">
+                <!-- Список товаров будет вставлен сюда -->
+            </div>
         </div>
     </div>
 
@@ -397,7 +559,7 @@
                     });
                     
                     renderProducts();
-                    updateStats(); // Обновляем статистику
+                    updateStats();
                     updateSyncStatus(`✅ ${products.length} товаров`, 'online');
                 }, (error) => {
                     console.error('Ошибка Firebase:', error);
@@ -409,20 +571,26 @@
         // 📊 СТАТИСТИКА
         // ============================================
         function updateStats() {
-            // Общее количество товаров
             document.getElementById('totalCount').textContent = products.length;
             
-            // Количество джинсов и шорт
             const jeans = products.filter(p => p.category === 'Джинсы');
             const shorts = products.filter(p => p.category === 'Шорты');
             document.getElementById('jeansCount').textContent = jeans.length;
             document.getElementById('shortsCount').textContent = shorts.length;
             
-            // Товары с низким остатком
             const lowStock = products.filter(p => p.quantity <= p.minStock);
-            document.getElementById('lowStockCount').textContent = lowStock.length;
+            const lowCount = lowStock.length;
+            document.getElementById('lowStockCount').textContent = lowCount;
             
-            // Анимация для статистики (если есть изменения)
+            // Показываем/скрываем бейдж на карточке
+            const badge = document.getElementById('lowBadge');
+            if (lowCount > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = lowCount;
+            } else {
+                badge.style.display = 'none';
+            }
+            
             animateStats();
         }
 
@@ -438,7 +606,67 @@
         }
 
         // ============================================
-        // ДОБАВЛЕНИЕ ТОВАРА (С СЖАТИЕМ)
+        // 🪟 МОДАЛЬНОЕ ОКНО С ТОВАРАМИ КОНЧАЮЩИМИСЯ
+        // ============================================
+        function showLowStockModal() {
+            const lowStock = products.filter(p => p.quantity <= p.minStock);
+            const modal = document.getElementById('lowStockModal');
+            const list = document.getElementById('modalProductList');
+            
+            if (lowStock.length === 0) {
+                list.innerHTML = `
+                    <div class="modal-empty">
+                        <div class="empty-icon">🎉</div>
+                        <p>Все товары в наличии!</p>
+                        <p style="font-size:13px; color:#999;">Нет товаров с низким остатком</p>
+                    </div>
+                `;
+            } else {
+                let html = '';
+                lowStock.forEach(p => {
+                    const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
+                    html += `
+                        <div class="modal-product-item">
+                            <div class="item-photo">
+                                ${p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : '📷'}
+                            </div>
+                            <div class="item-info">
+                                <div class="item-name">${escapeHtml(p.name)}</div>
+                                <div class="item-details">${catEmoji} ${p.category} • Мин. остаток: ${p.minStock} шт.</div>
+                            </div>
+                            <div class="item-quantity">${p.quantity} шт.</div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            }
+            
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLowStockModal() {
+            document.getElementById('lowStockModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Закрытие по клику на оверлей
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('lowStockModal');
+            if (e.target === modal) {
+                closeLowStockModal();
+            }
+        });
+
+        // Закрытие по ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLowStockModal();
+            }
+        });
+
+        // ============================================
+        // ДОБАВЛЕНИЕ ТОВАРА
         // ============================================
         async function addProductLogic(name, quantity, category, minStock, photoData) {
             showNotification(`📤 Сохранение "${name}"...`, false);
