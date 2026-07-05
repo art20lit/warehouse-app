@@ -17,7 +17,7 @@
             padding-bottom: 100px;
         }
 
-        /* ===== СВЕТЛАЯ ТЕМА (по умолчанию) ===== */
+        /* ===== СВЕТЛАЯ ТЕМА ===== */
         .product-name { 
             font-weight: 600; 
             font-size: 18px; 
@@ -37,6 +37,7 @@
             .stat-card .stat-value { color: #ffffff !important; }
             .modal-content { background: #2d2d2d !important; }
             .modal-product-item { border-bottom-color: #444 !important; }
+            .modal-product-item .item-details { color: #aaaaaa !important; }
         }
 
         /* ===== СТАТИСТИКА ===== */
@@ -189,6 +190,13 @@
             align-items: center;
             justify-content: center;
             font-size: 20px;
+            flex-shrink: 0;
+        }
+        .modal-product-item .item-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
         }
         .modal-product-item .item-info {
             flex: 1;
@@ -318,7 +326,6 @@
         }
         .compress-info span { background: #2481cc20; padding: 2px 8px; border-radius: 10px; }
         
-        /* Адаптив для статистики */
         @media (max-width: 480px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -440,7 +447,7 @@
 
     <script>
         // ==================================================
-        // ✅ ТВОЙ FIREBASE КОНФИГ
+        // ✅ FIREBASE КОНФИГ
         // ==================================================
         const firebaseConfig = {
             apiKey: "AIzaSyC-a15NM1nzH8ELTqlBc6SDtQIIAQ2qu0g",
@@ -582,7 +589,6 @@
             const lowCount = lowStock.length;
             document.getElementById('lowStockCount').textContent = lowCount;
             
-            // Показываем/скрываем бейдж на карточке
             const badge = document.getElementById('lowBadge');
             if (lowCount > 0) {
                 badge.style.display = 'flex';
@@ -590,23 +596,10 @@
             } else {
                 badge.style.display = 'none';
             }
-            
-            animateStats();
-        }
-
-        function animateStats() {
-            const cards = document.querySelectorAll('.stat-card');
-            cards.forEach(card => {
-                card.style.transition = 'transform 0.2s';
-                card.style.transform = 'scale(1.05)';
-                setTimeout(() => {
-                    card.style.transform = 'scale(1)';
-                }, 200);
-            });
         }
 
         // ============================================
-        // 🪟 МОДАЛЬНОЕ ОКНО С ТОВАРАМИ КОНЧАЮЩИМИСЯ
+        // 🪟 МОДАЛЬНОЕ ОКНО С ТОВАРАМИ, КОТОРЫЕ ЗАКАНЧИВАЮТСЯ
         // ============================================
         function showLowStockModal() {
             const lowStock = products.filter(p => p.quantity <= p.minStock);
@@ -625,11 +618,12 @@
                 let html = '';
                 lowStock.forEach(p => {
                     const catEmoji = p.category === 'Джинсы' ? '👖' : '🩳';
+                    const photoHtml = p.photo 
+                        ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` 
+                        : '📷';
                     html += `
                         <div class="modal-product-item">
-                            <div class="item-photo">
-                                ${p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : '📷'}
-                            </div>
+                            <div class="item-photo">${photoHtml}</div>
                             <div class="item-info">
                                 <div class="item-name">${escapeHtml(p.name)}</div>
                                 <div class="item-details">${catEmoji} ${p.category} • Мин. остаток: ${p.minStock} шт.</div>
