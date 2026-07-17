@@ -1433,7 +1433,7 @@
                             parse_mode: 'HTML'
                         })
                     });
-                    showNotification('✅ Telegram бот работает!', 'success');
+                    showNotification(t('notification_telegram_ok'), 'success');
                 }
             } catch (e) { console.warn('⚠️ Telegram check error:', e); }
         }
@@ -1443,6 +1443,7 @@
         // ==================================================
         const translations = {
             ru: {
+                // Общие
                 warehouse: 'Управление складом',
                 allProducts: 'Все товары',
                 lowStock: 'Мало',
@@ -1452,83 +1453,97 @@
                 users: 'Управление пользователями',
                 logout: 'Выйти',
                 categories: 'Категории',
-                search: 'Поиск по названию, артикулу...',
-                allCategories: 'Все категории',
-                allSubcategories: 'Все подкатегории',
-                allProducts2: 'Все товары',
-                lowStock2: 'Низкий остаток',
-                inStock: 'В наличии',
-                outOfStock: 'Закончились',
-                clear: 'Сбросить',
-                noProducts: 'Нет товаров',
-                createFirst: 'Создайте первую!',
-                loading: 'Загрузка...',
-                authTitle: '📦 Склад',
-                authSubtitle: 'Войдите или зарегистрируйтесь',
-                authLogin: 'Вход',
-                authRegister: 'Регистрация',
-                loginEmail: '📧 Email',
-                loginPassword: '🔒 Пароль',
-                loginBtn: 'Войти',
-                registerEmail: '📧 Email',
-                registerPassword: '🔒 Пароль',
-                registerName: '👤 Ваше имя',
-                registerBtn: 'Зарегистрироваться',
-                registerSuccess: '✅ Регистрация успешна!',
-                twofaTitle: '🔐 Двухфакторная аутентификация',
-                twofaDesc: 'Код отправлен в Telegram',
-                twofaBot: 'Проверьте сообщения от бота @Skladotm_Bot',
-                twofaCodeLabel: 'Введите код из Telegram:',
-                twofaVerify: '✅ Подтвердить',
-                twofaResend: '🔄 Отправить повторно',
-                exportTitle: 'Экспорт товаров',
-                exportDesc: 'Выберите поля для экспорта в Excel:',
-                importTitle: 'Импорт товаров',
-                importDesc: 'Загрузите Excel файл для обновления остатков:',
-                importFile: '📥 Выбрать файл',
-                importHint: 'Обновление по полям: Артикул + Размер',
-                fieldName: 'Название',
-                fieldSku: 'Артикул',
-                fieldSize: 'Размер',
-                fieldQty: 'Количество',
-                fieldCategory: 'Категория',
-                fieldMinStock: 'Мин. остаток',
-                exportSelected: '📤 Выбранные поля',
-                exportAdvanced: '📤 Расширенный',
-                exportAll: '📤 Все поля',
-                menuTitle: '📋 Меню',
-                mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс',
-                addEvent: '➕ Добавить',
-                editTitle: '✏️ Редактирование',
-                editNoPhoto: '📷 Нет фото',
-                editPhoto: '📷 Фото',
-                editName: '📝 Название',
-                editSkus: '🔢 Артикулы',
-                editSize: '📏 Размер',
-                editQty: '🔢 Количество',
-                editMinStock: '⚠️ Мин. остаток',
-                editSave: '💾 Сохранить',
-                editDelete: '🗑️ Удалить',
-                editCancel: '✕ Отмена',
-                importModeTitle: '📥 Режим импорта',
-                importModeDesc: 'Как обновить количество?',
-                importModeSub: 'Выберите действие с товарами из файла',
-                importAdd: '➕ ДОБАВИТЬ',
-                importSub: '➖ УБАВИТЬ',
-                importFileTitle: 'Загрузка',
-                importFileSub: 'Загрузите Excel файл',
-                fileDropText: 'Нажмите или перетащите файл Excel (.xlsx, .xls)',
-                installTitle: '📱 Установить приложение',
-                installDesc: 'Склад всегда под рукой',
-                installBtn: 'Установить',
-                noCategories: 'Нет категорий',
-                closeSub: '✕ Закрыть',
-                lowStockTitle: '⚠️ Товары с низким остатком',
-                allProductsTitle: '📦 Все товары',
-                historyTitle: '📋 История изменений',
-                calendarTitle: '📅 Календарь событий',
-                usersTitle: '👥 Управление пользователями',
-                exportModalTitle: '📊 ЭКСПОРТ / ИМПОРТ'
+                search_placeholder: '🔍 Поиск по названию, артикулу...',
+                search_all_categories: 'Все категории',
+                search_all_subcategories: 'Все подкатегории',
+                search_all_products: 'Все товары',
+                search_low_stock: '⚠️ Низкий остаток',
+                search_in_stock: '✅ В наличии',
+                search_out_of_stock: '❌ Закончились',
+                search_clear: '✕ Сбросить',
+                search_results: '📊 Найдено: {count} из {total}',
+                search_not_found: '🔍 Ничего не найдено',
+                no_categories: 'Нет категорий',
+                // Авторизация
+                auth_title: '📦 Склад',
+                auth_subtitle: 'Войдите или зарегистрируйтесь',
+                auth_login: 'Вход',
+                auth_register: 'Регистрация',
+                login_email: '📧 Email',
+                login_password: '🔒 Пароль',
+                login_btn: 'Войти',
+                register_email: '📧 Email',
+                register_password: '🔒 Пароль',
+                register_name: '👤 Ваше имя',
+                register_btn: 'Зарегистрироваться',
+                register_success: '✅ Регистрация успешна!',
+                // 2FA
+                twofa_title: '🔐 Двухфакторная аутентификация',
+                twofa_desc: 'Код отправлен в Telegram',
+                twofa_bot: 'Проверьте сообщения от бота @Skladotm_Bot',
+                twofa_code_label: 'Введите код из Telegram:',
+                twofa_verify: '✅ Подтвердить',
+                twofa_resend: '🔄 Отправить повторно',
+                // Экспорт
+                export_title: 'Экспорт товаров',
+                export_desc: 'Выберите поля для экспорта в Excel:',
+                import_title: 'Импорт товаров',
+                import_desc: 'Загрузите Excel файл для обновления остатков:',
+                import_file_btn: '📥 Выбрать файл',
+                import_hint: 'Обновление по полям: Артикул + Размер',
+                field_name: 'Название',
+                field_sku: 'Артикул',
+                field_size: 'Размер',
+                field_qty: 'Количество',
+                field_category: 'Категория',
+                field_min_stock: 'Мин. остаток',
+                export_selected: '📤 Выбранные поля',
+                export_advanced: '📤 Расширенный',
+                export_all: '📤 Все поля',
+                // Меню
+                menu_title: '📋 Меню',
+                menu_all_products: 'Все товары',
+                menu_low_stock: 'Мало',
+                menu_history: 'История изменений',
+                menu_calendar: 'Календарь событий',
+                menu_export_import: 'ЭКСПОРТ/ИМПОРТ',
+                menu_users: 'Управление пользователями',
+                menu_logout: 'Выйти',
+                // Календарь
+                calendar_days: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
+                calendar_event_add: '➕ Добавить',
+                // Редактирование
+                edit_title: '✏️ Редактирование',
+                edit_no_photo: '📷 Нет фото',
+                edit_photo: '📷 Фото',
+                edit_name: '📝 Название',
+                edit_skus: '🔢 Артикулы',
+                edit_size: '📏 Размер',
+                edit_qty: '🔢 Количество',
+                edit_min_stock: '⚠️ Мин. остаток',
+                edit_save: '💾 Сохранить',
+                edit_delete: '🗑️ Удалить',
+                edit_cancel: '✕ Отмена',
+                // Импорт
+                import_mode_title: '📥 Режим импорта',
+                import_mode_desc: 'Как обновить количество?',
+                import_mode_sub: 'Выберите действие с товарами из файла',
+                import_add: '➕ ДОБАВИТЬ',
+                import_sub: '➖ УБАВИТЬ',
+                import_file_title: 'Загрузка',
+                import_file_sub: 'Загрузите Excel файл',
+                file_drop_text: 'Нажмите или перетащите файл Excel (.xlsx, .xls)',
+                // PWA
+                install_title: '📱 Установить приложение',
+                install_desc: 'Склад всегда под рукой',
+                install_btn: 'Установить',
+                // Уведомления
+                notification_telegram_ok: '✅ Telegram бот работает!',
+                // Роли
+                role_admin: 'Администратор 👑',
+                role_manager: 'Менеджер 📋',
+                role_it: 'IT-специалист 💻',
+                role_viewer: 'Наблюдатель 👀'
             },
             en: {
                 warehouse: 'Warehouse Management',
@@ -1540,83 +1555,87 @@
                 users: 'User Management',
                 logout: 'Logout',
                 categories: 'Categories',
-                search: 'Search by name, SKU...',
-                allCategories: 'All Categories',
-                allSubcategories: 'All Subcategories',
-                allProducts2: 'All Products',
-                lowStock2: 'Low Stock',
-                inStock: 'In Stock',
-                outOfStock: 'Out of Stock',
-                clear: 'Clear',
-                noProducts: 'No products',
-                createFirst: 'Create your first!',
-                loading: 'Loading...',
-                authTitle: '📦 Warehouse',
-                authSubtitle: 'Login or Register',
-                authLogin: 'Login',
-                authRegister: 'Register',
-                loginEmail: '📧 Email',
-                loginPassword: '🔒 Password',
-                loginBtn: 'Login',
-                registerEmail: '📧 Email',
-                registerPassword: '🔒 Password',
-                registerName: '👤 Your Name',
-                registerBtn: 'Register',
-                registerSuccess: '✅ Registration successful!',
-                twofaTitle: '🔐 Two-Factor Authentication',
-                twofaDesc: 'Code sent to Telegram',
-                twofaBot: 'Check messages from @Skladotm_Bot',
-                twofaCodeLabel: 'Enter code from Telegram:',
-                twofaVerify: '✅ Verify',
-                twofaResend: '🔄 Resend',
-                exportTitle: 'Export Products',
-                exportDesc: 'Select fields to export to Excel:',
-                importTitle: 'Import Products',
-                importDesc: 'Upload Excel file to update stock:',
-                importFile: '📥 Select file',
-                importHint: 'Update by fields: SKU + Size',
-                fieldName: 'Name',
-                fieldSku: 'SKU',
-                fieldSize: 'Size',
-                fieldQty: 'Quantity',
-                fieldCategory: 'Category',
-                fieldMinStock: 'Min Stock',
-                exportSelected: '📤 Selected fields',
-                exportAdvanced: '📤 Advanced',
-                exportAll: '📤 All fields',
-                menuTitle: '📋 Menu',
-                mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun',
-                addEvent: '➕ Add',
-                editTitle: '✏️ Edit',
-                editNoPhoto: '📷 No photo',
-                editPhoto: '📷 Photo',
-                editName: '📝 Name',
-                editSkus: '🔢 SKUs',
-                editSize: '📏 Size',
-                editQty: '🔢 Quantity',
-                editMinStock: '⚠️ Min Stock',
-                editSave: '💾 Save',
-                editDelete: '🗑️ Delete',
-                editCancel: '✕ Cancel',
-                importModeTitle: '📥 Import Mode',
-                importModeDesc: 'How to update quantity?',
-                importModeSub: 'Choose action with products from file',
-                importAdd: '➕ ADD',
-                importSub: '➖ SUBTRACT',
-                importFileTitle: 'Upload',
-                importFileSub: 'Upload Excel file',
-                fileDropText: 'Click or drag Excel file (.xlsx, .xls)',
-                installTitle: '📱 Install app',
-                installDesc: 'Warehouse always at hand',
-                installBtn: 'Install',
-                noCategories: 'No categories',
-                closeSub: '✕ Close',
-                lowStockTitle: '⚠️ Low Stock Products',
-                allProductsTitle: '📦 All Products',
-                historyTitle: '📋 History',
-                calendarTitle: '📅 Calendar',
-                usersTitle: '👥 User Management',
-                exportModalTitle: '📊 EXPORT / IMPORT'
+                search_placeholder: '🔍 Search by name, SKU...',
+                search_all_categories: 'All Categories',
+                search_all_subcategories: 'All Subcategories',
+                search_all_products: 'All Products',
+                search_low_stock: '⚠️ Low Stock',
+                search_in_stock: '✅ In Stock',
+                search_out_of_stock: '❌ Out of Stock',
+                search_clear: '✕ Clear',
+                search_results: '📊 Found: {count} of {total}',
+                search_not_found: '🔍 Nothing found',
+                no_categories: 'No categories',
+                auth_title: '📦 Warehouse',
+                auth_subtitle: 'Login or Register',
+                auth_login: 'Login',
+                auth_register: 'Register',
+                login_email: '📧 Email',
+                login_password: '🔒 Password',
+                login_btn: 'Login',
+                register_email: '📧 Email',
+                register_password: '🔒 Password',
+                register_name: '👤 Your Name',
+                register_btn: 'Register',
+                register_success: '✅ Registration successful!',
+                twofa_title: '🔐 Two-Factor Authentication',
+                twofa_desc: 'Code sent to Telegram',
+                twofa_bot: 'Check messages from @Skladotm_Bot',
+                twofa_code_label: 'Enter code from Telegram:',
+                twofa_verify: '✅ Verify',
+                twofa_resend: '🔄 Resend',
+                export_title: 'Export Products',
+                export_desc: 'Select fields to export to Excel:',
+                import_title: 'Import Products',
+                import_desc: 'Upload Excel file to update stock:',
+                import_file_btn: '📥 Select file',
+                import_hint: 'Update by fields: SKU + Size',
+                field_name: 'Name',
+                field_sku: 'SKU',
+                field_size: 'Size',
+                field_qty: 'Quantity',
+                field_category: 'Category',
+                field_min_stock: 'Min Stock',
+                export_selected: '📤 Selected fields',
+                export_advanced: '📤 Advanced',
+                export_all: '📤 All fields',
+                menu_title: '📋 Menu',
+                menu_all_products: 'All Products',
+                menu_low_stock: 'Low Stock',
+                menu_history: 'History',
+                menu_calendar: 'Calendar',
+                menu_export_import: 'EXPORT/IMPORT',
+                menu_users: 'User Management',
+                menu_logout: 'Logout',
+                calendar_days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+                calendar_event_add: '➕ Add',
+                edit_title: '✏️ Edit',
+                edit_no_photo: '📷 No photo',
+                edit_photo: '📷 Photo',
+                edit_name: '📝 Name',
+                edit_skus: '🔢 SKUs',
+                edit_size: '📏 Size',
+                edit_qty: '🔢 Quantity',
+                edit_min_stock: '⚠️ Min Stock',
+                edit_save: '💾 Save',
+                edit_delete: '🗑️ Delete',
+                edit_cancel: '✕ Cancel',
+                import_mode_title: '📥 Import Mode',
+                import_mode_desc: 'How to update quantity?',
+                import_mode_sub: 'Choose action with products from file',
+                import_add: '➕ ADD',
+                import_sub: '➖ SUBTRACT',
+                import_file_title: 'Upload',
+                import_file_sub: 'Upload Excel file',
+                file_drop_text: 'Click or drag Excel file (.xlsx, .xls)',
+                install_title: '📱 Install app',
+                install_desc: 'Warehouse always at hand',
+                install_btn: 'Install',
+                notification_telegram_ok: '✅ Telegram bot is working!',
+                role_admin: 'Administrator 👑',
+                role_manager: 'Manager 📋',
+                role_it: 'IT Specialist 💻',
+                role_viewer: 'Viewer 👀'
             },
             zh: {
                 warehouse: '仓库管理',
@@ -1628,175 +1647,298 @@
                 users: '用户管理',
                 logout: '退出',
                 categories: '分类',
-                search: '搜索名称、SKU...',
-                allCategories: '全部分类',
-                allSubcategories: '全部子分类',
-                allProducts2: '所有商品',
-                lowStock2: '低库存',
-                inStock: '有货',
-                outOfStock: '缺货',
-                clear: '清除',
-                noProducts: '没有商品',
-                createFirst: '创建第一个！',
-                loading: '加载中...',
-                authTitle: '📦 仓库',
-                authSubtitle: '登录或注册',
-                authLogin: '登录',
-                authRegister: '注册',
-                loginEmail: '📧 邮箱',
-                loginPassword: '🔒 密码',
-                loginBtn: '登录',
-                registerEmail: '📧 邮箱',
-                registerPassword: '🔒 密码',
-                registerName: '👤 您的名字',
-                registerBtn: '注册',
-                registerSuccess: '✅ 注册成功！',
-                twofaTitle: '🔐 双重认证',
-                twofaDesc: '验证码已发送到 Telegram',
-                twofaBot: '请检查 @Skladotm_Bot 的消息',
-                twofaCodeLabel: '输入 Telegram 验证码：',
-                twofaVerify: '✅ 验证',
-                twofaResend: '🔄 重新发送',
-                exportTitle: '导出商品',
-                exportDesc: '选择要导出到 Excel 的字段：',
-                importTitle: '导入商品',
-                importDesc: '上传 Excel 文件更新库存：',
-                importFile: '📥 选择文件',
-                importHint: '按字段更新：SKU + 尺寸',
-                fieldName: '名称',
-                fieldSku: 'SKU',
-                fieldSize: '尺寸',
-                fieldQty: '数量',
-                fieldCategory: '分类',
-                fieldMinStock: '最小库存',
-                exportSelected: '📤 选定字段',
-                exportAdvanced: '📤 高级',
-                exportAll: '📤 所有字段',
-                menuTitle: '📋 菜单',
-                mon: '一', tue: '二', wed: '三', thu: '四', fri: '五', sat: '六', sun: '日',
-                addEvent: '➕ 添加',
-                editTitle: '✏️ 编辑',
-                editNoPhoto: '📷 无照片',
-                editPhoto: '📷 照片',
-                editName: '📝 名称',
-                editSkus: '🔢 SKU',
-                editSize: '📏 尺寸',
-                editQty: '🔢 数量',
-                editMinStock: '⚠️ 最小库存',
-                editSave: '💾 保存',
-                editDelete: '🗑️ 删除',
-                editCancel: '✕ 取消',
-                importModeTitle: '📥 导入模式',
-                importModeDesc: '如何更新数量？',
-                importModeSub: '选择对文件中商品的操作',
-                importAdd: '➕ 添加',
-                importSub: '➖ 减去',
-                importFileTitle: '上传',
-                importFileSub: '上传 Excel 文件',
-                fileDropText: '点击或拖拽 Excel 文件 (.xlsx, .xls)',
-                installTitle: '📱 安装应用',
-                installDesc: '仓库随时在手',
-                installBtn: '安装',
-                noCategories: '没有分类',
-                closeSub: '✕ 关闭',
-                lowStockTitle: '⚠️ 低库存商品',
-                allProductsTitle: '📦 所有商品',
-                historyTitle: '📋 历史记录',
-                calendarTitle: '📅 日历',
-                usersTitle: '👥 用户管理',
-                exportModalTitle: '📊 导出 / 导入'
+                search_placeholder: '🔍 搜索名称、SKU...',
+                search_all_categories: '全部分类',
+                search_all_subcategories: '全部子分类',
+                search_all_products: '所有商品',
+                search_low_stock: '⚠️ 低库存',
+                search_in_stock: '✅ 有货',
+                search_out_of_stock: '❌ 缺货',
+                search_clear: '✕ 清除',
+                search_results: '📊 找到：{count} 个，共 {total} 个',
+                search_not_found: '🔍 未找到',
+                no_categories: '没有分类',
+                auth_title: '📦 仓库',
+                auth_subtitle: '登录或注册',
+                auth_login: '登录',
+                auth_register: '注册',
+                login_email: '📧 邮箱',
+                login_password: '🔒 密码',
+                login_btn: '登录',
+                register_email: '📧 邮箱',
+                register_password: '🔒 密码',
+                register_name: '👤 您的名字',
+                register_btn: '注册',
+                register_success: '✅ 注册成功！',
+                twofa_title: '🔐 双重认证',
+                twofa_desc: '验证码已发送到 Telegram',
+                twofa_bot: '请检查 @Skladotm_Bot 的消息',
+                twofa_code_label: '输入 Telegram 验证码：',
+                twofa_verify: '✅ 验证',
+                twofa_resend: '🔄 重新发送',
+                export_title: '导出商品',
+                export_desc: '选择要导出到 Excel 的字段：',
+                import_title: '导入商品',
+                import_desc: '上传 Excel 文件更新库存：',
+                import_file_btn: '📥 选择文件',
+                import_hint: '按字段更新：SKU + 尺寸',
+                field_name: '名称',
+                field_sku: 'SKU',
+                field_size: '尺寸',
+                field_qty: '数量',
+                field_category: '分类',
+                field_min_stock: '最小库存',
+                export_selected: '📤 选定字段',
+                export_advanced: '📤 高级',
+                export_all: '📤 所有字段',
+                menu_title: '📋 菜单',
+                menu_all_products: '所有商品',
+                menu_low_stock: '低库存',
+                menu_history: '历史记录',
+                menu_calendar: '日历',
+                menu_export_import: '导出/导入',
+                menu_users: '用户管理',
+                menu_logout: '退出',
+                calendar_days: ['一','二','三','四','五','六','日'],
+                calendar_event_add: '➕ 添加',
+                edit_title: '✏️ 编辑',
+                edit_no_photo: '📷 无照片',
+                edit_photo: '📷 照片',
+                edit_name: '📝 名称',
+                edit_skus: '🔢 SKU',
+                edit_size: '📏 尺寸',
+                edit_qty: '🔢 数量',
+                edit_min_stock: '⚠️ 最小库存',
+                edit_save: '💾 保存',
+                edit_delete: '🗑️ 删除',
+                edit_cancel: '✕ 取消',
+                import_mode_title: '📥 导入模式',
+                import_mode_desc: '如何更新数量？',
+                import_mode_sub: '选择对文件中商品的操作',
+                import_add: '➕ 添加',
+                import_sub: '➖ 减去',
+                import_file_title: '上传',
+                import_file_sub: '上传 Excel 文件',
+                file_drop_text: '点击或拖拽 Excel 文件 (.xlsx, .xls)',
+                install_title: '📱 安装应用',
+                install_desc: '仓库随时在手',
+                install_btn: '安装',
+                notification_telegram_ok: '✅ Telegram 机器人正常工作！',
+                role_admin: '管理员 👑',
+                role_manager: '经理 📋',
+                role_it: 'IT 专员 💻',
+                role_viewer: '观察员 👀'
             }
         };
 
         let currentLanguage = localStorage.getItem('language') || 'ru';
 
+        // ==================================================
+        // 📝 ФУНКЦИЯ ПЕРЕВОДА
+        // ==================================================
+        function t(key, params = {}) {
+            const lang = currentLanguage || 'ru';
+            const keys = key.split('.');
+            let value = translations[lang];
+            
+            for (const k of keys) {
+                if (value && value[k] !== undefined) {
+                    value = value[k];
+                } else {
+                    value = null;
+                    break;
+                }
+            }
+            
+            if (value === null || value === undefined) {
+                let fallback = translations.ru;
+                for (const k of keys) {
+                    if (fallback && fallback[k] !== undefined) {
+                        fallback = fallback[k];
+                    } else {
+                        fallback = key;
+                        break;
+                    }
+                }
+                value = fallback;
+            }
+            
+            if (typeof value === 'string') {
+                for (const [k, v] of Object.entries(params)) {
+                    value = value.replace(new RegExp(`{${k}}`, 'g'), v);
+                }
+            }
+            
+            return value;
+        }
+
+        // ==================================================
+        // 🌍 УСТАНОВКА ЯЗЫКА (ПОЛНАЯ)
+        // ==================================================
         function setLanguage(lang) {
             currentLanguage = lang;
             localStorage.setItem('language', lang);
             
+            // Обновляем кнопки языка
             document.querySelectorAll('.language-selector button').forEach(b => {
                 b.classList.toggle('active', b.textContent.toLowerCase() === lang);
             });
             
-            document.querySelectorAll('[data-lang]').forEach(el => {
-                const key = el.dataset.lang;
-                if (translations[lang] && translations[lang][key]) {
-                    el.textContent = translations[lang][key];
+            // Обновляем все элементы по ID
+            const elementsMap = {
+                'authTitle': 'auth_title',
+                'authSubtitle': 'auth_subtitle',
+                'authLoginTab': 'auth_login',
+                'authRegisterTab': 'auth_register',
+                'loginEmailLabel': 'login_email',
+                'loginPasswordLabel': 'login_password',
+                'loginBtn': 'login_btn',
+                'registerEmailLabel': 'register_email',
+                'registerPasswordLabel': 'register_password',
+                'registerNameLabel': 'register_name',
+                'registerBtn': 'register_btn',
+                'registerSuccess': 'register_success',
+                'menuTitle': 'menu_title',
+                'menuAllProducts': 'menu_all_products',
+                'menuLowStock': 'menu_low_stock',
+                'menuHistory': 'menu_history',
+                'menuCalendar': 'menu_calendar',
+                'menuExportImport': 'menu_export_import',
+                'menuUsers': 'menu_users',
+                'menuLogout': 'menu_logout',
+                'headerTitle': 'warehouse',
+                'stockAll': 'search_all_products',
+                'stockLow': 'search_low_stock',
+                'stockHigh': 'search_in_stock',
+                'stockZero': 'search_out_of_stock',
+                'clearBtn': 'search_clear',
+                'noCategories': 'no_categories',
+                'categoriesTitle': 'categories',
+                'closeSubBtn': 'search_clear',
+                'editTitle': 'edit_title',
+                'editNoPhoto': 'edit_no_photo',
+                'editPhotoLabel': 'edit_photo',
+                'editNameLabel': 'edit_name',
+                'editSkusLabel': 'edit_skus',
+                'editSizeLabel': 'edit_size',
+                'editQtyLabel': 'edit_qty',
+                'editMinStockLabel': 'edit_min_stock',
+                'editSaveBtn': 'edit_save',
+                'editDeleteBtn': 'edit_delete',
+                'editCancelBtn': 'edit_cancel',
+                'twofaTitle': 'twofa_title',
+                'twofaDesc': 'twofa_desc',
+                'twofaBot': 'twofa_bot',
+                'twofaCodeLabel': 'twofa_code_label',
+                'twofaVerifyBtn': 'twofa_verify',
+                'twofaResendBtn': 'twofa_resend',
+                'exportModalTitle': 'exportImport',
+                'exportTitle': 'export_title',
+                'exportDesc': 'export_desc',
+                'importTitle': 'import_title',
+                'importDesc': 'import_desc',
+                'importFileBtn': 'import_file_btn',
+                'importHint': 'import_hint',
+                'fieldName': 'field_name',
+                'fieldSku': 'field_sku',
+                'fieldSize': 'field_size',
+                'fieldQty': 'field_qty',
+                'fieldCategory': 'field_category',
+                'fieldMinStock': 'field_min_stock',
+                'exportSelectedBtn': 'export_selected',
+                'exportAdvancedBtn': 'export_advanced',
+                'exportAllBtn': 'export_all',
+                'importModeTitle': 'import_mode_title',
+                'importModeDesc': 'import_mode_desc',
+                'importModeSub': 'import_mode_sub',
+                'importAddBtn': 'import_add',
+                'importSubBtn': 'import_sub',
+                'importFileTitle': 'import_file_title',
+                'importFileSub': 'import_file_sub',
+                'fileDropText': 'file_drop_text',
+                'installTitle': 'install_title',
+                'installDesc': 'install_desc',
+                'installBtn': 'install_btn',
+                'allProductsTitle': 'allProducts',
+                'lowStockTitle': 'lowStock',
+                'historyTitle': 'history',
+                'calendarTitle': 'calendar',
+                'usersTitle': 'users',
+                'addEventBtn': 'calendar_event_add',
+                'calendarPrev': '◀',
+                'calendarNext': '▶'
+            };
+            
+            for (const [id, key] of Object.entries(elementsMap)) {
+                const el = document.getElementById(id);
+                if (el) {
+                    const text = t(key);
+                    if (text && text !== key) {
+                        if (id === 'headerTitle') {
+                            el.textContent = '📦 ' + text;
+                        } else {
+                            el.textContent = text;
+                        }
+                    }
+                }
+            }
+            
+            // Обновляем дни календаря
+            const dayIds = ['calMon', 'calTue', 'calWed', 'calThu', 'calFri', 'calSat', 'calSun'];
+            const dayKeys = ['calendar_days'];
+            dayIds.forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const days = t('calendar_days');
+                    if (Array.isArray(days)) {
+                        el.textContent = days[i] || el.textContent;
+                    }
                 }
             });
             
-            const map = {
-                authTitle: 'authTitle', authSubtitle: 'authSubtitle',
-                authLoginTab: 'authLoginTab', authRegisterTab: 'authRegisterTab',
-                loginEmailLabel: 'loginEmailLabel', loginPasswordLabel: 'loginPasswordLabel',
-                loginBtn: 'loginBtn', registerEmailLabel: 'registerEmailLabel',
-                registerPasswordLabel: 'registerPasswordLabel', registerNameLabel: 'registerNameLabel',
-                registerBtn: 'registerBtn', registerSuccess: 'registerSuccess',
-                menuTitle: 'menuTitle', menuAllProducts: 'menuAllProducts',
-                menuLowStock: 'menuLowStock', menuHistory: 'menuHistory',
-                menuCalendar: 'menuCalendar', menuExportImport: 'menuExportImport',
-                menuUsers: 'menuUsers', menuLogout: 'menuLogout',
-                headerTitle: 'headerTitle',
-                stockAll: 'stockAll', stockLow: 'stockLow',
-                stockHigh: 'stockHigh', stockZero: 'stockZero',
-                clearBtn: 'clearBtn', noCategories: 'noCategories',
-                categoriesTitle: 'categoriesTitle', closeSubBtn: 'closeSubBtn',
-                editTitle: 'editTitle', editNoPhoto: 'editNoPhoto',
-                editPhotoLabel: 'editPhotoLabel', editNameLabel: 'editNameLabel',
-                editSkusLabel: 'editSkusLabel', editSizeLabel: 'editSizeLabel',
-                editQtyLabel: 'editQtyLabel', editMinStockLabel: 'editMinStockLabel',
-                editSaveBtn: 'editSaveBtn', editDeleteBtn: 'editDeleteBtn',
-                editCancelBtn: 'editCancelBtn',
-                twofaTitle: 'twofaTitle', twofaDesc: 'twofaDesc',
-                twofaBot: 'twofaBot', twofaCodeLabel: 'twofaCodeLabel',
-                twofaVerifyBtn: 'twofaVerifyBtn', twofaResendBtn: 'twofaResendBtn',
-                exportModalTitle: 'exportModalTitle', exportTitle: 'exportTitle',
-                exportDesc: 'exportDesc', importTitle: 'importTitle',
-                importDesc: 'importDesc', importFileBtn: 'importFileBtn',
-                importHint: 'importHint', fieldName: 'fieldName',
-                fieldSku: 'fieldSku', fieldSize: 'fieldSize',
-                fieldQty: 'fieldQty', fieldCategory: 'fieldCategory',
-                fieldMinStock: 'fieldMinStock', exportSelectedBtn: 'exportSelectedBtn',
-                exportAdvancedBtn: 'exportAdvancedBtn', exportAllBtn: 'exportAllBtn',
-                importModeTitle: 'importModeTitle', importModeDesc: 'importModeDesc',
-                importModeSub: 'importModeSub', importAddBtn: 'importAddBtn',
-                importSubBtn: 'importSubBtn', importFileTitle: 'importFileTitle',
-                importFileSub: 'importFileSub', fileDropText: 'fileDropText',
-                calMon: 'mon', calTue: 'tue', calWed: 'wed',
-                calThu: 'thu', calFri: 'fri', calSat: 'sat', calSun: 'sun',
-                addEventBtn: 'addEventBtn', calendarTitle: 'calendarTitle',
-                installTitle: 'installTitle', installDesc: 'installDesc',
-                installBtn: 'installBtn',
-                allProductsTitle: 'allProductsTitle', lowStockTitle: 'lowStockTitle',
-                historyTitle: 'historyTitle', usersTitle: 'usersTitle'
-            };
-            
-            for (const [key, id] of Object.entries(map)) {
-                const el = document.getElementById(id);
-                if (el && translations[lang] && translations[lang][key]) {
-                    el.textContent = translations[lang][key];
-                }
-            }
-            
+            // Обновляем placeholder поиска
             const searchInput = document.getElementById('searchInput');
-            if (searchInput) searchInput.placeholder = translations[lang].search;
+            if (searchInput) searchInput.placeholder = t('search_placeholder');
             
+            // Обновляем фильтры
             const filterStock = document.getElementById('filterStock');
             if (filterStock) {
                 const options = filterStock.options;
-                if (options[0]) options[0].textContent = translations[lang].allProducts2;
-                if (options[1]) options[1].textContent = '⚠️ ' + translations[lang].lowStock2;
-                if (options[2]) options[2].textContent = '✅ ' + translations[lang].inStock;
-                if (options[3]) options[3].textContent = '❌ ' + translations[lang].outOfStock;
+                if (options[0]) options[0].textContent = t('search_all_products');
+                if (options[1]) options[1].textContent = t('search_low_stock');
+                if (options[2]) options[2].textContent = t('search_in_stock');
+                if (options[3]) options[3].textContent = t('search_out_of_stock');
             }
             
-            const clearBtn = document.getElementById('clearBtn');
-            if (clearBtn) clearBtn.textContent = '✕ ' + translations[lang].clear;
+            // Обновляем меню
+            const menuItems = {
+                'menuAllProducts': 'menu_all_products',
+                'menuLowStock': 'menu_low_stock',
+                'menuHistory': 'menu_history',
+                'menuCalendar': 'menu_calendar',
+                'menuExportImport': 'menu_export_import',
+                'menuUsers': 'menu_users',
+                'menuLogout': 'menu_logout',
+                'menuTitle': 'menu_title'
+            };
             
-            const noCat = document.getElementById('noCategories');
-            if (noCat) noCat.textContent = translations[lang].noCategories;
+            for (const [id, key] of Object.entries(menuItems)) {
+                const el = document.getElementById(id);
+                if (el) {
+                    const text = t(key);
+                    if (text && text !== key) {
+                        el.textContent = text;
+                    }
+                }
+            }
             
-            showNotification(`🌍 ${lang === 'zh' ? '中文' : lang === 'en' ? 'English' : 'Русский'}`, 'info');
+            // Уведомление о смене языка
+            const langNames = {
+                ru: 'Русский',
+                en: 'English',
+                zh: '中文'
+            };
+            showNotification(`🌍 ${langNames[lang] || lang.toUpperCase()}`, 'info');
         }
 
         // ==================================================
@@ -1943,6 +2085,8 @@
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             const monthYear = document.getElementById('calendarMonthYear');
+            
+            // Обновляем названия месяцев
             const monthNames = currentLanguage === 'zh' ? ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'] :
                               currentLanguage === 'en' ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] :
                               ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
@@ -2047,10 +2191,10 @@
             
             const results = document.getElementById('searchResults');
             if (filteredProducts.length > 0 && filteredProducts.length < products.length) {
-                results.textContent = `📊 Найдено: ${filteredProducts.length} из ${products.length}`;
+                results.textContent = t('search_results', { count: filteredProducts.length, total: products.length });
                 results.style.display = 'block';
             } else if (document.getElementById('searchInput').value && filteredProducts.length === 0) {
-                results.textContent = '🔍 Ничего не найдено';
+                results.textContent = t('search_not_found');
                 results.style.display = 'block';
             } else {
                 results.style.display = 'none';
@@ -2072,10 +2216,10 @@
             const catSelect = document.getElementById('filterCategory');
             const subSelect = document.getElementById('filterSubcategory');
             const currentCat = catSelect.value;
-            catSelect.innerHTML = `<option value="">${translations[currentLanguage].allCategories}</option>`;
+            catSelect.innerHTML = `<option value="">${t('search_all_categories')}</option>`;
             categories.forEach(c => catSelect.innerHTML += `<option value="${escapeHtml(c.name)}" ${c.name === currentCat ? 'selected' : ''}>${c.emoji || '📁'} ${escapeHtml(c.name)}</option>`);
             const currentSub = subSelect.value;
-            subSelect.innerHTML = `<option value="">${translations[currentLanguage].allSubcategories}</option>`;
+            subSelect.innerHTML = `<option value="">${t('search_all_subcategories')}</option>`;
             subcategories.forEach(s => subSelect.innerHTML += `<option value="${s.id}" ${s.id === currentSub ? 'selected' : ''}>${escapeHtml(s.name)}</option>`);
         }
 
@@ -2125,7 +2269,7 @@
                 });
                 await logAction('user_registered', { email, name });
                 successEl.style.display = 'block';
-                successEl.textContent = translations[currentLanguage].registerSuccess;
+                successEl.textContent = t('register_success');
                 document.getElementById('registerEmail').value = '';
                 document.getElementById('registerPassword').value = '';
                 document.getElementById('registerName').value = '';
@@ -2171,10 +2315,10 @@
                     `🔐 <b>Код подтверждения</b>\n\n📧 ${user.email}\n🔑 <code>${code}</code>\n\n⏳ Действителен 5 минут`,
                     user.uid
                 );
-                showNotification('📱 Код отправлен в Telegram!', 'success');
+                showNotification(t('twofa_code_sent', '📱 Код отправлен в Telegram!'), 'success');
             } catch (error) {
                 console.log(`📧 Код для ${user.email}: ${code}`);
-                showNotification(`⚠️ Ошибка отправки, проверьте консоль`, 'warning');
+                showNotification(t('twofa_error', '⚠️ Ошибка отправки, проверьте консоль'), 'warning');
             }
             
             document.getElementById('twoFactorModal').classList.add('show');
@@ -2205,12 +2349,12 @@
         function verifyTwoFactor() {
             const input = document.getElementById('twoFactorCode').value;
             if (input === twoFactorCode) {
-                showNotification('✅ 2FA подтверждена!', 'success');
+                showNotification(t('twofa_verified'), 'success');
                 if (twoFactorTimer) clearInterval(twoFactorTimer);
                 closeTwoFactorModal();
                 completeLogin(twoFactorUser);
             } else {
-                showNotification('❌ Неверный код!', 'error');
+                showNotification(t('twofa_invalid'), 'error');
                 document.getElementById('twoFactorCode').value = '';
                 document.getElementById('twoFactorCode').focus();
             }
@@ -2224,7 +2368,7 @@
                     `🔄 <b>Новый код подтверждения</b>\n\n📧 ${twoFactorUser.email}\n🔑 <code>${code}</code>\n\n⏳ Действителен 5 минут`,
                     twoFactorUser.uid
                 );
-                showNotification('📱 Новый код отправлен в Telegram!', 'success');
+                showNotification(t('twofa_resend_sent'), 'success');
                 
                 if (twoFactorTimer) {
                     clearInterval(twoFactorTimer);
@@ -2318,10 +2462,10 @@
                     
                     if (!currentUserData.telegramChatId) {
                         setTimeout(async () => {
-                            const chatId = prompt('📱 Введите ваш Telegram Chat ID для получения уведомлений (или пропустите):\n\nУзнать ID: напишите @userinfobot в Telegram');
+                            const chatId = prompt(t('users_telegram_prompt', '📱 Введите ваш Telegram Chat ID для получения уведомлений (или пропустите):\n\nУзнать ID: напишите @userinfobot в Telegram'));
                             if (chatId) {
                                 await db.collection('users').doc(user.uid).update({ telegramChatId: chatId });
-                                showNotification('✅ Telegram ID сохранён!', 'success');
+                                showNotification(t('users_telegram_saved'), 'success');
                                 sendTelegramNotification(`📱 Пользователь ${user.email} подключил Telegram уведомления`);
                             }
                         }, 2000);
@@ -2347,10 +2491,10 @@
         const ROLES = { ADMIN: 'admin', MANAGER: 'manager', IT: 'it', VIEWER: 'viewer' };
 
         const ROLE_CONFIGS = {
-            admin: { label: 'Администратор', icon: '👑', permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canExport: true, canImport: true, canManageRoles: true, canViewHistory: true, canSendNotifications: true } },
-            manager: { label: 'Менеджер', icon: '📋', permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true, canManageUsers: false, canExport: true, canImport: true, canManageRoles: false, canViewHistory: true, canSendNotifications: false } },
-            it: { label: 'IT-специалист', icon: '💻', permissions: { canView: true, canCreate: false, canEdit: false, canDelete: false, canManageUsers: true, canExport: true, canImport: true, canManageRoles: true, canViewHistory: true, canSendNotifications: true } },
-            viewer: { label: 'Наблюдатель', icon: '👀', permissions: { canView: true, canCreate: false, canEdit: false, canDelete: false, canManageUsers: false, canExport: false, canImport: false, canManageRoles: false, canViewHistory: false, canSendNotifications: false } }
+            admin: { label: t('role_admin'), icon: '👑', permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canExport: true, canImport: true, canManageRoles: true, canViewHistory: true, canSendNotifications: true } },
+            manager: { label: t('role_manager'), icon: '📋', permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true, canManageUsers: false, canExport: true, canImport: true, canManageRoles: false, canViewHistory: true, canSendNotifications: false } },
+            it: { label: t('role_it'), icon: '💻', permissions: { canView: true, canCreate: false, canEdit: false, canDelete: false, canManageUsers: true, canExport: true, canImport: true, canManageRoles: true, canViewHistory: true, canSendNotifications: true } },
+            viewer: { label: t('role_viewer'), icon: '👀', permissions: { canView: true, canCreate: false, canEdit: false, canDelete: false, canManageUsers: false, canExport: false, canImport: false, canManageRoles: false, canViewHistory: false, canSendNotifications: false } }
         };
 
         // ==================================================
@@ -2584,7 +2728,7 @@
         function renderCategories() {
             const grid = document.getElementById('categoryGrid');
             if (categories.length === 0) { 
-                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${translations[currentLanguage].noCategories}</p></div>`; 
+                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p id="noCategories">${t('no_categories')}</p></div>`; 
                 return; 
             }
             let html = '';
@@ -2651,7 +2795,7 @@
         function renderSubcategories() {
             const grid = document.getElementById('subcategoryGrid');
             if (subcategories.length === 0) { 
-                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${translations[currentLanguage].noCategories}</p></div>`; 
+                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${t('no_categories')}</p></div>`; 
                 return; 
             }
             let html = '';
@@ -2718,7 +2862,7 @@
             if (filteredProducts.length > 0) subProducts = subProducts.filter(p => filteredProducts.some(fp => fp.id === p.id));
             countEl.textContent = `(${subProducts.length})`;
             if (subProducts.length === 0) {
-                list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${filteredProducts.length > 0 ? 'Ничего не найдено' : 'Нет товаров'}</p></div>`;
+                list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${filteredProducts.length > 0 ? t('search_not_found') : 'Нет товаров'}</p></div>`;
             } else {
                 let html = '';
                 subProducts.forEach(p => {
@@ -2797,7 +2941,7 @@
             document.getElementById('editNewSku').value = '';
             renderEditSkuList();
             const preview = document.getElementById('editPhotoPreview');
-            preview.innerHTML = product.photo ? `<img src="${product.photo}">` : `<div class="no-photo">${translations[currentLanguage].editNoPhoto}</div>`;
+            preview.innerHTML = product.photo ? `<img src="${product.photo}">` : `<div class="no-photo" id="editNoPhoto">${t('edit_no_photo')}</div>`;
             document.getElementById('editPhotoInput').value = '';
             currentEditPhotoFile = null;
             document.getElementById('editModal').classList.add('show');
@@ -2870,9 +3014,8 @@
         }
 
         // ==================================================
-        // 📊 МОДАЛЬНЫЕ ОКНА ПРОСМОТРА (ИСПРАВЛЕННЫЕ)
+        // 📊 МОДАЛЬНЫЕ ОКНА ПРОСМОТРА
         // ==================================================
-
         function showAllProducts() {
             const modal = document.getElementById('allProductsModal');
             const list = document.getElementById('allProductsList');
@@ -2886,7 +3029,7 @@
             if (countEl) countEl.textContent = `(${products.length})`;
             
             if (products.length === 0) {
-                list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Нет товаров</p></div>';
+                list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${t('allProducts')}</p></div>`;
             } else {
                 let html = '';
                 products.forEach(p => {
@@ -2963,7 +3106,7 @@
         }
 
         // ==================================================
-        // 📤 ЭКСПОРТ (УЛУЧШЕННЫЙ)
+        // 📤 ЭКСПОРТ
         // ==================================================
         function exportToExcel() {
             if (!checkPermission('canExport')) return;
@@ -2974,7 +3117,7 @@
                 if (fields.length === 0) { showNotification('Выберите поля для экспорта', 'error'); return; }
                 
                 const headers = fields.map(f => {
-                    const map = { name: 'Название', sku: 'Артикул', size: 'Размер', quantity: 'Количество', category: 'Категория', minStock: 'Мин.остаток' };
+                    const map = { name: t('field_name'), sku: t('field_sku'), size: t('field_size'), quantity: t('field_qty'), category: t('field_category'), minStock: t('field_min_stock') };
                     return map[f] || f;
                 });
                 const data = [headers];
@@ -3015,7 +3158,7 @@
             if (!checkPermission('canExport')) return;
             if (products.length === 0) { showNotification('⚠️ Нет товаров', 'error'); return; }
             try {
-                const data = [['Название', 'Артикулы', 'Размер', 'Количество', 'Категория', 'Подкатегория', 'Мин.остаток', 'Дата создания']];
+                const data = [[t('field_name'), t('field_sku'), t('field_size'), t('field_qty'), t('field_category'), 'Подкатегория', t('field_min_stock'), 'Дата создания']];
                 products.forEach(p => {
                     const sub = subcategories.find(s => s.id === p.subcategoryId);
                     data.push([
