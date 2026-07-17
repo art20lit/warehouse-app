@@ -2824,4 +2824,226 @@
         });
     </script>
 </body>
+    // ==================================================
+// 👑 СПЕЦИАЛЬНАЯ НАСТРОЙКА ДЛЯ АРХИПА
+// ==================================================
+
+// Ваши данные
+const ADMIN_EMAIL = 'arhip.litvinenko.art80@mail.ru';
+const ADMIN_PASSWORD = 'a_L.arhip1';
+const ADMIN_NAME = 'Архип Александрович Литвиненко';
+
+// Функция для создания/обновления пользователя с ролью IT
+async function setupAdminUser() {
+    try {
+        console.log('🔧 Проверка пользователя:', ADMIN_EMAIL);
+        
+        // 1. Пытаемся войти
+        try {
+            await auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
+            console.log('✅ Вход выполнен');
+            
+            // Ждем загрузки данных пользователя
+            setTimeout(async () => {
+                const user = auth.currentUser;
+                if (user) {
+                    await updateUserToIT(user);
+                }
+            }, 1000);
+            
+            return;
+        } catch (loginError) {
+            console.log('⚠️ Вход не удался, создаём пользователя...');
+            
+            // 2. Если вход не удался - регистрируем
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(
+                    ADMIN_EMAIL, 
+                    ADMIN_PASSWORD
+                );
+                const user = userCredential.user;
+                
+                console.log('✅ Пользователь создан в Auth');
+                
+                // Обновляем профиль
+                await user.updateProfile({
+                    displayName: ADMIN_NAME
+                });
+                
+                // Сохраняем в Firestore с ролью IT
+                await db.collection('users').doc(user.uid).set({
+                    uid: user.uid,
+                    email: ADMIN_EMAIL,
+                    name: ADMIN_NAME,
+                    role: 'it',
+                    permissions: {
+                        canView: true,
+                        canCreate: true,
+                        canEdit: true,
+                        canDelete: true,
+                        canManageUsers: true,
+                        canExport: true,
+                        canImport: true,
+                        canManageRoles: true // Полный доступ
+                    },
+                    status: 'active',
+                    createdAt: new Date().toISOString(),
+                    createdBy: 'system',
+                    isSpecialAdmin: true
+                });
+                
+                console.log('✅ Пользователь сохранён в Firestore с ролью IT');
+                console.log('🎉 ГОТОВО! Войдите в систему.');
+                
+                // Автоматически входим
+                await auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
+                
+            } catch (createError) {
+                console.error('❌ Ошибка создания:', createError);
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Ошибка настройки:', error);
+    }
+}
+
+// Функция обновления существующего пользователя до IT
+async function updateUserToIT(user) {
+    try {
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        
+        if (!userDoc.exists) {
+            console.log('⚠️ Документ пользователя не найден, создаём...');
+            await db.collection('users').doc(user.uid).set({
+                uid: user.uid,
+                email: ADMIN_EMAIL,
+                name: ADMIN_NAME,
+                role: 'it',
+                permissions: {
+                    canView: true,
+                    canCreate: true,
+                    canEdit: true,
+                    canDelete: true,
+                    canManageUsers: true,
+                    canExport: true,
+                    canImport: true,
+                    canManageRoles: true
+                },
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                createdBy: 'system',
+                isSpecialAdmin: true
+            });
+            console.log('✅ Документ создан с ролью IT');
+        } else {
+            // Обновляем существующего пользователя
+            const data = userDoc.data();
+            if (data.role !== 'it' || !data.permissions?.canManageRoles) {
+                await db.collection('users').doc(user.uid).update({
+                    role: 'it',
+                    permissions: {
+                        canView: true,
+                        canCreate: true,
+                        canEdit: true,
+                        canDelete: true,
+                        canManageUsers: true,
+                        canExport: true,
+                        canImport: true,
+                        canManageRoles: true
+                    },
+                    status: 'active',
+                    updatedAt: new Date().toISOString(),
+                    isSpecialAdmin: true
+                });
+                console.log('✅ Пользователь обновлён до IT');
+            } else {
+                console.log('✅ Пользователь уже имеет роль IT');
+            }
+        }
+        
+        // Принудительно обновляем текущие данные
+        if (currentUser && currentUser.uid === user.uid) {
+            currentUserRole = 'it';
+            currentUserPermissions = {
+                canView: true,
+                canCreate: true,
+                canEdit: true,
+                canDelete: true,
+                canManageUsers: true,
+                canExport: true,
+                canImport: true,
+                canManageRoles: true
+            };
+            applyPermissions();
+            document.getElementById('sideUserRole').textContent = 'Роль: IT-специалист 💻';
+            document.getElementById('userRoleDisplay').textContent = '👤 IT-специалист 💻';
+            document.getElementById('adminMenuItems').classList.remove('hidden');
+            
+            showNotification('✅ Вы вошли как IT-специалист с полными правами!', 'success');
+        }
+        
+    } catch (error) {
+        console.error('❌ Ошибка обновления:', error);
+    }
+}
+
+// ==================================================
+// 🚀 АВТОМАТИЧЕСКИЙ ЗАПУСК ПРИ ЗАГРУЗКЕ
+// ==================================================
+
+// Добавляем обработчик, который проверит пользователя при входе
+const originalOnAuthStateChanged = auth.onAuthStateChanged;
+
+auth.onAuthStateChanged = async function(user) {
+    // Вызываем оригинальный обработчик
+    if (originalOnAuthStateChanged) {
+        originalOnAuthStateChanged(user);
+    }
+    
+    // Проверяем, вошел ли наш пользователь
+    if (user && user.email === ADMIN_EMAIL) {
+        console.log('👋 Привет, Архип! Проверяем права...');
+        await updateUserToIT(user);
+    }
+};
+
+// Запускаем проверку при загрузке страницы
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Система загружена');
+    console.log('👑 Проверка специального пользователя...');
+    
+    // Проверяем, есть ли уже пользователь
+    const user = auth.currentUser;
+    if (user && user.email === ADMIN_EMAIL) {
+        await updateUserToIT(user);
+    } else {
+        // Если пользователь не вошел, но мы хотим автоматически войти
+        // Раскомментируйте строки ниже, если хотите авто-вход
+        /*
+        try {
+            await auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
+            console.log('✅ Автоматический вход выполнен');
+        } catch (e) {
+            console.log('ℹ️ Авто-вход не выполнен, зарегистрируйтесь или войдите вручную');
+        }
+        */
+    }
+});
+
+// ==================================================
+// 📋 КОМАНДЫ ДЛЯ КОНСОЛИ
+// ==================================================
+
+console.log('📋 Доступные команды:');
+console.log('  setupAdminUser() - создать/обновить пользователя IT');
+console.log('  updateUserToIT(user) - обновить пользователя до IT');
+console.log('  ADMIN_EMAIL - ваш email');
+console.log('  ADMIN_PASSWORD - ваш пароль');
+
+// Для быстрого доступа в консоли
+window.setupAdminUser = setupAdminUser;
+window.updateUserToIT = updateUserToIT;
+window.ADMIN_EMAIL = ADMIN_EMAIL;
+window.ADMIN_PASSWORD = ADMIN_PASSWORD;
 </html>
