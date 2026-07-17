@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Склад - Управление товарами</title>
     
-    <!-- PWA Manifest - ИСПРАВЛЕННЫЙ -->
-    <link rel="manifest" href='data:application/json,{"name":"Складской учёт","short_name":"Склад","description":"Управление складскими товарами","start_url":"/","display":"standalone","orientation":"portrait","background_color":"#ffffff","theme_color":"#2481cc","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%27100%27 fill=%27%232481cc%27/%3E%3Ctext x=%27256%27 y=%27340%27 font-size=%27280%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27%3E📦%3C/text%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml"}]}'>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json,{%22name%22:%22%D0%A1%D0%BA%D0%BB%D0%B0%D0%B4%22,%22short_name%22:%22%D0%A1%D0%BA%D0%BB%D0%B0%D0%B4%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%232481cc%22}">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -35,12 +35,10 @@
             --shadow-strong: rgba(0,0,0,0.12);
             --input-border: #dce0e6;
             --accent-color: #4a6cf7;
-            --accent-hover: #3a5cd7;
             --success-color: #2ecc71;
             --danger-color: #e74c3c;
             --warning-color: #f39c12;
             --purple-color: #8b5cf6;
-            --pink-color: #ec4899;
             --radius: 16px;
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -76,8 +74,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
         .fade-in { animation: fadeIn 0.4s ease forwards; }
         .slide-in { animation: slideIn 0.3s ease forwards; }
@@ -117,7 +113,6 @@
         button.danger { background: var(--danger-color); }
         button.warning { background: var(--warning-color); color: #fff; }
         button.purple { background: var(--purple-color); }
-        button.pink { background: var(--pink-color); }
         button.gray { background: var(--text-muted); }
         button.small { padding: 5px 12px; font-size: 12px; }
         
@@ -190,6 +185,11 @@
             background: transparent;
             color: var(--text-secondary);
             border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .language-selector button:hover {
+            border-color: var(--accent-color);
         }
         .language-selector button.active {
             background: var(--accent-color);
@@ -229,6 +229,7 @@
             background: transparent;
             color: var(--text-secondary);
             font-weight: 500;
+            cursor: pointer;
         }
         .auth-tabs button.active {
             background: var(--bg-card);
@@ -244,6 +245,26 @@
             font-weight: 600;
             margin-bottom: 4px;
             color: var(--text-muted);
+        }
+        .auth-error {
+            color: var(--danger-color);
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+            padding: 10px;
+            background: rgba(231,76,60,0.1);
+            border-radius: 8px;
+        }
+        .auth-success {
+            color: var(--success-color);
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+            padding: 10px;
+            background: rgba(46,204,113,0.1);
+            border-radius: 8px;
         }
         
         /* ===== ШАПКА ===== */
@@ -464,6 +485,14 @@
         }
         .product-item .p-qty.low { color: var(--danger-color); }
         .product-item .p-min-stock { font-size: 10px; color: var(--text-muted); }
+        .product-item .p-edit-icon {
+            font-size: 16px;
+            color: var(--text-muted);
+            opacity: 0.3;
+            padding: 4px 6px;
+            cursor: pointer;
+        }
+        .product-item:hover .p-edit-icon { opacity: 1; }
         
         /* ===== МОДАЛЬНЫЕ ОКНА ===== */
         .modal-overlay {
@@ -523,6 +552,74 @@
         }
         .add-product-row input { flex: 1; min-width: 70px; padding: 6px 10px; font-size: 13px; }
         .add-product-row button { padding: 6px 12px; font-size: 13px; }
+        .add-product-row .photo-preview {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            object-fit: cover;
+            display: none;
+        }
+        
+        .edit-photo-preview {
+            text-align: center;
+            margin: 8px 0;
+        }
+        .edit-photo-preview img {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .edit-photo-preview .no-photo {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        .sku-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .sku-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(74,108,247,0.1);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            border: 1px solid rgba(74,108,247,0.2);
+        }
+        .sku-tag .remove-sku {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 2px;
+            width: auto;
+            opacity: 0.5;
+        }
+        .sku-tag .remove-sku:hover { opacity: 1; }
+        .add-sku-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .add-sku-row input {
+            flex: 1;
+            padding: 5px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .add-sku-row button {
+            padding: 5px 12px;
+            font-size: 12px;
+            width: auto;
+            background: var(--purple-color);
+        }
         
         .empty-state { text-align: center; padding: 30px 0; color: var(--text-muted); }
         .empty-state .icon { font-size: 44px; margin-bottom: 8px; }
@@ -557,14 +654,281 @@
         .notification.info { background: var(--accent-color); color: white; }
         .notification.warning { background: var(--warning-color); color: white; }
         
+        .photo-preview { margin-top: 8px; text-align: center; }
+        .photo-preview img { max-width: 120px; max-height: 120px; border-radius: 12px; }
+        
+        .file-drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin: 8px 0;
+            transition: border-color 0.3s;
+            cursor: pointer;
+        }
+        .file-drop-zone:hover { border-color: var(--accent-color); background: rgba(74,108,247,0.05); }
+        .file-drop-zone.dragover { border-color: var(--success-color); background: rgba(46,204,113,0.1); }
+        
+        .import-preview {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(46,204,113,0.1);
+            border-radius: 10px;
+        }
+        .import-preview.show { display: block; }
+        .import-preview .ip-filename { font-weight: 600; }
+        .import-preview .ip-count { font-size: 12px; color: var(--text-muted); }
+        .import-preview .ip-status { margin-top: 8px; }
+        
+        .import-progress {
+            display: none;
+            margin-top: 10px;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .import-progress.show { display: block; }
+        .import-progress .ip-bar {
+            height: 100%;
+            background: var(--accent-color);
+            border-radius: 4px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+        
+        /* ===== КАЛЕНДАРЬ ===== */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 10px;
+        }
+        .calendar-day {
+            padding: 6px 2px;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--border-color);
+            transition: all var(--transition);
+            cursor: default;
+        }
+        .calendar-day:hover { transform: scale(1.05); }
+        .calendar-day.today { background: var(--accent-color); color: white; font-weight: 700; }
+        .calendar-day.has-event { background: var(--warning-color); color: white; cursor: pointer; }
+        .calendar-day.weekend { color: var(--danger-color); }
+        .calendar-day.empty { background: transparent; }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .calendar-header button {
+            padding: 4px 12px;
+            font-size: 13px;
+            background: var(--border-color);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .calendar-header button:hover { background: var(--accent-color); color: white; }
+        
+        /* ===== РАЗРЕШЕНИЯ ===== */
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .perm-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: var(--border-color);
+            border-radius: 10px;
+            transition: all var(--transition);
+        }
+        .perm-item:hover { background: rgba(74,108,247,0.1); transform: translateX(4px); }
+        .perm-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .perm-item .perm-label { font-size: 13px; font-weight: 500; flex: 1; }
+        .perm-item .perm-status {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .perm-item .perm-status.active {
+            background: rgba(46,204,113,0.15);
+            color: var(--success-color);
+        }
+        .perm-item .perm-status.inactive {
+            background: rgba(231,76,60,0.15);
+            color: var(--danger-color);
+        }
+        
+        .user-grid {
+            display: grid;
+            gap: 10px;
+        }
+        .user-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+        }
+        .user-card .user-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .user-card .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .user-card .user-info { flex: 1; min-width: 120px; }
+        .user-card .user-email { font-weight: 600; font-size: 14px; }
+        .user-card .user-name { font-size: 12px; color: var(--text-muted); }
+        .user-card .user-role-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .user-card .user-role-badge.admin { background: rgba(231,76,60,0.15); color: var(--danger-color); }
+        .user-card .user-role-badge.manager { background: rgba(46,204,113,0.15); color: var(--success-color); }
+        .user-card .user-role-badge.it { background: rgba(139,92,246,0.15); color: var(--purple-color); }
+        .user-card .user-role-badge.viewer { background: rgba(243,156,18,0.15); color: var(--warning-color); }
+        .user-card .permissions-section {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+        .user-card .permission-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 500;
+            margin: 2px 2px 2px 0;
+        }
+        .user-card .permission-tag.active {
+            background: rgba(46,204,113,0.15);
+            color: var(--success-color);
+        }
+        .user-card .permission-tag.inactive {
+            background: rgba(231,76,60,0.1);
+            color: var(--danger-color);
+        }
+        .user-card .user-actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .user-card .user-actions select {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+        
+        /* ===== ЭКСПОРТ ===== */
+        .export-section {
+            background: var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .export-section .export-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .export-section .export-title span:first-child { font-size: 22px; }
+        .export-section .export-title span:last-child {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+        .export-section .export-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .export-fields {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .export-fields label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            background: var(--bg-card);
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: all var(--transition);
+        }
+        .export-fields label:hover {
+            border-color: var(--accent-color);
+            background: rgba(74,108,247,0.05);
+        }
+        .export-fields label input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
         @media (max-width: 480px) {
             .category-grid { grid-template-columns: repeat(2, 1fr); }
             .subcategory-grid { grid-template-columns: repeat(2, 1fr); }
+            .permissions-grid { grid-template-columns: 1fr; }
             .side-menu { width: 280px; right: -300px; }
             .search-container input, .search-container select { min-width: 80px; font-size: 12px; }
             .theme-toggle { width: 40px; height: 40px; font-size: 18px; bottom: 60px; right: 12px; }
             .header h1 { font-size: 18px; }
             .modal-content { padding: 16px; }
+            .calendar-grid { gap: 2px; }
+            .calendar-day { font-size: 11px; padding: 4px 2px; }
+            .user-card .user-actions select { min-width: 100px; }
+            .export-fields label { font-size: 10px; padding: 2px 6px; }
         }
     </style>
 </head>
@@ -573,11 +937,11 @@
     <!-- ===== PWA БАННЕР ===== -->
     <div id="installBanner" style="display:none; position:fixed; bottom:80px; left:16px; right:16px; background:var(--accent-color); color:white; padding:14px 18px; border-radius:16px; align-items:center; justify-content:space-between; z-index:1000; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
         <div>
-            <strong>📱 Установить приложение</strong>
-            <div style="font-size:12px; opacity:0.8;">Склад всегда под рукой</div>
+            <strong id="installTitle">📱 Установить приложение</strong>
+            <div style="font-size:12px; opacity:0.8;" id="installDesc">Склад всегда под рукой</div>
         </div>
         <div>
-            <button onclick="installApp()" style="background:white; color:var(--accent-color); border:none; padding:6px 14px; border-radius:10px; font-weight:600; margin-right:6px; cursor:pointer; font-size:13px;">Установить</button>
+            <button onclick="installApp()" style="background:white; color:var(--accent-color); border:none; padding:6px 14px; border-radius:10px; font-weight:600; margin-right:6px; cursor:pointer; font-size:13px;" id="installBtn">Установить</button>
             <button onclick="hideInstallBanner()" style="background:transparent; color:white; border:none; font-size:18px; cursor:pointer;">✕</button>
         </div>
     </div>
@@ -588,40 +952,40 @@
     <!-- ===== АВТОРИЗАЦИЯ ===== -->
     <div id="authPage">
         <div class="auth-container">
-            <h1>📦 Склад</h1>
-            <div class="subtitle">Войдите или зарегистрируйтесь</div>
+            <h1 id="authTitle">📦 Склад</h1>
+            <div class="subtitle" id="authSubtitle">Войдите или зарегистрируйтесь</div>
             <div class="auth-tabs">
-                <button class="active" onclick="switchAuthTab('login')">Вход</button>
-                <button onclick="switchAuthTab('register')">Регистрация</button>
+                <button class="active" onclick="switchAuthTab('login')" id="authLoginTab">Вход</button>
+                <button onclick="switchAuthTab('register')" id="authRegisterTab">Регистрация</button>
             </div>
             <form id="loginForm" class="auth-form active" onsubmit="loginUser(event)">
                 <div class="input-group">
-                    <label>📧 Email</label>
+                    <label id="loginEmailLabel">📧 Email</label>
                     <input type="email" id="loginEmail" placeholder="your@email.com" required>
                 </div>
                 <div class="input-group">
-                    <label>🔒 Пароль</label>
+                    <label id="loginPasswordLabel">🔒 Пароль</label>
                     <input type="password" id="loginPassword" placeholder="••••••••" required minlength="6">
                 </div>
-                <button type="submit" style="width:100%;">Войти</button>
-                <div class="auth-error" id="loginError" style="color:var(--danger-color); margin-top:10px; display:none;"></div>
+                <button type="submit" style="width:100%;" id="loginBtn">Войти</button>
+                <div class="auth-error" id="loginError"></div>
             </form>
             <form id="registerForm" class="auth-form" onsubmit="registerUser(event)">
                 <div class="input-group">
-                    <label>📧 Email</label>
+                    <label id="registerEmailLabel">📧 Email</label>
                     <input type="email" id="registerEmail" placeholder="your@email.com" required>
                 </div>
                 <div class="input-group">
-                    <label>🔒 Пароль</label>
+                    <label id="registerPasswordLabel">🔒 Пароль</label>
                     <input type="password" id="registerPassword" placeholder="••••••••" required minlength="6">
                 </div>
                 <div class="input-group">
-                    <label>👤 Ваше имя</label>
+                    <label id="registerNameLabel">👤 Ваше имя</label>
                     <input type="text" id="registerName" placeholder="Иван Иванов" required>
                 </div>
-                <button type="submit" style="width:100%;">Зарегистрироваться</button>
-                <div class="auth-error" id="registerError" style="color:var(--danger-color); margin-top:10px; display:none;"></div>
-                <div class="auth-success" id="registerSuccess" style="color:var(--success-color); margin-top:10px; display:none;">✅ Регистрация успешна!</div>
+                <button type="submit" style="width:100%;" id="registerBtn">Зарегистрироваться</button>
+                <div class="auth-error" id="registerError"></div>
+                <div class="auth-success" id="registerSuccess">✅ Регистрация успешна!</div>
             </form>
         </div>
     </div>
@@ -633,41 +997,41 @@
         <div class="side-menu-overlay" id="sideOverlay" onclick="closeMenu()"></div>
         <div class="side-menu" id="sideMenu">
             <button class="close-menu" onclick="closeMenu()">✕</button>
-            <div class="menu-title">📋 Меню</div>
+            <div class="menu-title" id="menuTitle">📋 Меню</div>
             <div class="user-info">
                 <div class="user-email" id="sideUserEmail">user@email.com</div>
                 <div class="user-role" id="sideUserRole">Роль: Наблюдатель 👀</div>
             </div>
             <div class="menu-item" onclick="closeMenu(); showAllProducts();">
                 <span class="icon">📦</span>
-                <span class="label" data-lang="allProducts">Все товары</span>
+                <span class="label" id="menuAllProducts">Все товары</span>
             </div>
             <div class="menu-divider"></div>
             <div class="menu-item" onclick="closeMenu(); showLowStockModal();">
                 <span class="icon">⚠️</span>
-                <span class="label" data-lang="lowStock">Мало</span>
+                <span class="label" id="menuLowStock">Мало</span>
                 <span class="badge" id="menuLowBadge">0</span>
             </div>
             <div class="menu-divider"></div>
             <div class="menu-item" onclick="closeMenu(); showHistoryModal();">
                 <span class="icon">📋</span>
-                <span class="label" data-lang="history">История изменений</span>
+                <span class="label" id="menuHistory">История изменений</span>
             </div>
             <div class="menu-divider"></div>
             <div class="menu-item" onclick="closeMenu(); showCalendarModal();">
                 <span class="icon">📅</span>
-                <span class="label" data-lang="calendar">Календарь событий</span>
+                <span class="label" id="menuCalendar">Календарь событий</span>
             </div>
             <div class="menu-divider"></div>
             <div class="menu-item" onclick="closeMenu(); openImportExportModal();">
                 <span class="icon">📊</span>
-                <span class="label" data-lang="exportImport">ЭКСПОРТ/ИМПОРТ</span>
+                <span class="label" id="menuExportImport">ЭКСПОРТ/ИМПОРТ</span>
             </div>
             <div id="adminMenuItems" class="hidden">
                 <div class="menu-divider"></div>
                 <div class="menu-item" onclick="closeMenu(); openUsersModal();">
                     <span class="icon">👥</span>
-                    <span class="label" data-lang="users">Управление пользователями</span>
+                    <span class="label" id="menuUsers">Управление пользователями</span>
                     <span class="badge" id="menuPendingBadge">0</span>
                 </div>
             </div>
@@ -681,13 +1045,13 @@
             <div class="menu-divider"></div>
             <div class="menu-item" onclick="closeMenu(); logoutUser();">
                 <span class="icon">🚪</span>
-                <span class="label" data-lang="logout">Выйти</span>
+                <span class="label" id="menuLogout">Выйти</span>
             </div>
         </div>
 
         <!-- Шапка -->
         <div class="header">
-            <h1>📦 <span data-lang="warehouse">Управление складом</span></h1>
+            <h1 id="headerTitle">📦 Управление складом</h1>
             <div class="header-controls">
                 <span class="sync-status sync-waiting" id="syncStatus">🔄 Подключение...</span>
                 <span id="userRoleDisplay" style="font-size:11px; color:var(--text-muted);"></span>
@@ -702,12 +1066,12 @@
                 <select id="filterCategory" onchange="filterProducts()"><option value="">Все категории</option></select>
                 <select id="filterSubcategory" onchange="filterProducts()"><option value="">Все подкатегории</option></select>
                 <select id="filterStock" onchange="filterProducts()">
-                    <option value="">Все товары</option>
-                    <option value="low">⚠️ Низкий остаток</option>
-                    <option value="high">✅ В наличии</option>
-                    <option value="zero">❌ Закончились</option>
+                    <option value="" id="stockAll">Все товары</option>
+                    <option value="low" id="stockLow">⚠️ Низкий остаток</option>
+                    <option value="high" id="stockHigh">✅ В наличии</option>
+                    <option value="zero" id="stockZero">❌ Закончились</option>
                 </select>
-                <button class="small gray" onclick="clearFilters()">✕ Сбросить</button>
+                <button class="small gray" onclick="clearFilters()" id="clearBtn">✕ Сбросить</button>
             </div>
             <div class="search-results" id="searchResults"></div>
         </div>
@@ -715,7 +1079,7 @@
         <!-- Категории -->
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-                <h3 style="font-size:17px;">📂 <span data-lang="categories">Категории</span></h3>
+                <h3 style="font-size:17px;" id="categoriesTitle">📂 Категории</h3>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
                     <input type="text" id="newCategoryName" placeholder="Название" style="width:140px; padding:6px 10px; font-size:13px;">
                     <input type="text" id="newCategoryEmoji" placeholder="Emoji" style="width:50px; padding:6px 10px; text-align:center; font-size:13px;" value="📁">
@@ -723,7 +1087,7 @@
                 </div>
             </div>
             <div class="category-grid" id="categoryGrid">
-                <div class="empty-state"><div class="icon">📭</div><p>Нет категорий</p></div>
+                <div class="empty-state"><div class="icon">📭</div><p id="noCategories">Нет категорий</p></div>
             </div>
         </div>
 
@@ -736,14 +1100,16 @@
                     <button class="small" id="addSubPhotoBtn" onclick="document.getElementById('subPhotoInput').click()">📷</button>
                     <input type="text" id="newSubcategoryName" placeholder="Название" style="width:120px; padding:6px 10px; font-size:13px;">
                     <button class="success small" id="addSubcategoryBtn" onclick="addSubcategory()">➕ Добавить</button>
-                    <button class="small gray" onclick="closeSubcategorySection()">✕ Закрыть</button>
+                    <button class="small gray" onclick="closeSubcategorySection()" id="closeSubBtn">✕ Закрыть</button>
                 </div>
             </div>
             <div id="subPhotoPreview" class="photo-preview"></div>
             <div class="subcategory-grid" id="subcategoryGrid"></div>
         </div>
 
-        <!-- Модалки -->
+        <!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
+        
+        <!-- Модалка товаров -->
         <div class="modal-overlay" id="subModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -759,92 +1125,95 @@
                     <input type="number" id="subModalProductMinStock" placeholder="Мин." value="5" style="flex:0.3; min-width:50px;">
                     <input type="file" id="subModalProductPhoto" accept="image/*" style="display:none;" onchange="previewProductPhoto(this)">
                     <button class="photo-btn small" id="addProductPhotoBtn" onclick="document.getElementById('subModalProductPhoto').click()">📷</button>
-                    <img id="subModalProductPreview" style="display:none; width:35px; height:35px; border-radius:8px; object-fit:cover;">
+                    <img class="photo-preview" id="subModalProductPreview" style="display:none; width:35px; height:35px; border-radius:8px; object-fit:cover;">
                     <button class="success small" id="addProductBtn" onclick="addProductToSubcategory()">➕</button>
                 </div>
             </div>
         </div>
 
+        <!-- Модалка редактирования -->
         <div class="modal-overlay" id="editModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title">✏️ Редактирование</div>
+                    <div class="modal-title" id="editTitle">✏️ Редактирование</div>
                     <button class="close-btn" onclick="closeEditModal()">✕</button>
                 </div>
                 <div id="editForm">
-                    <div class="edit-photo-preview" id="editPhotoPreview"><div class="no-photo">📷 Нет фото</div></div>
-                    <div class="input-group"><label>📷 Фото</label><input type="file" id="editPhotoInput" accept="image/*" onchange="previewEditPhoto(this)"></div>
-                    <div class="input-group"><label>📝 Название</label><input type="text" id="editName" placeholder="Название"></div>
+                    <div class="edit-photo-preview" id="editPhotoPreview"><div class="no-photo" id="editNoPhoto">📷 Нет фото</div></div>
+                    <div class="input-group"><label id="editPhotoLabel">📷 Фото</label><input type="file" id="editPhotoInput" accept="image/*" onchange="previewEditPhoto(this)"></div>
+                    <div class="input-group"><label id="editNameLabel">📝 Название</label><input type="text" id="editName" placeholder="Название"></div>
                     <div class="input-group">
-                        <label>🔢 Артикулы</label>
+                        <label id="editSkusLabel">🔢 Артикулы</label>
                         <div class="sku-list" id="editSkuList"></div>
                         <div class="add-sku-row"><input type="text" id="editNewSku" placeholder="Новый артикул"><button class="small" onclick="addSkuToEdit()" style="background:var(--purple-color);">➕</button></div>
                     </div>
-                    <div class="input-group"><label>📏 Размер</label><input type="text" id="editSize" placeholder="Размер"></div>
-                    <div class="input-group"><label>🔢 Количество</label><input type="number" id="editQty" placeholder="0" min="0"></div>
-                    <div class="input-group"><label>⚠️ Мин. остаток</label><input type="number" id="editMinStock" placeholder="5" min="0"></div>
+                    <div class="input-group"><label id="editSizeLabel">📏 Размер</label><input type="text" id="editSize" placeholder="Размер"></div>
+                    <div class="input-group"><label id="editQtyLabel">🔢 Количество</label><input type="number" id="editQty" placeholder="0" min="0"></div>
+                    <div class="input-group"><label id="editMinStockLabel">⚠️ Мин. остаток</label><input type="number" id="editMinStock" placeholder="5" min="0"></div>
                     <div class="edit-actions" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
                         <button class="success" id="editSaveBtn" onclick="saveEditProduct()">💾 Сохранить</button>
                         <button class="danger" id="editDeleteBtn" onclick="deleteEditProduct()">🗑️ Удалить</button>
-                        <button class="small gray" onclick="closeEditModal()">✕ Отмена</button>
+                        <button class="small gray" onclick="closeEditModal()" id="editCancelBtn">✕ Отмена</button>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Модалка всех товаров -->
         <div class="modal-overlay" id="allProductsModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title">📦 Все товары <span class="count" id="allProductsCount"></span></div>
+                    <div class="modal-title" id="allProductsTitle">📦 Все товары <span class="count" id="allProductsCount"></span></div>
                     <button class="close-btn" onclick="closeAllProductsModal()">✕</button>
                 </div>
                 <div id="allProductsList"></div>
             </div>
         </div>
 
+        <!-- Модалка низкого остатка -->
         <div class="modal-overlay" id="lowStockModal">
             <div class="modal-content">
                 <div class="modal-header" style="border-bottom-color:var(--danger-color);">
-                    <div class="modal-title">⚠️ Товары с низким остатком <span class="count" id="lowModalCount"></span></div>
+                    <div class="modal-title" id="lowStockTitle">⚠️ Товары с низким остатком <span class="count" id="lowModalCount"></span></div>
                     <button class="close-btn" onclick="closeLowStockModal()">✕</button>
                 </div>
                 <div id="lowStockModalList"></div>
             </div>
         </div>
 
-        <!-- История -->
+        <!-- Модалка истории -->
         <div class="modal-overlay" id="historyModal">
             <div class="modal-content">
                 <div class="modal-header" style="border-bottom-color:var(--purple-color);">
-                    <div class="modal-title">📋 История изменений <span class="count" id="historyCount"></span></div>
+                    <div class="modal-title" id="historyTitle">📋 История изменений <span class="count" id="historyCount"></span></div>
                     <button class="close-btn" onclick="closeHistoryModal()">✕</button>
                 </div>
                 <div id="historyList"></div>
             </div>
         </div>
 
-        <!-- Календарь -->
+        <!-- Модалка календаря -->
         <div class="modal-overlay" id="calendarModal">
             <div class="modal-content">
                 <div class="modal-header" style="border-bottom-color:var(--warning-color);">
-                    <div class="modal-title">📅 Календарь событий</div>
+                    <div class="modal-title" id="calendarTitle">📅 Календарь событий</div>
                     <button class="close-btn" onclick="closeCalendarModal()">✕</button>
                 </div>
                 <div id="calendarContent">
                     <div class="calendar-header">
-                        <button onclick="changeMonth(-1)">◀</button>
+                        <button onclick="changeMonth(-1)" id="calendarPrev">◀</button>
                         <span id="calendarMonthYear" style="font-weight:600; font-size:16px;"></span>
-                        <button onclick="changeMonth(1)">▶</button>
+                        <button onclick="changeMonth(1)" id="calendarNext">▶</button>
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px; font-size:11px; font-weight:600; color:var(--text-muted); text-align:center;">
-                        <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+                        <span id="calMon">Пн</span><span id="calTue">Вт</span><span id="calWed">Ср</span><span id="calThu">Чт</span><span id="calFri">Пт</span><span id="calSat">Сб</span><span id="calSun">Вс</span>
                     </div>
                     <div class="calendar-grid" id="calendarGrid"></div>
                     <div style="margin-top:14px;">
                         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
                             <input type="date" id="eventDate" style="flex:1; min-width:140px; padding:6px 10px; font-size:13px;">
                             <input type="text" id="eventTitle" placeholder="Название события" style="flex:2; min-width:140px; padding:6px 10px; font-size:13px;">
-                            <button class="success small" onclick="addEvent()">➕ Добавить</button>
+                            <button class="success small" onclick="addEvent()" id="addEventBtn">➕ Добавить</button>
                         </div>
                         <div id="eventsList" style="max-height:150px; overflow-y:auto;"></div>
                     </div>
@@ -852,99 +1221,110 @@
             </div>
         </div>
 
-        <!-- Пользователи -->
+        <!-- Модалка пользователей -->
         <div class="modal-overlay" id="usersModal">
             <div class="modal-content">
                 <div class="modal-header" style="border-bottom-color:var(--purple-color);">
-                    <div class="modal-title">👥 Управление пользователями <span class="count" id="usersModalCount"></span></div>
-                    <div><button class="small" onclick="renderUsersList()" style="margin-right:6px;">🔄</button><button class="close-btn" onclick="closeUsersModal()">✕</button></div>
+                    <div class="modal-title" id="usersTitle">👥 Управление пользователями <span class="count" id="usersModalCount"></span></div>
+                    <div><button class="small" onclick="renderUsersList()" id="usersRefreshBtn" style="margin-right:6px;">🔄</button><button class="close-btn" onclick="closeUsersModal()">✕</button></div>
                 </div>
                 <div id="usersList"></div>
             </div>
         </div>
 
-        <!-- 2FA -->
+        <!-- Модалка 2FA -->
         <div class="modal-overlay" id="twoFactorModal">
             <div class="modal-content" style="max-width:400px;">
                 <div class="modal-header" style="border-bottom-color:var(--success-color);">
-                    <div class="modal-title">🔐 Двухфакторная аутентификация</div>
+                    <div class="modal-title" id="twofaTitle">🔐 Двухфакторная аутентификация</div>
                     <button class="close-btn" onclick="closeTwoFactorModal()">✕</button>
                 </div>
                 <div style="text-align:center; padding:16px 0;">
-                    <div style="font-size:44px; margin-bottom:8px;">📧</div>
-                    <p style="color:var(--text-secondary); margin-bottom:12px;">Код подтверждения отправлен на вашу почту</p>
-                    <div class="input-group"><label>Введите код:</label><input type="text" id="twoFactorCode" placeholder="000000" maxlength="6" style="text-align:center; font-size:22px; letter-spacing:6px;"></div>
-                    <button class="success" onclick="verifyTwoFactor()" style="width:100%; margin-top:6px;">✅ Подтвердить</button>
-                    <button class="small gray" onclick="resendTwoFactorCode()" style="margin-top:6px;">🔄 Отправить повторно</button>
+                    <div style="font-size:44px; margin-bottom:8px;">📱</div>
+                    <p style="color:var(--text-secondary); margin-bottom:4px; font-weight:600;" id="twofaDesc">Код отправлен в Telegram</p>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;" id="twofaBot">Проверьте сообщения от бота @Skladotm_Bot</p>
+                    <div class="input-group">
+                        <label id="twofaCodeLabel">Введите код из Telegram:</label>
+                        <input type="text" id="twoFactorCode" placeholder="000000" maxlength="6" 
+                               style="text-align:center; font-size:22px; letter-spacing:6px;">
+                    </div>
+                    <button class="success" onclick="verifyTwoFactor()" style="width:100%; margin-top:6px;" id="twofaVerifyBtn">✅ Подтвердить</button>
+                    <div style="display:flex; gap:6px; margin-top:6px;">
+                        <button class="small gray" onclick="resendTwoFactorCode()" style="flex:1;" id="twofaResendBtn">🔄 Отправить повторно</button>
+                    </div>
+                    <div id="twoFactorTimer" style="font-size:12px; color:var(--text-muted); margin-top:8px;"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Экспорт/Импорт -->
+        <!-- Модалка экспорт/импорт -->
         <div class="modal-overlay" id="importExportModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title">📊 ЭКСПОРТ / ИМПОРТ</div>
+                    <div class="modal-title" id="exportModalTitle">📊 ЭКСПОРТ / ИМПОРТ</div>
                     <button class="close-btn" onclick="closeImportExportModal()">✕</button>
                 </div>
-                <div style="text-align:center; padding:16px 0;">
-                    <div style="font-size:44px; margin-bottom:8px;">📁</div>
-                    <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Управление данными</div>
-                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Экспортируйте или импортируйте товары</div>
+                <div style="padding:10px 0;">
                     
-                    <div style="background:var(--border-color); border-radius:12px; padding:12px; margin-bottom:12px; text-align:left;">
-                        <div style="font-weight:600; font-size:14px; margin-bottom:6px;">📤 Экспорт с выбором полей:</div>
-                        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;" id="exportFields">
-                            <label style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer; background:var(--bg-card); padding:2px 8px; border-radius:6px;">
-                                <input type="checkbox" checked data-field="name"> Название
-                            </label>
-                            <label style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer; background:var(--bg-card); padding:2px 8px; border-radius:6px;">
-                                <input type="checkbox" checked data-field="sku"> Артикул
-                            </label>
-                            <label style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer; background:var(--bg-card); padding:2px 8px; border-radius:6px;">
-                                <input type="checkbox" checked data-field="size"> Размер
-                            </label>
-                            <label style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer; background:var(--bg-card); padding:2px 8px; border-radius:6px;">
-                                <input type="checkbox" checked data-field="quantity"> Количество
-                            </label>
-                            <label style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer; background:var(--bg-card); padding:2px 8px; border-radius:6px;">
-                                <input type="checkbox" checked data-field="category"> Категория
-                            </label>
-                            <label style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer; background:var(--bg-card); padding:2px 8px; border-radius:6px;">
-                                <input type="checkbox" checked data-field="minStock"> Мин. остаток
-                            </label>
+                    <!-- 📤 ЭКСПОРТ -->
+                    <div class="export-section">
+                        <div class="export-title">
+                            <span>📤</span>
+                            <span id="exportTitle">Экспорт товаров</span>
                         </div>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <button class="success small" onclick="exportToExcel()">📤 Экспорт</button>
-                            <button class="purple small" onclick="exportToExcelWithFields()">📤 Расширенный экспорт</button>
+                        <div class="export-desc" id="exportDesc">Выберите поля для экспорта в Excel:</div>
+                        <div class="export-fields" id="exportFields">
+                            <label><input type="checkbox" checked data-field="name"> <span id="fieldName">Название</span></label>
+                            <label><input type="checkbox" checked data-field="sku"> <span id="fieldSku">Артикул</span></label>
+                            <label><input type="checkbox" checked data-field="size"> <span id="fieldSize">Размер</span></label>
+                            <label><input type="checkbox" checked data-field="quantity"> <span id="fieldQty">Количество</span></label>
+                            <label><input type="checkbox" checked data-field="category"> <span id="fieldCategory">Категория</span></label>
+                            <label><input type="checkbox" checked data-field="minStock"> <span id="fieldMinStock">Мин. остаток</span></label>
+                        </div>
+                        <div class="export-buttons">
+                            <button class="success small" onclick="exportToExcel()" id="exportSelectedBtn">📤 Выбранные поля</button>
+                            <button class="purple small" onclick="exportToExcelWithFields()" id="exportAdvancedBtn">📤 Расширенный</button>
+                            <button class="small" onclick="exportAllProducts()" style="background:var(--success-color);" id="exportAllBtn">📤 Все поля</button>
                         </div>
                     </div>
                     
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
-                        <button class="purple" onclick="openImportModeModal()">📥 ИМПОРТ</button>
+                    <!-- 📥 ИМПОРТ -->
+                    <div class="export-section" style="margin-bottom:0;">
+                        <div class="export-title">
+                            <span>📥</span>
+                            <span id="importTitle">Импорт товаров</span>
+                        </div>
+                        <div class="export-desc" id="importDesc">Загрузите Excel файл для обновления остатков:</div>
+                        <button class="purple" onclick="openImportModeModal()" id="importFileBtn">📥 Выбрать файл</button>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:6px;" id="importHint">
+                            ⚠️ Обновление по полям: <strong id="importFieldsHint">Артикул + Размер</strong>
+                        </div>
                     </div>
+                    
                 </div>
             </div>
         </div>
 
+        <!-- Модалка импорта -->
         <div class="modal-overlay" id="importModeModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title">📥 Режим импорта</div>
+                    <div class="modal-title" id="importModeTitle">📥 Режим импорта</div>
                     <button class="close-btn" onclick="closeImportModeModal()">✕</button>
                 </div>
                 <div style="text-align:center; padding:16px 0;">
                     <div style="font-size:44px; margin-bottom:8px;">⚙️</div>
-                    <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Как обновить количество?</div>
-                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Выберите действие с товарами из файла</div>
+                    <div style="font-size:18px; font-weight:700; margin-bottom:4px;" id="importModeDesc">Как обновить количество?</div>
+                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" id="importModeSub">Выберите действие с товарами из файла</div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-                        <button class="success" onclick="startImport('add')">➕ ДОБАВИТЬ</button>
-                        <button class="danger" onclick="startImport('subtract')">➖ УБАВИТЬ</button>
+                        <button class="success" onclick="startImport('add')" id="importAddBtn">➕ ДОБАВИТЬ</button>
+                        <button class="danger" onclick="startImport('subtract')" id="importSubBtn">➖ УБАВИТЬ</button>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Модалка загрузки файла -->
         <div class="modal-overlay" id="importFileModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -954,19 +1334,19 @@
                 <div style="text-align:center; padding:10px 0;">
                     <div style="font-size:44px; margin-bottom:8px;" id="importFileIcon">📂</div>
                     <div style="font-size:18px; font-weight:700; margin-bottom:4px;" id="importFileModeTitle">Режим: ДОБАВИТЬ</div>
-                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Загрузите Excel файл</div>
-                    <div class="file-drop-zone" id="fileDropZone" onclick="document.getElementById('importFileInput').click()" style="border:2px dashed var(--border-color); border-radius:12px; padding:24px; text-align:center; margin:8px 0; transition:border-color 0.3s; cursor:pointer;">
+                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" id="importFileSub">Загрузите Excel файл</div>
+                    <div class="file-drop-zone" id="fileDropZone" onclick="document.getElementById('importFileInput').click()">
                         <div style="font-size:40px; margin-bottom:4px;">📂</div>
-                        <div style="font-size:13px; color:var(--text-muted);">Нажмите или перетащите файл <strong>Excel (.xlsx, .xls)</strong></div>
+                        <div style="font-size:13px; color:var(--text-muted);" id="fileDropText">Нажмите или перетащите файл <strong>Excel (.xlsx, .xls)</strong></div>
                     </div>
                     <input type="file" id="importFileInput" accept=".xlsx,.xls" onchange="handleImportFile(event)">
-                    <div class="import-preview" id="importPreview" style="display:none; margin-top:10px; padding:10px; background:rgba(46,204,113,0.1); border-radius:10px;">
-                        <div class="ip-filename" id="importFileName" style="font-weight:600;"></div>
-                        <div class="ip-count" id="importFileCount" style="font-size:12px; color:var(--text-muted);"></div>
+                    <div class="import-preview" id="importPreview">
+                        <div class="ip-filename" id="importFileName"></div>
+                        <div class="ip-count" id="importFileCount"></div>
                         <div class="ip-status" id="importStatus"></div>
                     </div>
-                    <div class="import-progress" id="importProgress" style="display:none; margin-top:10px; height:4px; background:var(--border-color); border-radius:4px; overflow:hidden;">
-                        <div class="ip-bar" id="importProgressBar" style="height:100%; background:var(--accent-color); border-radius:4px; transition:width 0.3s; width:0%;"></div>
+                    <div class="import-progress" id="importProgress">
+                        <div class="ip-bar" id="importProgressBar"></div>
                     </div>
                 </div>
             </div>
@@ -976,6 +1356,9 @@
         <div id="totalInfo" class="total-info">📊 Загрузка...</div>
     </div>
 
+    <!-- ============================================
+    JAVASCRIPT
+    ============================================ -->
     <script>
         // ==================================================
         // 🔥 FIREBASE КОНФИГ
@@ -994,24 +1377,18 @@
         const db = firebase.firestore();
 
         // ==================================================
-        // 📱 TELEGRAM УВЕДОМЛЕНИЯ - ВАШИ ДАННЫЕ
+        // 📱 TELEGRAM
         // ==================================================
         const TELEGRAM_BOT_TOKEN = '8901067381:AAFM93llzCV4PIeaWHVyYPzyVXmxZm0bIiY';
         const TELEGRAM_CHAT_ID = '1651342419';
 
-        // ==================================================
-        // 📤 ОТПРАВКА УВЕДОМЛЕНИЙ В TELEGRAM
-        // ==================================================
         async function sendTelegramNotification(message, userId = null) {
             try {
-                console.log('📤 Отправка уведомления в Telegram...');
-                
-                // Если указан userId, отправляем конкретному пользователю
                 if (userId) {
                     const userDoc = await db.collection('users').doc(userId).get();
                     const userData = userDoc.data();
                     if (userData && userData.telegramChatId) {
-                        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -1020,106 +1397,326 @@
                                 parse_mode: 'HTML'
                             })
                         });
-                        const result = await response.json();
-                        if (result.ok) {
-                            console.log('✅ Уведомление отправлено пользователю');
-                        } else {
-                            console.warn('⚠️ Ошибка отправки:', result.description);
-                        }
-                        return result;
                     }
                 } else {
-                    // Отправляем всем пользователям с Telegram
                     const usersSnapshot = await db.collection('users').where('telegramChatId', '!=', '').get();
-                    let sent = 0;
                     for (const doc of usersSnapshot.docs) {
                         const data = doc.data();
                         if (data.telegramChatId) {
-                            try {
-                                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        chat_id: data.telegramChatId,
-                                        text: message,
-                                        parse_mode: 'HTML'
-                                    })
-                                });
-                                sent++;
-                            } catch (e) {
-                                console.warn('⚠️ Ошибка отправки пользователю:', data.email);
-                            }
+                            await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    chat_id: data.telegramChatId,
+                                    text: message,
+                                    parse_mode: 'HTML'
+                                })
+                            });
                         }
                     }
-                    console.log(`✅ Отправлено ${sent} уведомлений`);
-                    return { sent };
                 }
-            } catch (error) {
-                console.error('❌ Ошибка отправки в Telegram:', error);
-                return { error: error.message };
-            }
+            } catch (e) { console.warn('⚠️ Telegram error:', e); }
         }
 
-        // ==================================================
-        // 📱 ПРОВЕРКА РАБОТЫ TELEGRAM БОТА
-        // ==================================================
         async function testTelegramBot() {
             try {
-                console.log('🔍 Проверка Telegram бота...');
                 const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe`);
                 const data = await response.json();
-                
                 if (data.ok) {
-                    console.log('✅ Бот работает! Имя:', data.result.username);
-                    
-                    // Отправляем тестовое сообщение
-                    const testMsg = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    console.log('✅ Бот работает!');
+                    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             chat_id: TELEGRAM_CHAT_ID,
-                            text: '✅ <b>Бот настроен!</b>\n\n📦 Система уведомлений работает.\n🕐 Время: ' + new Date().toLocaleString(),
+                            text: '✅ <b>Бот настроен!</b>\n📦 Система уведомлений работает.',
                             parse_mode: 'HTML'
                         })
                     });
-                    const testResult = await testMsg.json();
-                    
-                    if (testResult.ok) {
-                        console.log('✅ Тестовое сообщение отправлено!');
-                        showNotification('✅ Telegram бот работает!', 'success');
-                    } else {
-                        console.warn('⚠️ Не удалось отправить тест:', testResult.description);
-                        showNotification('⚠️ Проверьте Chat ID', 'warning');
-                    }
-                } else {
-                    console.error('❌ Бот не работает:', data.description);
-                    showNotification('❌ Ошибка Telegram бота', 'error');
+                    showNotification('✅ Telegram бот работает!', 'success');
                 }
-            } catch (error) {
-                console.error('❌ Ошибка проверки:', error);
-                showNotification('❌ Ошибка подключения к Telegram', 'error');
-            }
+            } catch (e) { console.warn('⚠️ Telegram check error:', e); }
         }
 
         // ==================================================
-        // 📋 РОЛИ
-        // ==================================================
-        const ROLES = { ADMIN: 'admin', MANAGER: 'manager', IT: 'it', VIEWER: 'viewer' };
-
-        const ROLE_CONFIGS = {
-            admin: { label: 'Администратор', icon: '👑', permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canExport: true, canImport: true, canManageRoles: true, canViewHistory: true, canSendNotifications: true } },
-            manager: { label: 'Менеджер', icon: '📋', permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true, canManageUsers: false, canExport: true, canImport: true, canManageRoles: false, canViewHistory: true, canSendNotifications: false } },
-            it: { label: 'IT-специалист', icon: '💻', permissions: { canView: true, canCreate: false, canEdit: false, canDelete: false, canManageUsers: true, canExport: true, canImport: true, canManageRoles: true, canViewHistory: true, canSendNotifications: true } },
-            viewer: { label: 'Наблюдатель', icon: '👀', permissions: { canView: true, canCreate: false, canEdit: false, canDelete: false, canManageUsers: false, canExport: false, canImport: false, canManageRoles: false, canViewHistory: false, canSendNotifications: false } }
-        };
-
-        // ==================================================
-        // 🌍 ЯЗЫКИ
+        // 🌍 ПОЛНАЯ МУЛЬТИЯЗЫЧНОСТЬ
         // ==================================================
         const translations = {
-            ru: { warehouse: 'Управление складом', allProducts: 'Все товары', lowStock: 'Мало', history: 'История изменений', calendar: 'Календарь событий', exportImport: 'ЭКСПОРТ/ИМПОРТ', users: 'Управление пользователями', logout: 'Выйти', categories: 'Категории' },
-            en: { warehouse: 'Warehouse Management', allProducts: 'All Products', lowStock: 'Low Stock', history: 'History', calendar: 'Calendar', exportImport: 'EXPORT/IMPORT', users: 'User Management', logout: 'Logout', categories: 'Categories' },
-            zh: { warehouse: '仓库管理', allProducts: '所有商品', lowStock: '低库存', history: '历史记录', calendar: '日历', exportImport: '导出/导入', users: '用户管理', logout: '退出', categories: '分类' }
+            ru: {
+                // Общие
+                warehouse: 'Управление складом',
+                allProducts: 'Все товары',
+                lowStock: 'Мало',
+                history: 'История изменений',
+                calendar: 'Календарь событий',
+                exportImport: 'ЭКСПОРТ/ИМПОРТ',
+                users: 'Управление пользователями',
+                logout: 'Выйти',
+                categories: 'Категории',
+                search: 'Поиск по названию, артикулу...',
+                allCategories: 'Все категории',
+                allSubcategories: 'Все подкатегории',
+                allProducts2: 'Все товары',
+                lowStock2: 'Низкий остаток',
+                inStock: 'В наличии',
+                outOfStock: 'Закончились',
+                clear: 'Сбросить',
+                noProducts: 'Нет товаров',
+                createFirst: 'Создайте первую!',
+                loading: 'Загрузка...',
+                // Авторизация
+                authTitle: '📦 Склад',
+                authSubtitle: 'Войдите или зарегистрируйтесь',
+                authLogin: 'Вход',
+                authRegister: 'Регистрация',
+                loginEmail: '📧 Email',
+                loginPassword: '🔒 Пароль',
+                loginBtn: 'Войти',
+                registerEmail: '📧 Email',
+                registerPassword: '🔒 Пароль',
+                registerName: '👤 Ваше имя',
+                registerBtn: 'Зарегистрироваться',
+                registerSuccess: '✅ Регистрация успешна!',
+                // 2FA
+                twofaTitle: '🔐 Двухфакторная аутентификация',
+                twofaDesc: 'Код отправлен в Telegram',
+                twofaBot: 'Проверьте сообщения от бота @Skladotm_Bot',
+                twofaCodeLabel: 'Введите код из Telegram:',
+                twofaVerify: '✅ Подтвердить',
+                twofaResend: '🔄 Отправить повторно',
+                // Экспорт
+                exportTitle: 'Экспорт товаров',
+                exportDesc: 'Выберите поля для экспорта в Excel:',
+                importTitle: 'Импорт товаров',
+                importDesc: 'Загрузите Excel файл для обновления остатков:',
+                importFile: '📥 Выбрать файл',
+                importHint: 'Обновление по полям: Артикул + Размер',
+                fieldName: 'Название',
+                fieldSku: 'Артикул',
+                fieldSize: 'Размер',
+                fieldQty: 'Количество',
+                fieldCategory: 'Категория',
+                fieldMinStock: 'Мин. остаток',
+                exportSelected: '📤 Выбранные поля',
+                exportAdvanced: '📤 Расширенный',
+                exportAll: '📤 Все поля',
+                // Меню
+                menuTitle: '📋 Меню',
+                // Календарь
+                mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс',
+                addEvent: '➕ Добавить',
+                // Редактирование
+                editTitle: '✏️ Редактирование',
+                editNoPhoto: '📷 Нет фото',
+                editPhoto: '📷 Фото',
+                editName: '📝 Название',
+                editSkus: '🔢 Артикулы',
+                editSize: '📏 Размер',
+                editQty: '🔢 Количество',
+                editMinStock: '⚠️ Мин. остаток',
+                editSave: '💾 Сохранить',
+                editDelete: '🗑️ Удалить',
+                editCancel: '✕ Отмена',
+                // Импорт
+                importModeTitle: '📥 Режим импорта',
+                importModeDesc: 'Как обновить количество?',
+                importModeSub: 'Выберите действие с товарами из файла',
+                importAdd: '➕ ДОБАВИТЬ',
+                importSub: '➖ УБАВИТЬ',
+                importFileTitle: 'Загрузка',
+                importFileSub: 'Загрузите Excel файл',
+                fileDropText: 'Нажмите или перетащите файл Excel (.xlsx, .xls)',
+                // Уведомления
+                installTitle: '📱 Установить приложение',
+                installDesc: 'Склад всегда под рукой',
+                installBtn: 'Установить',
+                // Категории
+                noCategories: 'Нет категорий',
+                closeSub: '✕ Закрыть',
+                // Товары
+                lowStockTitle: '⚠️ Товары с низким остатком',
+                allProductsTitle: '📦 Все товары',
+                historyTitle: '📋 История изменений',
+                calendarTitle: '📅 Календарь событий',
+                usersTitle: '👥 Управление пользователями',
+                exportModalTitle: '📊 ЭКСПОРТ / ИМПОРТ'
+            },
+            en: {
+                warehouse: 'Warehouse Management',
+                allProducts: 'All Products',
+                lowStock: 'Low Stock',
+                history: 'History',
+                calendar: 'Calendar',
+                exportImport: 'EXPORT/IMPORT',
+                users: 'User Management',
+                logout: 'Logout',
+                categories: 'Categories',
+                search: 'Search by name, SKU...',
+                allCategories: 'All Categories',
+                allSubcategories: 'All Subcategories',
+                allProducts2: 'All Products',
+                lowStock2: 'Low Stock',
+                inStock: 'In Stock',
+                outOfStock: 'Out of Stock',
+                clear: 'Clear',
+                noProducts: 'No products',
+                createFirst: 'Create your first!',
+                loading: 'Loading...',
+                authTitle: '📦 Warehouse',
+                authSubtitle: 'Login or Register',
+                authLogin: 'Login',
+                authRegister: 'Register',
+                loginEmail: '📧 Email',
+                loginPassword: '🔒 Password',
+                loginBtn: 'Login',
+                registerEmail: '📧 Email',
+                registerPassword: '🔒 Password',
+                registerName: '👤 Your Name',
+                registerBtn: 'Register',
+                registerSuccess: '✅ Registration successful!',
+                twofaTitle: '🔐 Two-Factor Authentication',
+                twofaDesc: 'Code sent to Telegram',
+                twofaBot: 'Check messages from @Skladotm_Bot',
+                twofaCodeLabel: 'Enter code from Telegram:',
+                twofaVerify: '✅ Verify',
+                twofaResend: '🔄 Resend',
+                exportTitle: 'Export Products',
+                exportDesc: 'Select fields to export to Excel:',
+                importTitle: 'Import Products',
+                importDesc: 'Upload Excel file to update stock:',
+                importFile: '📥 Select file',
+                importHint: 'Update by fields: SKU + Size',
+                fieldName: 'Name',
+                fieldSku: 'SKU',
+                fieldSize: 'Size',
+                fieldQty: 'Quantity',
+                fieldCategory: 'Category',
+                fieldMinStock: 'Min Stock',
+                exportSelected: '📤 Selected fields',
+                exportAdvanced: '📤 Advanced',
+                exportAll: '📤 All fields',
+                menuTitle: '📋 Menu',
+                mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun',
+                addEvent: '➕ Add',
+                editTitle: '✏️ Edit',
+                editNoPhoto: '📷 No photo',
+                editPhoto: '📷 Photo',
+                editName: '📝 Name',
+                editSkus: '🔢 SKUs',
+                editSize: '📏 Size',
+                editQty: '🔢 Quantity',
+                editMinStock: '⚠️ Min Stock',
+                editSave: '💾 Save',
+                editDelete: '🗑️ Delete',
+                editCancel: '✕ Cancel',
+                importModeTitle: '📥 Import Mode',
+                importModeDesc: 'How to update quantity?',
+                importModeSub: 'Choose action with products from file',
+                importAdd: '➕ ADD',
+                importSub: '➖ SUBTRACT',
+                importFileTitle: 'Upload',
+                importFileSub: 'Upload Excel file',
+                fileDropText: 'Click or drag Excel file (.xlsx, .xls)',
+                installTitle: '📱 Install app',
+                installDesc: 'Warehouse always at hand',
+                installBtn: 'Install',
+                noCategories: 'No categories',
+                closeSub: '✕ Close',
+                lowStockTitle: '⚠️ Low Stock Products',
+                allProductsTitle: '📦 All Products',
+                historyTitle: '📋 History',
+                calendarTitle: '📅 Calendar',
+                usersTitle: '👥 User Management',
+                exportModalTitle: '📊 EXPORT / IMPORT'
+            },
+            zh: {
+                warehouse: '仓库管理',
+                allProducts: '所有商品',
+                lowStock: '低库存',
+                history: '历史记录',
+                calendar: '日历',
+                exportImport: '导出/导入',
+                users: '用户管理',
+                logout: '退出',
+                categories: '分类',
+                search: '搜索名称、SKU...',
+                allCategories: '全部分类',
+                allSubcategories: '全部子分类',
+                allProducts2: '所有商品',
+                lowStock2: '低库存',
+                inStock: '有货',
+                outOfStock: '缺货',
+                clear: '清除',
+                noProducts: '没有商品',
+                createFirst: '创建第一个！',
+                loading: '加载中...',
+                authTitle: '📦 仓库',
+                authSubtitle: '登录或注册',
+                authLogin: '登录',
+                authRegister: '注册',
+                loginEmail: '📧 邮箱',
+                loginPassword: '🔒 密码',
+                loginBtn: '登录',
+                registerEmail: '📧 邮箱',
+                registerPassword: '🔒 密码',
+                registerName: '👤 您的名字',
+                registerBtn: '注册',
+                registerSuccess: '✅ 注册成功！',
+                twofaTitle: '🔐 双重认证',
+                twofaDesc: '验证码已发送到 Telegram',
+                twofaBot: '请检查 @Skladotm_Bot 的消息',
+                twofaCodeLabel: '输入 Telegram 验证码：',
+                twofaVerify: '✅ 验证',
+                twofaResend: '🔄 重新发送',
+                exportTitle: '导出商品',
+                exportDesc: '选择要导出到 Excel 的字段：',
+                importTitle: '导入商品',
+                importDesc: '上传 Excel 文件更新库存：',
+                importFile: '📥 选择文件',
+                importHint: '按字段更新：SKU + 尺寸',
+                fieldName: '名称',
+                fieldSku: 'SKU',
+                fieldSize: '尺寸',
+                fieldQty: '数量',
+                fieldCategory: '分类',
+                fieldMinStock: '最小库存',
+                exportSelected: '📤 选定字段',
+                exportAdvanced: '📤 高级',
+                exportAll: '📤 所有字段',
+                menuTitle: '📋 菜单',
+                mon: '一', tue: '二', wed: '三', thu: '四', fri: '五', sat: '六', sun: '日',
+                addEvent: '➕ 添加',
+                editTitle: '✏️ 编辑',
+                editNoPhoto: '📷 无照片',
+                editPhoto: '📷 照片',
+                editName: '📝 名称',
+                editSkus: '🔢 SKU',
+                editSize: '📏 尺寸',
+                editQty: '🔢 数量',
+                editMinStock: '⚠️ 最小库存',
+                editSave: '💾 保存',
+                editDelete: '🗑️ 删除',
+                editCancel: '✕ 取消',
+                importModeTitle: '📥 导入模式',
+                importModeDesc: '如何更新数量？',
+                importModeSub: '选择对文件中商品的操作',
+                importAdd: '➕ 添加',
+                importSub: '➖ 减去',
+                importFileTitle: '上传',
+                importFileSub: '上传 Excel 文件',
+                fileDropText: '点击或拖拽 Excel 文件 (.xlsx, .xls)',
+                installTitle: '📱 安装应用',
+                installDesc: '仓库随时在手',
+                installBtn: '安装',
+                noCategories: '没有分类',
+                closeSub: '✕ 关闭',
+                lowStockTitle: '⚠️ 低库存商品',
+                allProductsTitle: '📦 所有商品',
+                historyTitle: '📋 历史记录',
+                calendarTitle: '📅 日历',
+                usersTitle: '👥 用户管理',
+                exportModalTitle: '📊 导出 / 导入'
+            }
         };
 
         let currentLanguage = localStorage.getItem('language') || 'ru';
@@ -1127,13 +1724,109 @@
         function setLanguage(lang) {
             currentLanguage = lang;
             localStorage.setItem('language', lang);
-            document.querySelectorAll('.language-selector button').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === lang));
+            
+            // Обновляем кнопки языка
+            document.querySelectorAll('.language-selector button').forEach(b => {
+                b.classList.toggle('active', b.textContent.toLowerCase() === lang);
+            });
+            
+            // Обновляем все элементы с data-lang
             document.querySelectorAll('[data-lang]').forEach(el => {
                 const key = el.dataset.lang;
-                if (translations[lang] && translations[lang][key]) el.textContent = translations[lang][key];
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
             });
+            
+            // Обновляем элементы по ID
+            const map = {
+                // Авторизация
+                authTitle: 'authTitle', authSubtitle: 'authSubtitle',
+                authLoginTab: 'authLoginTab', authRegisterTab: 'authRegisterTab',
+                loginEmailLabel: 'loginEmailLabel', loginPasswordLabel: 'loginPasswordLabel',
+                loginBtn: 'loginBtn', registerEmailLabel: 'registerEmailLabel',
+                registerPasswordLabel: 'registerPasswordLabel', registerNameLabel: 'registerNameLabel',
+                registerBtn: 'registerBtn', registerSuccess: 'registerSuccess',
+                // Меню
+                menuTitle: 'menuTitle', menuAllProducts: 'menuAllProducts',
+                menuLowStock: 'menuLowStock', menuHistory: 'menuHistory',
+                menuCalendar: 'menuCalendar', menuExportImport: 'menuExportImport',
+                menuUsers: 'menuUsers', menuLogout: 'menuLogout',
+                // Шапка
+                headerTitle: 'headerTitle',
+                // Поиск
+                stockAll: 'stockAll', stockLow: 'stockLow',
+                stockHigh: 'stockHigh', stockZero: 'stockZero',
+                clearBtn: 'clearBtn', noCategories: 'noCategories',
+                // Категории
+                categoriesTitle: 'categoriesTitle', closeSubBtn: 'closeSubBtn',
+                // Редактирование
+                editTitle: 'editTitle', editNoPhoto: 'editNoPhoto',
+                editPhotoLabel: 'editPhotoLabel', editNameLabel: 'editNameLabel',
+                editSkusLabel: 'editSkusLabel', editSizeLabel: 'editSizeLabel',
+                editQtyLabel: 'editQtyLabel', editMinStockLabel: 'editMinStockLabel',
+                editSaveBtn: 'editSaveBtn', editDeleteBtn: 'editDeleteBtn',
+                editCancelBtn: 'editCancelBtn',
+                // 2FA
+                twofaTitle: 'twofaTitle', twofaDesc: 'twofaDesc',
+                twofaBot: 'twofaBot', twofaCodeLabel: 'twofaCodeLabel',
+                twofaVerifyBtn: 'twofaVerifyBtn', twofaResendBtn: 'twofaResendBtn',
+                // Экспорт
+                exportModalTitle: 'exportModalTitle', exportTitle: 'exportTitle',
+                exportDesc: 'exportDesc', importTitle: 'importTitle',
+                importDesc: 'importDesc', importFileBtn: 'importFileBtn',
+                importHint: 'importHint', fieldName: 'fieldName',
+                fieldSku: 'fieldSku', fieldSize: 'fieldSize',
+                fieldQty: 'fieldQty', fieldCategory: 'fieldCategory',
+                fieldMinStock: 'fieldMinStock', exportSelectedBtn: 'exportSelectedBtn',
+                exportAdvancedBtn: 'exportAdvancedBtn', exportAllBtn: 'exportAllBtn',
+                // Импорт
+                importModeTitle: 'importModeTitle', importModeDesc: 'importModeDesc',
+                importModeSub: 'importModeSub', importAddBtn: 'importAddBtn',
+                importSubBtn: 'importSubBtn', importFileTitle: 'importFileTitle',
+                importFileSub: 'importFileSub', fileDropText: 'fileDropText',
+                // Календарь
+                calMon: 'mon', calTue: 'tue', calWed: 'wed',
+                calThu: 'thu', calFri: 'fri', calSat: 'sat', calSun: 'sun',
+                addEventBtn: 'addEventBtn', calendarTitle: 'calendarTitle',
+                // PWA
+                installTitle: 'installTitle', installDesc: 'installDesc',
+                installBtn: 'installBtn',
+                // Прочее
+                allProductsTitle: 'allProductsTitle', lowStockTitle: 'lowStockTitle',
+                historyTitle: 'historyTitle', usersTitle: 'usersTitle'
+            };
+            
+            for (const [key, id] of Object.entries(map)) {
+                const el = document.getElementById(id);
+                if (el && translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            }
+            
+            // Обновляем placeholder поиска
             const searchInput = document.getElementById('searchInput');
-            if (searchInput) searchInput.placeholder = lang === 'zh' ? '🔍 搜索名称、SKU...' : lang === 'en' ? '🔍 Search...' : '🔍 Поиск...';
+            if (searchInput) searchInput.placeholder = translations[lang].search;
+            
+            // Обновляем фильтры
+            const filterStock = document.getElementById('filterStock');
+            if (filterStock) {
+                const options = filterStock.options;
+                if (options[0]) options[0].textContent = translations[lang].allProducts2;
+                if (options[1]) options[1].textContent = '⚠️ ' + translations[lang].lowStock2;
+                if (options[2]) options[2].textContent = '✅ ' + translations[lang].inStock;
+                if (options[3]) options[3].textContent = '❌ ' + translations[lang].outOfStock;
+            }
+            
+            // Обновляем кнопку очистки
+            const clearBtn = document.getElementById('clearBtn');
+            if (clearBtn) clearBtn.textContent = '✕ ' + translations[lang].clear;
+            
+            // Обновляем категории
+            const noCat = document.getElementById('noCategories');
+            if (noCat) noCat.textContent = translations[lang].noCategories;
+            
+            showNotification(`🌍 ${lang === 'zh' ? '中文' : lang === 'en' ? 'English' : 'Русский'}`, 'info');
         }
 
         // ==================================================
@@ -1193,9 +1886,7 @@
                     userEmail: currentUser?.email,
                     timestamp: new Date().toISOString()
                 });
-                // Отправляем уведомление в Telegram
-                const msg = `📢 <b>${action}</b>\n👤 ${currentUser?.email}\n📦 ${JSON.stringify(data)}`;
-                sendTelegramNotification(msg);
+                sendTelegramNotification(`📢 <b>${action}</b>\n👤 ${currentUser?.email}\n📦 ${JSON.stringify(data)}`);
             } catch (e) { console.warn('⚠️ Лог не записан:', e); }
         }
 
@@ -1382,15 +2073,15 @@
             const catSelect = document.getElementById('filterCategory');
             const subSelect = document.getElementById('filterSubcategory');
             const currentCat = catSelect.value;
-            catSelect.innerHTML = '<option value="">Все категории</option>';
+            catSelect.innerHTML = `<option value="">${translations[currentLanguage].allCategories}</option>`;
             categories.forEach(c => catSelect.innerHTML += `<option value="${escapeHtml(c.name)}" ${c.name === currentCat ? 'selected' : ''}>${c.emoji || '📁'} ${escapeHtml(c.name)}</option>`);
             const currentSub = subSelect.value;
-            subSelect.innerHTML = '<option value="">Все подкатегории</option>';
+            subSelect.innerHTML = `<option value="">${translations[currentLanguage].allSubcategories}</option>`;
             subcategories.forEach(s => subSelect.innerHTML += `<option value="${s.id}" ${s.id === currentSub ? 'selected' : ''}>${escapeHtml(s.name)}</option>`);
         }
 
         // ==================================================
-        // 👤 АУТЕНТИФИКАЦИЯ
+        // 🔐 АВТОРИЗАЦИЯ
         // ==================================================
         let currentUser = null, currentUserRole = null, currentUserPermissions = null, currentUserData = null;
         let categories = [], subcategories = [], products = [], users = [];
@@ -1400,14 +2091,16 @@
         let importFileData = null, importMode = 'add';
         let unsubCategories = null, unsubSubcategories = null, unsubProducts = null, unsubUsers = null;
 
-        // ==================================================
-        // 🔐 АВТОРИЗАЦИЯ
-        // ==================================================
         function switchAuthTab(tab) {
             document.querySelectorAll('.auth-tabs button').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-            if (tab === 'login') { document.querySelector('.auth-tabs button:first-child').classList.add('active'); document.getElementById('loginForm').classList.add('active'); }
-            else { document.querySelector('.auth-tabs button:last-child').classList.add('active'); document.getElementById('registerForm').classList.add('active'); }
+            if (tab === 'login') { 
+                document.querySelector('.auth-tabs button:first-child').classList.add('active'); 
+                document.getElementById('loginForm').classList.add('active'); 
+            } else { 
+                document.querySelector('.auth-tabs button:last-child').classList.add('active'); 
+                document.getElementById('registerForm').classList.add('active'); 
+            }
             document.querySelectorAll('.auth-error, .auth-success').forEach(el => el.style.display = 'none');
         }
 
@@ -1433,7 +2126,7 @@
                 });
                 await logAction('user_registered', { email, name });
                 successEl.style.display = 'block';
-                successEl.textContent = '✅ Регистрация успешна!';
+                successEl.textContent = translations[currentLanguage].registerSuccess;
                 document.getElementById('registerEmail').value = '';
                 document.getElementById('registerPassword').value = '';
                 document.getElementById('registerName').value = '';
@@ -1467,22 +2160,54 @@
         // ==================================================
         let twoFactorCode = '';
         let twoFactorUser = null;
+        let twoFactorTimer = null;
 
-        function requestTwoFactorCode(user) {
+        async function requestTwoFactorCode(user) {
             twoFactorUser = user;
-            twoFactorCode = Math.floor(100000 + Math.random() * 900000).toString();
-            console.log(`📧 Код для ${user.email}: ${twoFactorCode}`);
-            showNotification(`📧 Код отправлен на ${user.email}`, 'info');
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            twoFactorCode = code;
+            
+            try {
+                await sendTelegramNotification(
+                    `🔐 <b>Код подтверждения</b>\n\n📧 ${user.email}\n🔑 <code>${code}</code>\n\n⏳ Действителен 5 минут`,
+                    user.uid
+                );
+                showNotification('📱 Код отправлен в Telegram!', 'success');
+            } catch (error) {
+                console.log(`📧 Код для ${user.email}: ${code}`);
+                showNotification(`⚠️ Ошибка отправки, проверьте консоль`, 'warning');
+            }
+            
             document.getElementById('twoFactorModal').classList.add('show');
             document.body.style.overflow = 'hidden';
             document.getElementById('twoFactorCode').value = '';
             document.getElementById('twoFactorCode').focus();
+            
+            let seconds = 300;
+            const timerEl = document.getElementById('twoFactorTimer');
+            timerEl.textContent = '⏳ 5:00';
+            timerEl.style.color = 'var(--text-muted)';
+            
+            if (twoFactorTimer) clearInterval(twoFactorTimer);
+            twoFactorTimer = setInterval(() => {
+                seconds--;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timerEl.textContent = `⏳ ${mins}:${secs.toString().padStart(2, '0')}`;
+                if (seconds <= 60) timerEl.style.color = 'var(--danger-color)';
+                if (seconds <= 0) {
+                    clearInterval(twoFactorTimer);
+                    timerEl.textContent = '⏰ Код истёк';
+                    timerEl.style.color = 'var(--danger-color)';
+                }
+            }, 1000);
         }
 
         function verifyTwoFactor() {
             const input = document.getElementById('twoFactorCode').value;
             if (input === twoFactorCode) {
                 showNotification('✅ 2FA подтверждена!', 'success');
+                if (twoFactorTimer) clearInterval(twoFactorTimer);
                 closeTwoFactorModal();
                 completeLogin(twoFactorUser);
             } else {
@@ -1492,20 +2217,50 @@
             }
         }
 
-        function resendTwoFactorCode() {
+        async function resendTwoFactorCode() {
             if (twoFactorUser) {
-                twoFactorCode = Math.floor(100000 + Math.random() * 900000).toString();
-                console.log(`📧 Новый код: ${twoFactorCode}`);
-                showNotification('📧 Новый код отправлен!', 'info');
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+                twoFactorCode = code;
+                await sendTelegramNotification(
+                    `🔄 <b>Новый код подтверждения</b>\n\n📧 ${twoFactorUser.email}\n🔑 <code>${code}</code>\n\n⏳ Действителен 5 минут`,
+                    twoFactorUser.uid
+                );
+                showNotification('📱 Новый код отправлен в Telegram!', 'success');
+                
+                if (twoFactorTimer) {
+                    clearInterval(twoFactorTimer);
+                    twoFactorTimer = null;
+                    const timerEl = document.getElementById('twoFactorTimer');
+                    timerEl.textContent = '⏳ 5:00';
+                    timerEl.style.color = 'var(--text-muted)';
+                }
+                document.getElementById('twoFactorCode').value = '';
+                document.getElementById('twoFactorCode').focus();
+                
+                let seconds = 300;
+                const timerEl = document.getElementById('twoFactorTimer');
+                twoFactorTimer = setInterval(() => {
+                    seconds--;
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    timerEl.textContent = `⏳ ${mins}:${secs.toString().padStart(2, '0')}`;
+                    if (seconds <= 60) timerEl.style.color = 'var(--danger-color)';
+                    if (seconds <= 0) {
+                        clearInterval(twoFactorTimer);
+                        timerEl.textContent = '⏰ Код истёк';
+                        timerEl.style.color = 'var(--danger-color)';
+                    }
+                }, 1000);
             }
         }
 
         function closeTwoFactorModal() {
             document.getElementById('twoFactorModal').classList.remove('show');
             document.body.style.overflow = 'auto';
+            if (twoFactorTimer) { clearInterval(twoFactorTimer); twoFactorTimer = null; }
         }
 
-        function completeLogin(user) {}
+        function completeLogin(user) { console.log('✅ 2FA пройдена, вход выполнен:', user.email); }
 
         // ==================================================
         // 👤 ОБРАБОТЧИК АУТЕНТИФИКАЦИИ
@@ -1547,10 +2302,7 @@
                     const userRoleDisplay = document.getElementById('userRoleDisplay');
                     if (userRoleDisplay) userRoleDisplay.textContent = `${roleConfig.icon} ${roleConfig.label}`;
                     
-                    // Применяем права
-                    setTimeout(() => {
-                        applyPermissions();
-                    }, 100);
+                    setTimeout(() => { applyPermissions(); }, 100);
                     
                     listenCategories();
                     listenProducts();
@@ -1565,12 +2317,11 @@
                     setLanguage(currentLanguage);
                     loadTheme();
                     
-                    // Проверка Telegram
                     if (!currentUserData.telegramChatId) {
-                        setTimeout(() => {
-                            const chatId = prompt('📱 Введите ваш Telegram Chat ID для получения уведомлений (или пропустите):');
+                        setTimeout(async () => {
+                            const chatId = prompt('📱 Введите ваш Telegram Chat ID для получения уведомлений (или пропустите):\n\nУзнать ID: напишите @userinfobot в Telegram');
                             if (chatId) {
-                                db.collection('users').doc(user.uid).update({ telegramChatId: chatId });
+                                await db.collection('users').doc(user.uid).update({ telegramChatId: chatId });
                                 showNotification('✅ Telegram ID сохранён!', 'success');
                                 sendTelegramNotification(`📱 Пользователь ${user.email} подключил Telegram уведомления`);
                             }
@@ -1592,16 +2343,26 @@
         });
 
         // ==================================================
-        // 🔑 ПРАВА (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+        // 📋 РОЛИ
+        // ==================================================
+        const ROLES = { ADMIN: 'admin', MANAGER: 'manager', IT: 'it', VIEWER: 'viewer' };
+
+        const ROLE_CONFIGS = {
+            admin: { label: 'Администратор', icon: '👑', permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canExport: true, canImport: true, canManageRoles: true, canViewHistory: true, canSendNotifications: true } },
+            manager: { label: 'Менеджер', icon: '📋', permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true, canManageUsers: false, canExport: true, canImport: true, canManageRoles: false, canViewHistory: true, canSendNotifications: false } },
+            it: { label: 'IT-специалист', icon: '💻', permissions: { canView: true, canCreate: false, canEdit: false, canDelete: false, canManageUsers: true, canExport: true, canImport: true, canManageRoles: true, canViewHistory: true, canSendNotifications: true } },
+            viewer: { label: 'Наблюдатель', icon: '👀', permissions: { canView: true, canCreate: false, canEdit: false, canDelete: false, canManageUsers: false, canExport: false, canImport: false, canManageRoles: false, canViewHistory: false, canSendNotifications: false } }
+        };
+
+        // ==================================================
+        // 🔑 ПРАВА
         // ==================================================
         function hasPermission(p) { return currentUserPermissions && currentUserPermissions[p] === true; }
         function checkPermission(p) { if (!hasPermission(p)) { showNotification('⛔ Недостаточно прав', 'error'); return false; } return true; }
 
         function safeApplyStyles(id, styles) {
             const el = document.getElementById(id);
-            if (el) {
-                Object.assign(el.style, styles);
-            }
+            if (el) { Object.assign(el.style, styles); }
             return el;
         }
 
@@ -1625,9 +2386,7 @@
             safeApplyStyles('editDeleteBtn', { display: canDelete ? 'inline-flex' : 'none' });
             
             const adminMenu = document.getElementById('adminMenuItems');
-            if (adminMenu) {
-                adminMenu.style.display = canManageUsers ? 'block' : 'none';
-            }
+            if (adminMenu) { adminMenu.style.display = canManageUsers ? 'block' : 'none'; }
         }
 
         // ==================================================
@@ -1665,7 +2424,7 @@
             count.textContent = `(${users.length})`;
             if (users.length === 0) { list.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Нет пользователей</p></div>'; return; }
             
-            let html = '<div style="display:grid; gap:10px;">';
+            let html = '<div class="user-grid">';
             users.forEach(u => {
                 const isSelf = currentUser && u.id === currentUser.uid;
                 const roleConfig = ROLE_CONFIGS[u.role] || ROLE_CONFIGS.viewer;
@@ -1673,34 +2432,36 @@
                 const permKeys = Object.keys(perms);
                 
                 html += `
-                    <div style="background:var(--bg-card); border-radius:12px; padding:14px; border:1px solid var(--border-color);">
-                        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                            <div style="width:40px; height:40px; border-radius:50%; background:var(--accent-color); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; flex-shrink:0;">${(u.name || u.email || 'U')[0].toUpperCase()}</div>
-                            <div style="flex:1; min-width:120px;">
-                                <div style="font-weight:600; font-size:14px;">${escapeHtml(u.name || u.email)}</div>
-                                <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(u.email)}</div>
-                                <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
+                    <div class="user-card">
+                        <div class="user-header">
+                            <div class="user-avatar">${(u.name || u.email || 'U')[0].toUpperCase()}</div>
+                            <div class="user-info">
+                                <div class="user-email">${escapeHtml(u.name || u.email)}</div>
+                                <div class="user-name">${escapeHtml(u.email)}</div>
+                                <div style="display:flex; align-items:center; gap:6px; margin-top:2px; flex-wrap:wrap;">
                                     <span style="font-size:13px;">${roleConfig.icon}</span>
-                                    <span style="font-weight:600; font-size:13px;">${roleConfig.label}</span>
+                                    <span class="user-role-badge ${u.role}">${roleConfig.label}</span>
                                     ${isSelf ? ' <span style="font-size:11px; color:var(--text-muted);">(Вы)</span>' : ''}
                                 </div>
                             </div>
-                            <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
-                                ${isSelf ? '' : `
-                                    <select onchange="changeUserRole('${u.id}', this.value)" style="padding:4px 8px; font-size:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);">
-                                        ${Object.entries(ROLE_CONFIGS).map(([key, cfg]) => `<option value="${key}" ${u.role === key ? 'selected' : ''}>${cfg.icon} ${cfg.label}</option>`).join('')}
-                                    </select>
-                                    <button class="small purple" onclick="editUserPermissions('${u.id}')" style="padding:4px 10px; font-size:12px;">⚙️</button>
-                                    ${currentUserRole === 'it' || currentUserRole === 'admin' ? `<button class="small danger" onclick="deleteUser('${u.id}')" style="padding:4px 10px; font-size:12px;">🗑️</button>` : ''}
-                                `}
+                        </div>
+                        <div class="permissions-section">
+                            <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                                ${permKeys.map(k => `
+                                    <span class="permission-tag ${perms[k] ? 'active' : 'inactive'}">
+                                        ${perms[k] ? '✅' : '❌'} ${k.replace('can','')}
+                                    </span>
+                                `).join('')}
                             </div>
                         </div>
-                        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; padding-top:8px; border-top:1px solid var(--border-color);">
-                            ${permKeys.map(k => `
-                                <span style="display:inline-flex; align-items:center; gap:3px; padding:2px 10px; border-radius:10px; font-size:10px; font-weight:600; ${perms[k] ? 'background:rgba(46,204,113,0.15); color:var(--success-color);' : 'background:rgba(231,76,60,0.1); color:var(--danger-color);'}">
-                                    ${perms[k] ? '✅' : '❌'} ${k.replace('can','')}
-                                </span>
-                            `).join('')}
+                        <div class="user-actions">
+                            ${isSelf ? '' : `
+                                <select onchange="changeUserRole('${u.id}', this.value)">
+                                    ${Object.entries(ROLE_CONFIGS).map(([key, cfg]) => `<option value="${key}" ${u.role === key ? 'selected' : ''}>${cfg.icon} ${cfg.label}</option>`).join('')}
+                                </select>
+                                <button class="small purple" onclick="editUserPermissions('${u.id}')" style="padding:4px 10px; font-size:12px;">⚙️</button>
+                                ${currentUserRole === 'it' || currentUserRole === 'admin' ? `<button class="small danger" onclick="deleteUser('${u.id}')" style="padding:4px 10px; font-size:12px;">🗑️</button>` : ''}
+                            `}
                         </div>
                     </div>
                 `;
@@ -1726,11 +2487,11 @@
             };
             
             let permsHtml = Object.keys(perms).map(key => `
-                <div class="perm-item" style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--border-color); border-radius:8px; margin:4px 0;">
+                <div class="perm-item">
                     <span style="font-size:16px;">${key === 'canView' ? '👁️' : key === 'canCreate' ? '➕' : key === 'canEdit' ? '✏️' : key === 'canDelete' ? '🗑️' : key === 'canManageUsers' ? '👥' : key === 'canExport' ? '📤' : key === 'canImport' ? '📥' : key === 'canManageRoles' ? '🎯' : key === 'canViewHistory' ? '📋' : '📱'}</span>
-                    <input type="checkbox" ${perms[key] ? 'checked' : ''} data-perm="${key}" id="perm_${key}" style="width:16px; height:16px; accent-color:var(--accent-color);">
-                    <label for="perm_${key}" style="flex:1; font-size:13px; font-weight:500;">${permLabels[key] || key}</label>
-                    <span style="font-size:11px; padding:2px 10px; border-radius:8px; font-weight:600; ${perms[key] ? 'background:rgba(46,204,113,0.15); color:var(--success-color);' : 'background:rgba(231,76,60,0.1); color:var(--danger-color);'}">${perms[key] ? '✅ Вкл' : '❌ Выкл'}</span>
+                    <input type="checkbox" ${perms[key] ? 'checked' : ''} data-perm="${key}" id="perm_${key}">
+                    <label for="perm_${key}" class="perm-label">${permLabels[key] || key}</label>
+                    <span class="perm-status ${perms[key] ? 'active' : 'inactive'}">${perms[key] ? '✅ Вкл' : '❌ Выкл'}</span>
                 </div>
             `).join('');
             
@@ -1743,7 +2504,7 @@
                     <div style="padding:4px 0;">
                         <div style="font-weight:600; margin-bottom:8px; font-size:15px;">👤 ${escapeHtml(user.email)}</div>
                         <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Роль: ${ROLE_CONFIGS[user.role]?.icon} ${ROLE_CONFIGS[user.role]?.label}</div>
-                        <div style="display:grid; gap:4px;">${permsHtml}</div>
+                        <div class="permissions-grid">${permsHtml}</div>
                         <div style="margin-top:14px; display:flex; gap:8px;">
                             <button class="success" onclick="saveUserPermissions('${userId}')" style="flex:1;">💾 Сохранить</button>
                             <button class="gray" onclick="this.closest('.modal-overlay').remove()" style="flex:0.5;">✕</button>
@@ -1813,7 +2574,10 @@
 
         function renderCategories() {
             const grid = document.getElementById('categoryGrid');
-            if (categories.length === 0) { grid.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Нет категорий</p></div>'; return; }
+            if (categories.length === 0) { 
+                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${translations[currentLanguage].noCategories}</p></div>`; 
+                return; 
+            }
             let html = '';
             categories.forEach(cat => {
                 const subCount = subcategories.filter(s => s.categoryId === cat.id).length;
@@ -1877,7 +2641,10 @@
 
         function renderSubcategories() {
             const grid = document.getElementById('subcategoryGrid');
-            if (subcategories.length === 0) { grid.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Нет подкатегорий</p></div>'; return; }
+            if (subcategories.length === 0) { 
+                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${translations[currentLanguage].noCategories}</p></div>`; 
+                return; 
+            }
             let html = '';
             subcategories.forEach(sub => {
                 const prodCount = products.filter(p => p.subcategoryId === sub.id).length;
@@ -2021,7 +2788,7 @@
             document.getElementById('editNewSku').value = '';
             renderEditSkuList();
             const preview = document.getElementById('editPhotoPreview');
-            preview.innerHTML = product.photo ? `<img src="${product.photo}">` : '<div class="no-photo">📷 Нет фото</div>';
+            preview.innerHTML = product.photo ? `<img src="${product.photo}">` : `<div class="no-photo">${translations[currentLanguage].editNoPhoto}</div>`;
             document.getElementById('editPhotoInput').value = '';
             currentEditPhotoFile = null;
             document.getElementById('editModal').classList.add('show');
@@ -2038,7 +2805,10 @@
 
         function renderEditSkuList() {
             const container = document.getElementById('editSkuList');
-            if (!editSkuList || editSkuList.length === 0) { container.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Нет артикулов</span>'; return; }
+            if (!editSkuList || editSkuList.length === 0) { 
+                container.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Нет артикулов</span>'; 
+                return; 
+            }
             container.innerHTML = editSkuList.map((s, i) => `<span class="sku-tag">${escapeHtml(s)}<button class="remove-sku" onclick="removeSkuFromEdit(${i})">✕</button></span>`).join('');
         }
 
@@ -2131,41 +2901,20 @@
         function closeLowStockModal() { document.getElementById('lowStockModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
 
         // ==================================================
-        // 📤 ЭКСПОРТ
+        // 📤 ЭКСПОРТ (УЛУЧШЕННЫЙ)
         // ==================================================
         function exportToExcel() {
             if (!checkPermission('canExport')) return;
             if (products.length === 0) { showNotification('⚠️ Нет товаров', 'error'); return; }
             try {
-                const data = [['Название', 'Артикулы', 'Размер', 'Количество', 'Категория', 'Мин.остаток']];
-                products.forEach(p => {
-                    data.push([p.name || '', p.skus?.join(', ') || p.sku || '', p.size || '', p.quantity || 0, p.category || '', p.minStock || 5]);
+                const checkboxes = document.querySelectorAll('#exportFields input[type="checkbox"]:checked');
+                const fields = Array.from(checkboxes).map(cb => cb.dataset.field);
+                if (fields.length === 0) { showNotification('Выберите поля для экспорта', 'error'); return; }
+                
+                const headers = fields.map(f => {
+                    const map = { name: 'Название', sku: 'Артикул', size: 'Размер', quantity: 'Количество', category: 'Категория', minStock: 'Мин.остаток' };
+                    return map[f] || f;
                 });
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(data);
-                ws['!cols'] = [{ wch: 25 }, { wch: 25 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 12 }];
-                XLSX.utils.book_append_sheet(wb, ws, 'Товары');
-                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                const blob = new Blob([wbout], { type: 'application/octet-stream' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `склад_${new Date().toISOString().slice(0,10)}.xlsx`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
-                showNotification(`✅ Экспортировано ${products.length} товаров`, 'success');
-            } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
-        }
-
-        function exportToExcelWithFields() {
-            if (!checkPermission('canExport')) return;
-            if (products.length === 0) { showNotification('⚠️ Нет товаров', 'error'); return; }
-            const checkboxes = document.querySelectorAll('#exportFields input[type="checkbox"]:checked');
-            const fields = Array.from(checkboxes).map(cb => cb.dataset.field);
-            if (fields.length === 0) { showNotification('Выберите поля для экспорта', 'error'); return; }
-            try {
-                const headers = fields.map(f => ({ name: 'название', sku: 'артикул', size: 'размер', quantity: 'количество', category: 'категория', minStock: 'мин.остаток' }[f] || f));
                 const data = [headers];
                 products.forEach(p => {
                     const row = fields.map(f => {
@@ -2181,6 +2930,7 @@
                 });
                 const wb = XLSX.utils.book_new();
                 const ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = headers.map(() => ({ wch: 20 }));
                 XLSX.utils.book_append_sheet(wb, ws, 'Товары');
                 const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
                 const blob = new Blob([wbout], { type: 'application/octet-stream' });
@@ -2192,6 +2942,45 @@
                 document.body.removeChild(link);
                 URL.revokeObjectURL(link.href);
                 showNotification(`✅ Экспортировано ${products.length} товаров`, 'success');
+            } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
+        }
+
+        function exportToExcelWithFields() {
+            exportToExcel();
+        }
+
+        function exportAllProducts() {
+            if (!checkPermission('canExport')) return;
+            if (products.length === 0) { showNotification('⚠️ Нет товаров', 'error'); return; }
+            try {
+                const data = [['Название', 'Артикулы', 'Размер', 'Количество', 'Категория', 'Подкатегория', 'Мин.остаток', 'Дата создания']];
+                products.forEach(p => {
+                    const sub = subcategories.find(s => s.id === p.subcategoryId);
+                    data.push([
+                        p.name || '',
+                        p.skus?.join(', ') || p.sku || '',
+                        p.size || '',
+                        p.quantity || 0,
+                        p.category || '',
+                        sub ? sub.name : '',
+                        p.minStock || 5,
+                        p.createdAt ? new Date(p.createdAt).toLocaleDateString('ru-RU') : ''
+                    ]);
+                });
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [{ wch: 25 }, { wch: 25 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 20 }, { wch: 12 }, { wch: 15 }];
+                XLSX.utils.book_append_sheet(wb, ws, 'Товары');
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `склад_${new Date().toISOString().slice(0,10)}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+                showNotification(`✅ Экспортировано ${products.length} товаров (все поля)`, 'success');
             } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
         }
 
@@ -2212,8 +3001,8 @@
             document.getElementById('importFileTitleIcon').textContent = mode === 'add' ? '➕' : '➖';
             document.getElementById('importFileModal').classList.add('show');
             document.body.style.overflow = 'hidden';
-            document.getElementById('importPreview').style.display = 'none';
-            document.getElementById('importProgress').style.display = 'none';
+            document.getElementById('importPreview').classList.remove('show');
+            document.getElementById('importProgress').classList.remove('show');
             document.getElementById('importFileInput').value = '';
             importFileData = null;
             document.getElementById('importStatus').innerHTML = '';
@@ -2235,7 +3024,7 @@
                     const preview = document.getElementById('importPreview');
                     document.getElementById('importFileName').textContent = `📄 ${file.name}`;
                     document.getElementById('importFileCount').textContent = `Найдено ${jsonData.length} строк`;
-                    preview.style.display = 'block';
+                    preview.classList.add('show');
                     importFileData = jsonData;
                     document.getElementById('importStatus').innerHTML = `<button class="success small" onclick="processImport()">✅ Импортировать ${jsonData.length} товаров</button>`;
                 } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
@@ -2248,7 +3037,7 @@
             if (!importFileData || importFileData.length === 0) { showNotification('❌ Нет данных', 'error'); return; }
             const progress = document.getElementById('importProgress');
             const bar = document.getElementById('importProgressBar');
-            progress.style.display = 'block';
+            progress.classList.add('show');
             bar.style.width = '0%';
             let updated = 0, added = 0, errors = 0;
             const headers = Object.keys(importFileData[0]);
@@ -2282,7 +3071,7 @@
             status.innerHTML = `<div style="font-weight:600;color:${errors > 0 ? 'var(--danger-color)' : 'var(--success-color)'};">✅ Импорт завершён!<br>Обновлено: ${updated} | Добавлено: ${added} ${errors > 0 ? `| Ошибок: ${errors}` : ''}</div>
                 <button class="small" onclick="closeImportFileModal();" style="margin-top:8px;">✕ Закрыть</button>`;
             showNotification(`✅ Импорт: обновлено ${updated}, добавлено ${added}`, 'success');
-            setTimeout(() => progress.style.display = 'none', 3000);
+            setTimeout(() => progress.classList.remove('show'), 3000);
         }
 
         // ==================================================
@@ -2366,7 +3155,6 @@
             loadTheme();
             setLanguage(currentLanguage);
             
-            // Проверка Telegram бота
             setTimeout(testTelegramBot, 3000);
             
             const dropZone = document.getElementById('fileDropZone');
