@@ -1443,7 +1443,6 @@
         // ==================================================
         const translations = {
             ru: {
-                // Общие
                 warehouse: 'Управление складом',
                 allProducts: 'Все товары',
                 lowStock: 'Мало',
@@ -1464,7 +1463,6 @@
                 noProducts: 'Нет товаров',
                 createFirst: 'Создайте первую!',
                 loading: 'Загрузка...',
-                // Авторизация
                 authTitle: '📦 Склад',
                 authSubtitle: 'Войдите или зарегистрируйтесь',
                 authLogin: 'Вход',
@@ -1477,14 +1475,12 @@
                 registerName: '👤 Ваше имя',
                 registerBtn: 'Зарегистрироваться',
                 registerSuccess: '✅ Регистрация успешна!',
-                // 2FA
                 twofaTitle: '🔐 Двухфакторная аутентификация',
                 twofaDesc: 'Код отправлен в Telegram',
                 twofaBot: 'Проверьте сообщения от бота @Skladotm_Bot',
                 twofaCodeLabel: 'Введите код из Telegram:',
                 twofaVerify: '✅ Подтвердить',
                 twofaResend: '🔄 Отправить повторно',
-                // Экспорт
                 exportTitle: 'Экспорт товаров',
                 exportDesc: 'Выберите поля для экспорта в Excel:',
                 importTitle: 'Импорт товаров',
@@ -1500,12 +1496,9 @@
                 exportSelected: '📤 Выбранные поля',
                 exportAdvanced: '📤 Расширенный',
                 exportAll: '📤 Все поля',
-                // Меню
                 menuTitle: '📋 Меню',
-                // Календарь
                 mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс',
                 addEvent: '➕ Добавить',
-                // Редактирование
                 editTitle: '✏️ Редактирование',
                 editNoPhoto: '📷 Нет фото',
                 editPhoto: '📷 Фото',
@@ -1517,7 +1510,6 @@
                 editSave: '💾 Сохранить',
                 editDelete: '🗑️ Удалить',
                 editCancel: '✕ Отмена',
-                // Импорт
                 importModeTitle: '📥 Режим импорта',
                 importModeDesc: 'Как обновить количество?',
                 importModeSub: 'Выберите действие с товарами из файла',
@@ -1526,14 +1518,11 @@
                 importFileTitle: 'Загрузка',
                 importFileSub: 'Загрузите Excel файл',
                 fileDropText: 'Нажмите или перетащите файл Excel (.xlsx, .xls)',
-                // Уведомления
                 installTitle: '📱 Установить приложение',
                 installDesc: 'Склад всегда под рукой',
                 installBtn: 'Установить',
-                // Категории
                 noCategories: 'Нет категорий',
                 closeSub: '✕ Закрыть',
-                // Товары
                 lowStockTitle: '⚠️ Товары с низким остатком',
                 allProductsTitle: '📦 Все товары',
                 historyTitle: '📋 История изменений',
@@ -1725,12 +1714,10 @@
             currentLanguage = lang;
             localStorage.setItem('language', lang);
             
-            // Обновляем кнопки языка
             document.querySelectorAll('.language-selector button').forEach(b => {
                 b.classList.toggle('active', b.textContent.toLowerCase() === lang);
             });
             
-            // Обновляем все элементы с data-lang
             document.querySelectorAll('[data-lang]').forEach(el => {
                 const key = el.dataset.lang;
                 if (translations[lang] && translations[lang][key]) {
@@ -1738,40 +1725,31 @@
                 }
             });
             
-            // Обновляем элементы по ID
             const map = {
-                // Авторизация
                 authTitle: 'authTitle', authSubtitle: 'authSubtitle',
                 authLoginTab: 'authLoginTab', authRegisterTab: 'authRegisterTab',
                 loginEmailLabel: 'loginEmailLabel', loginPasswordLabel: 'loginPasswordLabel',
                 loginBtn: 'loginBtn', registerEmailLabel: 'registerEmailLabel',
                 registerPasswordLabel: 'registerPasswordLabel', registerNameLabel: 'registerNameLabel',
                 registerBtn: 'registerBtn', registerSuccess: 'registerSuccess',
-                // Меню
                 menuTitle: 'menuTitle', menuAllProducts: 'menuAllProducts',
                 menuLowStock: 'menuLowStock', menuHistory: 'menuHistory',
                 menuCalendar: 'menuCalendar', menuExportImport: 'menuExportImport',
                 menuUsers: 'menuUsers', menuLogout: 'menuLogout',
-                // Шапка
                 headerTitle: 'headerTitle',
-                // Поиск
                 stockAll: 'stockAll', stockLow: 'stockLow',
                 stockHigh: 'stockHigh', stockZero: 'stockZero',
                 clearBtn: 'clearBtn', noCategories: 'noCategories',
-                // Категории
                 categoriesTitle: 'categoriesTitle', closeSubBtn: 'closeSubBtn',
-                // Редактирование
                 editTitle: 'editTitle', editNoPhoto: 'editNoPhoto',
                 editPhotoLabel: 'editPhotoLabel', editNameLabel: 'editNameLabel',
                 editSkusLabel: 'editSkusLabel', editSizeLabel: 'editSizeLabel',
                 editQtyLabel: 'editQtyLabel', editMinStockLabel: 'editMinStockLabel',
                 editSaveBtn: 'editSaveBtn', editDeleteBtn: 'editDeleteBtn',
                 editCancelBtn: 'editCancelBtn',
-                // 2FA
                 twofaTitle: 'twofaTitle', twofaDesc: 'twofaDesc',
                 twofaBot: 'twofaBot', twofaCodeLabel: 'twofaCodeLabel',
                 twofaVerifyBtn: 'twofaVerifyBtn', twofaResendBtn: 'twofaResendBtn',
-                // Экспорт
                 exportModalTitle: 'exportModalTitle', exportTitle: 'exportTitle',
                 exportDesc: 'exportDesc', importTitle: 'importTitle',
                 importDesc: 'importDesc', importFileBtn: 'importFileBtn',
@@ -1780,19 +1758,15 @@
                 fieldQty: 'fieldQty', fieldCategory: 'fieldCategory',
                 fieldMinStock: 'fieldMinStock', exportSelectedBtn: 'exportSelectedBtn',
                 exportAdvancedBtn: 'exportAdvancedBtn', exportAllBtn: 'exportAllBtn',
-                // Импорт
                 importModeTitle: 'importModeTitle', importModeDesc: 'importModeDesc',
                 importModeSub: 'importModeSub', importAddBtn: 'importAddBtn',
                 importSubBtn: 'importSubBtn', importFileTitle: 'importFileTitle',
                 importFileSub: 'importFileSub', fileDropText: 'fileDropText',
-                // Календарь
                 calMon: 'mon', calTue: 'tue', calWed: 'wed',
                 calThu: 'thu', calFri: 'fri', calSat: 'sat', calSun: 'sun',
                 addEventBtn: 'addEventBtn', calendarTitle: 'calendarTitle',
-                // PWA
                 installTitle: 'installTitle', installDesc: 'installDesc',
                 installBtn: 'installBtn',
-                // Прочее
                 allProductsTitle: 'allProductsTitle', lowStockTitle: 'lowStockTitle',
                 historyTitle: 'historyTitle', usersTitle: 'usersTitle'
             };
@@ -1804,11 +1778,9 @@
                 }
             }
             
-            // Обновляем placeholder поиска
             const searchInput = document.getElementById('searchInput');
             if (searchInput) searchInput.placeholder = translations[lang].search;
             
-            // Обновляем фильтры
             const filterStock = document.getElementById('filterStock');
             if (filterStock) {
                 const options = filterStock.options;
@@ -1818,11 +1790,9 @@
                 if (options[3]) options[3].textContent = '❌ ' + translations[lang].outOfStock;
             }
             
-            // Обновляем кнопку очистки
             const clearBtn = document.getElementById('clearBtn');
             if (clearBtn) clearBtn.textContent = '✕ ' + translations[lang].clear;
             
-            // Обновляем категории
             const noCat = document.getElementById('noCategories');
             if (noCat) noCat.textContent = translations[lang].noCategories;
             
@@ -1894,14 +1864,27 @@
             const modal = document.getElementById('historyModal');
             const list = document.getElementById('historyList');
             const count = document.getElementById('historyCount');
+            
+            if (!modal || !list) {
+                console.error('❌ Элементы модалки истории не найдены');
+                return;
+            }
+            
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
             list.innerHTML = '<div style="text-align:center; padding:20px;"><div class="loading-spinner"></div></div>';
+            
             try {
-                const snapshot = await db.collection('logs').orderBy('timestamp', 'desc').limit(100).get();
+                const snapshot = await db.collection('logs')
+                    .orderBy('timestamp', 'desc')
+                    .limit(100)
+                    .get();
+                
                 const logs = [];
                 snapshot.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
-                count.textContent = `(${logs.length})`;
+                
+                if (count) count.textContent = `(${logs.length})`;
+                
                 if (logs.length === 0) {
                     list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>История пуста</p></div>';
                 } else {
@@ -1913,10 +1896,17 @@
                     });
                     list.innerHTML = html;
                 }
-            } catch (e) { list.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>Ошибка загрузки</p></div>'; }
+            } catch (e) {
+                console.error('Ошибка загрузки истории:', e);
+                list.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>Ошибка загрузки истории</p></div>';
+            }
         }
 
-        function closeHistoryModal() { document.getElementById('historyModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
+        function closeHistoryModal() {
+            const modal = document.getElementById('historyModal');
+            if (modal) modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
 
         // ==================================================
         // 📅 КАЛЕНДАРЬ
@@ -1926,12 +1916,21 @@
         let calendarMonth = new Date().getMonth();
 
         function showCalendarModal() {
-            document.getElementById('calendarModal').classList.add('show');
+            const modal = document.getElementById('calendarModal');
+            if (!modal) {
+                console.error('❌ Элемент calendarModal не найден');
+                return;
+            }
+            modal.classList.add('show');
             document.body.style.overflow = 'hidden';
             loadCalendarEvents();
         }
 
-        function closeCalendarModal() { document.getElementById('calendarModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
+        function closeCalendarModal() {
+            const modal = document.getElementById('calendarModal');
+            if (modal) modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
 
         async function loadCalendarEvents() {
             const snapshot = await db.collection('calendarEvents').orderBy('date').get();
@@ -2421,8 +2420,18 @@
         function renderUsersList() {
             const list = document.getElementById('usersList');
             const count = document.getElementById('usersModalCount');
-            count.textContent = `(${users.length})`;
-            if (users.length === 0) { list.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Нет пользователей</p></div>'; return; }
+            
+            if (!list) {
+                console.error('❌ Элемент usersList не найден');
+                return;
+            }
+            
+            if (count) count.textContent = `(${users.length})`;
+            
+            if (users.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Нет пользователей</p></div>';
+                return;
+            }
             
             let html = '<div class="user-grid">';
             users.forEach(u => {
@@ -2861,44 +2870,97 @@
         }
 
         // ==================================================
-        // 📊 ОСТАЛЬНЫЕ ФУНКЦИИ
+        // 📊 МОДАЛЬНЫЕ ОКНА ПРОСМОТРА (ИСПРАВЛЕННЫЕ)
         // ==================================================
+
         function showAllProducts() {
             const modal = document.getElementById('allProductsModal');
             const list = document.getElementById('allProductsList');
-            document.getElementById('allProductsCount').textContent = `(${products.length})`;
-            if (products.length === 0) { list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Нет товаров</p></div>'; } else {
-                list.innerHTML = products.map(p => `<div class="product-item" onclick="${hasPermission('canEdit') ? `openEditModal('${p.id}')` : ''}">
-                    <div class="p-photo">${p.photo ? `<img src="${p.photo}">` : '📷'}</div>
-                    <div class="p-info"><div class="p-name">${escapeHtml(p.name)}</div>
-                    <div><span class="p-sku-size">🔢 ${escapeHtml(p.skus?.join(', ') || p.sku || '')}</span><span class="p-sku-size">📏 ${escapeHtml(p.size)}</span></div></div>
-                    <div class="p-qty ${p.quantity <= (p.minStock || 5) ? 'low' : ''}">${p.quantity}</div>
-                </div>`).join('');
+            const countEl = document.getElementById('allProductsCount');
+            
+            if (!modal || !list) {
+                console.error('❌ Элементы модалки не найдены');
+                return;
             }
+            
+            if (countEl) countEl.textContent = `(${products.length})`;
+            
+            if (products.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Нет товаров</p></div>';
+            } else {
+                let html = '';
+                products.forEach(p => {
+                    const isLow = p.quantity <= (p.minStock || 5);
+                    const photoHtml = p.photo ? `<img src="${p.photo}">` : '📷';
+                    const skusText = Array.isArray(p.skus) && p.skus.length > 0 ? p.skus.join(', ') : p.sku || '';
+                    html += `<div class="product-item" onclick="${hasPermission('canEdit') ? `openEditModal('${p.id}')` : ''}">
+                        <div class="p-photo">${photoHtml}</div>
+                        <div class="p-info">
+                            <div class="p-name">${escapeHtml(p.name)}</div>
+                            <div><span class="p-sku-size">🔢 ${escapeHtml(skusText)}</span><span class="p-sku-size">📏 ${escapeHtml(p.size)}</span></div>
+                            <div class="p-min-stock">Мин. остаток: ${p.minStock || 5}</div>
+                        </div>
+                        <div class="p-qty ${isLow ? 'low' : ''}">${p.quantity}</div>
+                        ${hasPermission('canEdit') ? '<span class="p-edit-icon">✏️</span>' : ''}
+                    </div>`;
+                });
+                list.innerHTML = html;
+            }
+            
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
         }
 
-        function closeAllProductsModal() { document.getElementById('allProductsModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
+        function closeAllProductsModal() {
+            const modal = document.getElementById('allProductsModal');
+            if (modal) modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
 
         function showLowStockModal() {
-            const low = products.filter(p => p.quantity <= (p.minStock || 5));
+            const lowStock = products.filter(p => p.quantity <= (p.minStock || 5));
             const modal = document.getElementById('lowStockModal');
             const list = document.getElementById('lowStockModalList');
-            document.getElementById('lowModalCount').textContent = `(${low.length})`;
-            if (low.length === 0) { list.innerHTML = '<div class="empty-state"><div class="icon">🎉</div><p>Все товары в наличии!</p></div>'; } else {
-                list.innerHTML = low.map(p => `<div class="product-item" onclick="${hasPermission('canEdit') ? `openEditModal('${p.id}')` : ''}">
-                    <div class="p-photo">${p.photo ? `<img src="${p.photo}">` : '📷'}</div>
-                    <div class="p-info"><div class="p-name">${escapeHtml(p.name)}</div>
-                    <div style="color:var(--danger-color);font-size:12px;">⚠️ Осталось: ${p.quantity} шт. (мин. ${p.minStock || 5})</div></div>
-                    <div class="p-qty low">${p.quantity}</div>
-                </div>`).join('');
+            const countEl = document.getElementById('lowModalCount');
+            
+            if (!modal || !list) {
+                console.error('❌ Элементы модалки не найдены');
+                return;
             }
+            
+            if (countEl) countEl.textContent = `(${lowStock.length})`;
+            
+            if (lowStock.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="icon">🎉</div><p>Все товары в наличии!</p></div>';
+            } else {
+                let html = '';
+                lowStock.forEach(p => {
+                    const minStock = p.minStock || 5;
+                    const photoHtml = p.photo ? `<img src="${p.photo}">` : '📷';
+                    const skusText = Array.isArray(p.skus) && p.skus.length > 0 ? p.skus.join(', ') : p.sku || '';
+                    html += `<div class="product-item" onclick="${hasPermission('canEdit') ? `openEditModal('${p.id}')` : ''}">
+                        <div class="p-photo">${photoHtml}</div>
+                        <div class="p-info">
+                            <div class="p-name">${escapeHtml(p.name)}</div>
+                            <div><span class="p-sku-size">🔢 ${escapeHtml(skusText)}</span><span class="p-sku-size">📏 ${escapeHtml(p.size)}</span></div>
+                            <div style="color:var(--danger-color);font-size:12px;">⚠️ Осталось: ${p.quantity} шт. (мин. ${minStock})</div>
+                        </div>
+                        <div class="p-qty low">${p.quantity}</div>
+                        ${hasPermission('canEdit') ? '<span class="p-edit-icon">✏️</span>' : ''}
+                    </div>`;
+                });
+                list.innerHTML = html;
+            }
+            
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
         }
 
-        function closeLowStockModal() { document.getElementById('lowStockModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
+        function closeLowStockModal() {
+            const modal = document.getElementById('lowStockModal');
+            if (modal) modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
 
         // ==================================================
         // 📤 ЭКСПОРТ (УЛУЧШЕННЫЙ)
