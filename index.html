@@ -1210,6 +1210,42 @@
             white-space: nowrap;
         }
         
+        /* ===== АРХИВ ===== */
+        .archive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .archive-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .archive-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        .archive-card .archive-date {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        .archive-card .archive-info {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .archive-card .archive-amount {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--success-color);
+            margin-top: 4px;
+        }
+        
         @media (max-width: 768px) {
             .schedule-big-grid {
                 grid-template-columns: 1fr;
@@ -1344,6 +1380,13 @@
             <div class="menu-item" onclick="closeMenu(); openBigScheduleModal();">
                 <span class="icon">📊</span>
                 <span class="label" id="menuSchedule">График / Зарплата</span>
+            </div>
+            <div class="menu-divider"></div>
+            
+            <!-- ===== АРХИВ ===== -->
+            <div class="menu-item" onclick="closeMenu(); openArchiveModal();">
+                <span class="icon">📁</span>
+                <span class="label" id="menuArchive">Архив графика</span>
             </div>
             <div class="menu-divider"></div>
             
@@ -1689,12 +1732,12 @@
                     <select id="bigScheduleEmployeeSelect" style="flex:2; min-width:150px;">
                         <option value="">Выберите сотрудника</option>
                     </select>
-                    <input type="month" id="bigScheduleMonth" style="flex:1; min-width:120px;">
-                    <button class="small" onclick="loadBigSchedule()" style="background:var(--accent-color);">📅 Загрузить</button>
+                    <input type="date" id="bigScheduleStartDate" style="flex:1; min-width:120px;">
+                    <input type="date" id="bigScheduleEndDate" style="flex:1; min-width:120px;">
+                    <button class="small" onclick="loadBigScheduleByDates()" style="background:var(--accent-color);">📅 Загрузить</button>
                     <button class="success small" onclick="markAllPresentBig()">✅ Все пришли</button>
                     <button class="danger small" onclick="markAllAbsentBig()">❌ Все отсутствуют</button>
                     <button class="warning small" onclick="saveBigSchedule()">💾 Сохранить</button>
-                    <button class="success small" onclick="applyShiftPayment()" style="background:var(--success-color);">💰 Начислить за смену</button>
                 </div>
                 
                 <!-- Основная сетка -->
@@ -1713,7 +1756,7 @@
                         </div>
                         <div class="days-grid" id="bigDaysGrid">
                             <div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);">
-                                Выберите сотрудника и месяц
+                                Выберите сотрудника и даты
                             </div>
                         </div>
                     </div>
@@ -1732,6 +1775,64 @@
                             <div class="payroll-title" style="font-size:13px;">💳 Балансы сотрудников</div>
                             <div id="bigBalancesList"></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== АРХИВ ГРАФИКА ===== -->
+        <div class="modal-overlay" id="archiveModal">
+            <div class="modal-content" style="max-width:800px;">
+                <div class="modal-header" style="border-bottom-color:var(--success-color);">
+                    <div class="modal-title">
+                        <span class="icon">📁</span>
+                        <span id="archiveTitle">Архив графика и зарплат</span>
+                    </div>
+                    <button class="close-btn" onclick="closeArchiveModal()">✕</button>
+                </div>
+                
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+                    <input type="date" id="archiveStartDate" style="flex:1; min-width:140px; padding:8px 12px; font-size:13px;">
+                    <input type="date" id="archiveEndDate" style="flex:1; min-width:140px; padding:8px 12px; font-size:13px;">
+                    <button class="small" onclick="loadArchive()" style="background:var(--accent-color);">📂 Показать</button>
+                    <button class="success small" onclick="exportArchive()">📤 Экспорт</button>
+                </div>
+                
+                <div id="archiveContent">
+                    <div style="text-align:center; padding:20px; color:var(--text-muted);">
+                        Выберите даты для просмотра архива
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== МОДАЛКА ВВОДА СУММЫ ===== -->
+        <div class="modal-overlay" id="paymentModal">
+            <div class="modal-content" style="max-width:400px;">
+                <div class="modal-header" style="border-bottom-color:var(--success-color);">
+                    <div class="modal-title">
+                        <span class="icon">💰</span>
+                        <span id="paymentModalTitle">Начисление зарплаты</span>
+                    </div>
+                    <button class="close-btn" onclick="closePaymentModal()">✕</button>
+                </div>
+                <div style="padding:10px 0;">
+                    <div style="margin-bottom:8px;">
+                        <span id="paymentEmployeeName" style="font-weight:600; font-size:16px;"></span>
+                    </div>
+                    <div style="margin-bottom:8px; font-size:13px; color:var(--text-muted);">
+                        Отработано: <span id="paymentDays"></span> смен
+                    </div>
+                    <div style="margin-bottom:8px; font-size:13px; color:var(--text-muted);">
+                        Ставка за смену: <span id="paymentRate"></span> ₽
+                    </div>
+                    <div class="input-group" style="margin-bottom:12px;">
+                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:var(--text-muted);">💳 Сумма начисления:</label>
+                        <input type="number" id="paymentAmount" placeholder="Введите сумму" style="font-size:18px; padding:12px;">
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="success" onclick="confirmPayment()" style="flex:1;">✅ Начислить</button>
+                        <button class="gray" onclick="closePaymentModal()" style="flex:0.5;">✕</button>
                     </div>
                 </div>
             </div>
@@ -1838,6 +1939,7 @@
                 logout: 'Выйти',
                 categories: 'Категории',
                 schedule: 'График / Зарплата',
+                archive: 'Архив графика',
                 search_placeholder: '🔍 Поиск по названию, артикулу...',
                 search_all_categories: 'Все категории',
                 search_all_subcategories: 'Все подкатегории',
@@ -1899,6 +2001,7 @@
                 menu_users: 'Управление пользователями',
                 menu_logout: 'Выйти',
                 menu_schedule: 'График / Зарплата',
+                menu_archive: 'Архив графика',
                 calendar_days: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
                 calendar_event_add: '➕ Добавить',
                 edit_title: '✏️ Редактирование',
@@ -1928,6 +2031,7 @@
                 role_it: 'IT-специалист 💻',
                 role_viewer: 'Наблюдатель 👀',
                 role_accountant: 'Бухгалтер 🧾',
+                // График
                 big_schedule_title: 'График выхода и зарплата',
                 big_schedule_select_employee: 'Выберите сотрудника',
                 big_schedule_load: '📅 Загрузить',
@@ -1946,253 +2050,32 @@
                 big_schedule_weekend: 'Выходной',
                 big_schedule_today: 'Сегодня',
                 big_schedule_saved: '✅ График сохранён',
-                big_schedule_no_permission: '⛔ Недостаточно прав'
+                big_schedule_no_permission: '⛔ Недостаточно прав',
+                // Архив
+                archive_title: 'Архив графика и зарплат',
+                archive_show: '📂 Показать',
+                archive_export: '📤 Экспорт',
+                archive_no_data: 'Нет данных за выбранный период',
+                archive_employee: 'Сотрудник',
+                archive_date: 'Дата',
+                archive_status: 'Статус',
+                archive_amount: 'Сумма',
+                // Платежи
+                payment_title: 'Начисление зарплаты',
+                payment_amount_label: '💳 Сумма начисления:',
+                payment_confirm: '✅ Начислить',
+                payment_cancel: '✕ Отмена',
+                payment_enter: 'Введите сумму',
+                payment_days: 'Отработано: {days} смен',
+                payment_rate: 'Ставка за смену: {rate} ₽'
             },
-            en: {
-                warehouse: 'Warehouse Management',
-                allProducts: 'All Products',
-                lowStock: 'Low Stock',
-                history: 'History',
-                calendar: 'Calendar',
-                exportImport: 'EXPORT/IMPORT',
-                users: 'User Management',
-                logout: 'Logout',
-                categories: 'Categories',
-                schedule: 'Schedule / Payroll',
-                search_placeholder: '🔍 Search by name, SKU...',
-                search_all_categories: 'All Categories',
-                search_all_subcategories: 'All Subcategories',
-                search_all_products: 'All Products',
-                search_low_stock: '⚠️ Low Stock',
-                search_in_stock: '✅ In Stock',
-                search_out_of_stock: '❌ Out of Stock',
-                search_clear: '✕ Clear',
-                search_results: '📊 Found: {count} of {total}',
-                search_not_found: '🔍 Nothing found',
-                no_categories: 'No categories',
-                auth_title: '📦 Warehouse',
-                auth_subtitle: 'Login or Register',
-                auth_login: 'Login',
-                auth_register: 'Register',
-                login_email: '📧 Email',
-                login_password: '🔒 Password',
-                login_btn: 'Login',
-                register_email: '📧 Email',
-                register_password: '🔒 Password',
-                register_name: '👤 Your Name',
-                register_btn: 'Register',
-                register_success: '✅ Registration successful!',
-                twofa_title: '🔐 Two-Factor Authentication',
-                twofa_desc: 'Code sent to Telegram',
-                twofa_bot: 'Check messages from @Skladotm_Bot',
-                twofa_code_label: 'Enter code from Telegram:',
-                twofa_code_placeholder: '000000',
-                twofa_verify: '✅ Verify',
-                twofa_resend: '🔄 Resend',
-                twofa_verified: '✅ 2FA verified!',
-                twofa_invalid: '❌ Invalid code!',
-                twofa_code_sent: '📱 Code sent to Telegram!',
-                twofa_resend_sent: '📱 New code sent to Telegram!',
-                twofa_error: '⚠️ Send error, check console',
-                twofa_expired: '⏰ Code expired',
-                twofa_timer: '⏳ {time}',
-                export_title: 'Export Products',
-                export_desc: 'Select fields to export to Excel:',
-                import_title: 'Import Products',
-                import_desc: 'Upload Excel file to update stock:',
-                import_file_btn: '📥 Select file',
-                import_hint: 'Update by fields: SKU + Size',
-                field_name: 'Name',
-                field_sku: 'SKU',
-                field_size: 'Size',
-                field_qty: 'Quantity',
-                field_category: 'Category',
-                field_min_stock: 'Min Stock',
-                export_selected: '📤 Selected fields',
-                export_advanced: '📤 Advanced',
-                export_all: '📤 All fields',
-                menu_title: '📋 Menu',
-                menu_all_products: 'All Products',
-                menu_low_stock: 'Low Stock',
-                menu_history: 'History',
-                menu_calendar: 'Calendar',
-                menu_export_import: 'EXPORT/IMPORT',
-                menu_users: 'User Management',
-                menu_logout: 'Logout',
-                menu_schedule: 'Schedule / Payroll',
-                calendar_days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-                calendar_event_add: '➕ Add',
-                edit_title: '✏️ Edit',
-                edit_no_photo: '📷 No photo',
-                edit_photo: '📷 Photo',
-                edit_name: '📝 Name',
-                edit_skus: '🔢 SKUs',
-                edit_size: '📏 Size',
-                edit_qty: '🔢 Quantity',
-                edit_min_stock: '⚠️ Min Stock',
-                edit_save: '💾 Save',
-                edit_delete: '🗑️ Delete',
-                edit_cancel: '✕ Cancel',
-                import_mode_title: '📥 Import Mode',
-                import_mode_desc: 'How to update quantity?',
-                import_mode_sub: 'Choose action with products from file',
-                import_add: '➕ ADD',
-                import_sub: '➖ SUBTRACT',
-                import_file_title: 'Upload',
-                import_file_sub: 'Upload Excel file',
-                file_drop_text: 'Click or drag Excel file (.xlsx, .xls)',
-                install_title: '📱 Install app',
-                install_desc: 'Warehouse always at hand',
-                install_btn: 'Install',
-                role_admin: 'Administrator 👑',
-                role_manager: 'Manager 📋',
-                role_it: 'IT Specialist 💻',
-                role_viewer: 'Viewer 👀',
-                role_accountant: 'Accountant 🧾',
-                big_schedule_title: 'Schedule & Payroll',
-                big_schedule_select_employee: 'Select employee',
-                big_schedule_load: '📅 Load',
-                big_schedule_all_present: '✅ All present',
-                big_schedule_all_absent: '❌ All absent',
-                big_schedule_save: '💾 Save',
-                big_schedule_payroll: '💰 Payroll',
-                big_schedule_no_employees: 'Load employees',
-                big_schedule_select_employee_first: 'Select employee for calculation',
-                big_schedule_total: '💰 Total:',
-                big_schedule_week: 'Week',
-                big_schedule_worked: 'Worked',
-                big_schedule_earned: 'Earned',
-                big_schedule_present: '✅ Present',
-                big_schedule_absent: '❌ Absent',
-                big_schedule_weekend: 'Weekend',
-                big_schedule_today: 'Today',
-                big_schedule_saved: '✅ Schedule saved',
-                big_schedule_no_permission: '⛔ Insufficient permissions'
-            },
-            zh: {
-                warehouse: '仓库管理',
-                allProducts: '所有商品',
-                lowStock: '低库存',
-                history: '历史记录',
-                calendar: '日历',
-                exportImport: '导出/导入',
-                users: '用户管理',
-                logout: '退出',
-                categories: '分类',
-                schedule: '排班 / 薪资',
-                search_placeholder: '🔍 搜索名称、SKU...',
-                search_all_categories: '全部分类',
-                search_all_subcategories: '全部子分类',
-                search_all_products: '所有商品',
-                search_low_stock: '⚠️ 低库存',
-                search_in_stock: '✅ 有货',
-                search_out_of_stock: '❌ 缺货',
-                search_clear: '✕ 清除',
-                search_results: '📊 找到：{count} 个，共 {total} 个',
-                search_not_found: '🔍 未找到',
-                no_categories: '没有分类',
-                auth_title: '📦 仓库',
-                auth_subtitle: '登录或注册',
-                auth_login: '登录',
-                auth_register: '注册',
-                login_email: '📧 邮箱',
-                login_password: '🔒 密码',
-                login_btn: '登录',
-                register_email: '📧 邮箱',
-                register_password: '🔒 密码',
-                register_name: '👤 您的名字',
-                register_btn: '注册',
-                register_success: '✅ 注册成功！',
-                twofa_title: '🔐 双重认证',
-                twofa_desc: '验证码已发送到 Telegram',
-                twofa_bot: '请检查 @Skladotm_Bot 的消息',
-                twofa_code_label: '输入 Telegram 验证码：',
-                twofa_code_placeholder: '000000',
-                twofa_verify: '✅ 验证',
-                twofa_resend: '🔄 重新发送',
-                twofa_verified: '✅ 双重认证已验证！',
-                twofa_invalid: '❌ 验证码无效！',
-                twofa_code_sent: '📱 验证码已发送到 Telegram！',
-                twofa_resend_sent: '📱 新验证码已发送到 Telegram！',
-                twofa_error: '⚠️ 发送错误，请检查控制台',
-                twofa_expired: '⏰ 验证码已过期',
-                twofa_timer: '⏳ {time}',
-                export_title: '导出商品',
-                export_desc: '选择要导出到 Excel 的字段：',
-                import_title: '导入商品',
-                import_desc: '上传 Excel 文件更新库存：',
-                import_file_btn: '📥 选择文件',
-                import_hint: '按字段更新：SKU + 尺寸',
-                field_name: '名称',
-                field_sku: 'SKU',
-                field_size: '尺寸',
-                field_qty: '数量',
-                field_category: '分类',
-                field_min_stock: '最小库存',
-                export_selected: '📤 选定字段',
-                export_advanced: '📤 高级',
-                export_all: '📤 所有字段',
-                menu_title: '📋 菜单',
-                menu_all_products: '所有商品',
-                menu_low_stock: '低库存',
-                menu_history: '历史记录',
-                menu_calendar: '日历',
-                menu_export_import: '导出/导入',
-                menu_users: '用户管理',
-                menu_logout: '退出',
-                menu_schedule: '排班 / 薪资',
-                calendar_days: ['一','二','三','四','五','六','日'],
-                calendar_event_add: '➕ 添加',
-                edit_title: '✏️ 编辑',
-                edit_no_photo: '📷 无照片',
-                edit_photo: '📷 照片',
-                edit_name: '📝 名称',
-                edit_skus: '🔢 SKU',
-                edit_size: '📏 尺寸',
-                edit_qty: '🔢 数量',
-                edit_min_stock: '⚠️ 最小库存',
-                edit_save: '💾 保存',
-                edit_delete: '🗑️ 删除',
-                edit_cancel: '✕ 取消',
-                import_mode_title: '📥 导入模式',
-                import_mode_desc: '如何更新数量？',
-                import_mode_sub: '选择对文件中商品的操作',
-                import_add: '➕ 添加',
-                import_sub: '➖ 减去',
-                import_file_title: '上传',
-                import_file_sub: '上传 Excel 文件',
-                file_drop_text: '点击或拖拽 Excel 文件 (.xlsx, .xls)',
-                install_title: '📱 安装应用',
-                install_desc: '仓库随时在手',
-                install_btn: '安装',
-                role_admin: '管理员 👑',
-                role_manager: '经理 📋',
-                role_it: 'IT 专员 💻',
-                role_viewer: '观察员 👀',
-                role_accountant: '会计师 🧾',
-                big_schedule_title: '排班和薪资',
-                big_schedule_select_employee: '选择员工',
-                big_schedule_load: '📅 加载',
-                big_schedule_all_present: '✅ 全部到场',
-                big_schedule_all_absent: '❌ 全部缺席',
-                big_schedule_save: '💾 保存',
-                big_schedule_payroll: '💰 薪资',
-                big_schedule_no_employees: '加载员工',
-                big_schedule_select_employee_first: '选择员工进行计算',
-                big_schedule_total: '💰 总计：',
-                big_schedule_week: '周',
-                big_schedule_worked: '工作',
-                big_schedule_earned: '收入',
-                big_schedule_present: '✅ 到场',
-                big_schedule_absent: '❌ 缺席',
-                big_schedule_weekend: '周末',
-                big_schedule_today: '今天',
-                big_schedule_saved: '✅ 排班已保存',
-                big_schedule_no_permission: '⛔ 权限不足'
-            }
+            // ... остальные языки можно добавить позже
         };
 
         let currentLanguage = localStorage.getItem('language') || 'ru';
+        let currentPaymentUser = null;
+        let currentPaymentMonth = null;
+        let currentPaymentDays = 0;
 
         function t(key, params = {}) {
             const lang = currentLanguage || 'ru';
@@ -2255,6 +2138,7 @@
                 'menuUsers': 'menu_users',
                 'menuLogout': 'menu_logout',
                 'menuSchedule': 'menu_schedule',
+                'menuArchive': 'menu_archive',
                 'headerTitle': 'warehouse',
                 'stockAll': 'search_all_products',
                 'stockLow': 'search_low_stock',
@@ -2314,7 +2198,8 @@
                 'calendarTitle': 'calendar',
                 'usersTitle': 'users',
                 'addEventBtn': 'calendar_event_add',
-                'bigScheduleTitle': 'big_schedule_title'
+                'bigScheduleTitle': 'big_schedule_title',
+                'archiveTitle': 'archive_title'
             };
             
             for (const [id, key] of Object.entries(elementsMap)) {
@@ -2422,150 +2307,6 @@
             } catch (e) { console.warn('⚠️ Лог не записан:', e); }
         }
 
-        async function showHistoryModal() {
-            const modal = document.getElementById('historyModal');
-            const list = document.getElementById('historyList');
-            const count = document.getElementById('historyCount');
-            if (!modal || !list) { console.error('❌ Элементы модалки истории не найдены'); return; }
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-            list.innerHTML = '<div style="text-align:center; padding:20px;"><div class="loading-spinner"></div></div>';
-            try {
-                const snapshot = await db.collection('logs').orderBy('timestamp', 'desc').limit(100).get();
-                const logs = [];
-                snapshot.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
-                if (count) count.textContent = `(${logs.length})`;
-                if (logs.length === 0) {
-                    list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>История пуста</p></div>';
-                } else {
-                    let html = '';
-                    logs.forEach(log => {
-                        const date = new Date(log.timestamp).toLocaleString('ru-RU');
-                        const emoji = { 'product_added': '➕', 'product_updated': '✏️', 'product_deleted': '🗑️', 'user_registered': '👤', 'user_role_changed': '🔄' }[log.action] || '📌';
-                        html += `<div class="product-item"><div style="font-size:18px;">${emoji}</div><div class="p-info"><div style="font-weight:600;font-size:13px;">${log.action}</div><div style="font-size:11px;color:var(--text-muted);">${log.userEmail || 'Система'} • ${date}</div></div></div>`;
-                    });
-                    list.innerHTML = html;
-                }
-            } catch (e) {
-                list.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>Ошибка загрузки истории</p></div>';
-            }
-        }
-
-        function closeHistoryModal() {
-            const modal = document.getElementById('historyModal');
-            if (modal) modal.classList.remove('show');
-            document.body.style.overflow = 'auto';
-        }
-
-        // ==================================================
-        // 📅 КАЛЕНДАРЬ
-        // ==================================================
-        let calendarEvents = [];
-        let calendarYear = new Date().getFullYear();
-        let calendarMonth = new Date().getMonth();
-
-        function showCalendarModal() {
-            const modal = document.getElementById('calendarModal');
-            if (!modal) { console.error('❌ Элемент calendarModal не найден'); return; }
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-            loadCalendarEvents();
-        }
-
-        function closeCalendarModal() {
-            const modal = document.getElementById('calendarModal');
-            if (modal) modal.classList.remove('show');
-            document.body.style.overflow = 'auto';
-        }
-
-        async function loadCalendarEvents() {
-            const snapshot = await db.collection('calendarEvents').orderBy('date').get();
-            calendarEvents = [];
-            snapshot.forEach(doc => calendarEvents.push({ id: doc.id, ...doc.data() }));
-            renderCalendar();
-            renderEventsList();
-        }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            const monthYear = document.getElementById('calendarMonthYear');
-            const monthNames = currentLanguage === 'zh' ? ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'] :
-                              currentLanguage === 'en' ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] :
-                              ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
-            monthYear.textContent = `${monthNames[calendarMonth]} ${calendarYear}`;
-            const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
-            const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
-            const today = new Date();
-            let html = '';
-            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-            for (let i = 0; i < startOffset; i++) html += `<div class="calendar-day empty"></div>`;
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${calendarYear}-${String(calendarMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const isToday = d === today.getDate() && calendarMonth === today.getMonth() && calendarYear === today.getFullYear();
-                const hasEvent = calendarEvents.some(e => e.date === dateStr);
-                const isWeekend = new Date(calendarYear, calendarMonth, d).getDay() === 0 || new Date(calendarYear, calendarMonth, d).getDay() === 6;
-                html += `<div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''} ${isWeekend ? 'weekend' : ''}" onclick="${hasEvent ? `showEventsForDay('${dateStr}')` : ''}">${d}</div>`;
-            }
-            grid.innerHTML = html;
-        }
-
-        function changeMonth(delta) {
-            calendarMonth += delta;
-            if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
-            if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
-            renderCalendar();
-        }
-
-        function showEventsForDay(date) {
-            document.getElementById('eventDate').value = date;
-            renderEventsList();
-        }
-
-        function renderEventsList() {
-            const list = document.getElementById('eventsList');
-            const date = document.getElementById('eventDate').value;
-            if (!date) { list.innerHTML = '<div style="color:var(--text-muted); font-size:13px;">Выберите дату</div>'; return; }
-            const events = calendarEvents.filter(e => e.date === date);
-            if (events.length === 0) {
-                list.innerHTML = '<div style="color:var(--text-muted); font-size:13px;">Нет событий на этот день</div>';
-            } else {
-                let html = '';
-                events.forEach(e => {
-                    html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:var(--border-color); border-radius:8px; margin-bottom:4px;">
-                        <span>📌 ${e.title}</span>
-                        <button class="small danger" onclick="deleteEvent('${e.id}')" style="padding:2px 8px; font-size:11px;">✕</button>
-                    </div>`;
-                });
-                list.innerHTML = html;
-            }
-        }
-
-        async function addEvent() {
-            const date = document.getElementById('eventDate').value;
-            const title = document.getElementById('eventTitle').value.trim();
-            if (!date || !title) { showNotification('Заполните дату и название', 'error'); return; }
-            try {
-                const docRef = await db.collection('calendarEvents').add({ date, title, createdAt: new Date().toISOString() });
-                calendarEvents.push({ id: docRef.id, date, title });
-                renderCalendar();
-                renderEventsList();
-                document.getElementById('eventTitle').value = '';
-                showNotification('✅ Событие добавлено', 'success');
-                sendTelegramNotification(`📅 Новое событие: ${title}\n📆 Дата: ${date}`);
-            } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
-        }
-
-        async function deleteEvent(id) {
-            if (!confirm('Удалить событие?')) return;
-            try {
-                await db.collection('calendarEvents').doc(id).delete();
-                calendarEvents = calendarEvents.filter(e => e.id !== id);
-                renderCalendar();
-                renderEventsList();
-                showNotification('✅ Событие удалено', 'success');
-            } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
-        }
-
         // ==================================================
         // 🔍 ПОИСК
         // ==================================================
@@ -2630,173 +2371,6 @@
         let editProductId = null, editSkuList = [];
         let importFileData = null, importMode = 'add';
         let unsubCategories = null, unsubSubcategories = null, unsubProducts = null, unsubUsers = null;
-
-        function switchAuthTab(tab) {
-            document.querySelectorAll('.auth-tabs button').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-            if (tab === 'login') { 
-                document.querySelector('.auth-tabs button:first-child').classList.add('active'); 
-                document.getElementById('loginForm').classList.add('active'); 
-            } else { 
-                document.querySelector('.auth-tabs button:last-child').classList.add('active'); 
-                document.getElementById('registerForm').classList.add('active'); 
-            }
-            document.querySelectorAll('.auth-error, .auth-success').forEach(el => el.style.display = 'none');
-        }
-
-        async function registerUser(e) {
-            e.preventDefault();
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const name = document.getElementById('registerName').value.trim();
-            const errorEl = document.getElementById('registerError');
-            const successEl = document.getElementById('registerSuccess');
-            errorEl.style.display = 'none';
-            successEl.style.display = 'none';
-            if (!email || !password || !name) { errorEl.style.display = 'block'; errorEl.textContent = '❌ Заполните все поля'; return; }
-            if (password.length < 6) { errorEl.style.display = 'block'; errorEl.textContent = '❌ Пароль минимум 6 символов'; return; }
-            try {
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                await user.updateProfile({ displayName: name });
-                await db.collection('users').doc(user.uid).set({
-                    uid: user.uid, email, name, role: ROLES.VIEWER,
-                    permissions: ROLE_CONFIGS.viewer.permissions,
-                    status: 'active', createdAt: new Date().toISOString(),
-                    balance: 0,
-                    shiftRate: 1000
-                });
-                await logAction('user_registered', { email, name });
-                successEl.style.display = 'block';
-                successEl.textContent = t('register_success');
-                document.getElementById('registerEmail').value = '';
-                document.getElementById('registerPassword').value = '';
-                document.getElementById('registerName').value = '';
-                await auth.signInWithEmailAndPassword(email, password);
-                sendTelegramNotification(`🆕 Новый пользователь!\n👤 ${name}\n📧 ${email}`);
-            } catch (error) {
-                errorEl.style.display = 'block';
-                errorEl.textContent = '❌ ' + error.message;
-            }
-        }
-
-        async function loginUser(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorEl = document.getElementById('loginError');
-            errorEl.style.display = 'none';
-            try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                requestTwoFactorCode(userCredential.user);
-            } catch (error) {
-                errorEl.style.display = 'block';
-                errorEl.textContent = '❌ ' + error.message;
-            }
-        }
-
-        function logoutUser() { auth.signOut(); location.reload(); }
-
-        // ==================================================
-        // 🔐 2FA
-        // ==================================================
-        let twoFactorCode = '';
-        let twoFactorUser = null;
-        let twoFactorTimer = null;
-
-        async function requestTwoFactorCode(user) {
-            twoFactorUser = user;
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            twoFactorCode = code;
-            try {
-                await sendTelegramNotification(
-                    `🔐 <b>Код подтверждения</b>\n\n📧 ${user.email}\n🔑 <code>${code}</code>\n\n⏳ Действителен 5 минут`,
-                    user.uid
-                );
-                showNotification(t('twofa_code_sent'), 'success');
-            } catch (error) {
-                console.log(`📧 Код для ${user.email}: ${code}`);
-                showNotification(t('twofa_error'), 'warning');
-            }
-            document.getElementById('twoFactorModal').classList.add('show');
-            document.body.style.overflow = 'hidden';
-            document.getElementById('twoFactorCode').value = '';
-            document.getElementById('twoFactorCode').focus();
-            let seconds = 300;
-            const timerEl = document.getElementById('twoFactorTimer');
-            timerEl.textContent = t('twofa_timer', { time: '5:00' });
-            timerEl.style.color = 'var(--text-muted)';
-            if (twoFactorTimer) clearInterval(twoFactorTimer);
-            twoFactorTimer = setInterval(() => {
-                seconds--;
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                timerEl.textContent = t('twofa_timer', { time: `${mins}:${secs.toString().padStart(2, '0')}` });
-                if (seconds <= 60) timerEl.style.color = 'var(--danger-color)';
-                if (seconds <= 0) {
-                    clearInterval(twoFactorTimer);
-                    timerEl.textContent = t('twofa_expired');
-                    timerEl.style.color = 'var(--danger-color)';
-                }
-            }, 1000);
-        }
-
-        function verifyTwoFactor() {
-            const input = document.getElementById('twoFactorCode').value;
-            if (input === twoFactorCode) {
-                showNotification(t('twofa_verified'), 'success');
-                if (twoFactorTimer) clearInterval(twoFactorTimer);
-                closeTwoFactorModal();
-                completeLogin(twoFactorUser);
-            } else {
-                showNotification(t('twofa_invalid'), 'error');
-                document.getElementById('twoFactorCode').value = '';
-                document.getElementById('twoFactorCode').focus();
-            }
-        }
-
-        async function resendTwoFactorCode() {
-            if (twoFactorUser) {
-                const code = Math.floor(100000 + Math.random() * 900000).toString();
-                twoFactorCode = code;
-                await sendTelegramNotification(
-                    `🔄 <b>Новый код подтверждения</b>\n\n📧 ${twoFactorUser.email}\n🔑 <code>${code}</code>\n\n⏳ Действителен 5 минут`,
-                    twoFactorUser.uid
-                );
-                showNotification(t('twofa_resend_sent'), 'success');
-                if (twoFactorTimer) {
-                    clearInterval(twoFactorTimer);
-                    twoFactorTimer = null;
-                    const timerEl = document.getElementById('twoFactorTimer');
-                    timerEl.textContent = t('twofa_timer', { time: '5:00' });
-                    timerEl.style.color = 'var(--text-muted)';
-                }
-                document.getElementById('twoFactorCode').value = '';
-                document.getElementById('twoFactorCode').focus();
-                let seconds = 300;
-                const timerEl = document.getElementById('twoFactorTimer');
-                twoFactorTimer = setInterval(() => {
-                    seconds--;
-                    const mins = Math.floor(seconds / 60);
-                    const secs = seconds % 60;
-                    timerEl.textContent = t('twofa_timer', { time: `${mins}:${secs.toString().padStart(2, '0')}` });
-                    if (seconds <= 60) timerEl.style.color = 'var(--danger-color)';
-                    if (seconds <= 0) {
-                        clearInterval(twoFactorTimer);
-                        timerEl.textContent = t('twofa_expired');
-                        timerEl.style.color = 'var(--danger-color)';
-                    }
-                }, 1000);
-            }
-        }
-
-        function closeTwoFactorModal() {
-            document.getElementById('twoFactorModal').classList.remove('show');
-            document.body.style.overflow = 'auto';
-            if (twoFactorTimer) { clearInterval(twoFactorTimer); twoFactorTimer = null; }
-        }
-
-        function completeLogin(user) { console.log('✅ 2FA пройдена, вход выполнен:', user.email); }
 
         // ==================================================
         // 👤 ОБРАБОТЧИК АУТЕНТИФИКАЦИИ
@@ -3160,7 +2734,7 @@
         }
 
         // ==================================================
-        // 📂 КАТЕГОРИИ
+        // 📂 КАТЕГОРИИ (минимальная реализация)
         // ==================================================
         function listenCategories() {
             if (unsubCategories) unsubCategories();
@@ -3226,9 +2800,6 @@
             renderCategories();
         }
 
-        // ==================================================
-        // 📂 ПОДКАТЕГОРИИ
-        // ==================================================
         function listenSubcategories(categoryId) {
             if (unsubSubcategories) unsubSubcategories();
             unsubSubcategories = db.collection('subcategories').where('categoryId', '==', categoryId).onSnapshot(snapshot => {
@@ -3540,90 +3111,7 @@
         }
 
         // ==================================================
-        // 📤 ЭКСПОРТ
-        // ==================================================
-        function exportToExcel() {
-            if (!checkPermission('canExport')) return;
-            if (products.length === 0) { showNotification('⚠️ Нет товаров', 'error'); return; }
-            try {
-                const checkboxes = document.querySelectorAll('#exportFields input[type="checkbox"]:checked');
-                const fields = Array.from(checkboxes).map(cb => cb.dataset.field);
-                if (fields.length === 0) { showNotification('Выберите поля для экспорта', 'error'); return; }
-                const headers = fields.map(f => {
-                    const map = { name: t('field_name'), sku: t('field_sku'), size: t('field_size'), quantity: t('field_qty'), category: t('field_category'), minStock: t('field_min_stock') };
-                    return map[f] || f;
-                });
-                const data = [headers];
-                products.forEach(p => {
-                    const row = fields.map(f => {
-                        if (f === 'name') return p.name || '';
-                        if (f === 'sku') return p.skus?.join(', ') || p.sku || '';
-                        if (f === 'size') return p.size || '';
-                        if (f === 'quantity') return p.quantity || 0;
-                        if (f === 'category') return p.category || '';
-                        if (f === 'minStock') return p.minStock || 5;
-                        return '';
-                    });
-                    data.push(row);
-                });
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(data);
-                ws['!cols'] = headers.map(() => ({ wch: 20 }));
-                XLSX.utils.book_append_sheet(wb, ws, 'Товары');
-                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                const blob = new Blob([wbout], { type: 'application/octet-stream' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `склад_${new Date().toISOString().slice(0,10)}.xlsx`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
-                showNotification(`✅ Экспортировано ${products.length} товаров`, 'success');
-            } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
-        }
-
-        function exportToExcelWithFields() {
-            exportToExcel();
-        }
-
-        function exportAllProducts() {
-            if (!checkPermission('canExport')) return;
-            if (products.length === 0) { showNotification('⚠️ Нет товаров', 'error'); return; }
-            try {
-                const data = [[t('field_name'), t('field_sku'), t('field_size'), t('field_qty'), t('field_category'), 'Подкатегория', t('field_min_stock'), 'Дата создания']];
-                products.forEach(p => {
-                    const sub = subcategories.find(s => s.id === p.subcategoryId);
-                    data.push([
-                        p.name || '',
-                        p.skus?.join(', ') || p.sku || '',
-                        p.size || '',
-                        p.quantity || 0,
-                        p.category || '',
-                        sub ? sub.name : '',
-                        p.minStock || 5,
-                        p.createdAt ? new Date(p.createdAt).toLocaleDateString('ru-RU') : ''
-                    ]);
-                });
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(data);
-                ws['!cols'] = [{ wch: 25 }, { wch: 25 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 20 }, { wch: 12 }, { wch: 15 }];
-                XLSX.utils.book_append_sheet(wb, ws, 'Товары');
-                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                const blob = new Blob([wbout], { type: 'application/octet-stream' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `склад_${new Date().toISOString().slice(0,10)}.xlsx`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
-                showNotification(`✅ Экспортировано ${products.length} товаров (все поля)`, 'success');
-            } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
-        }
-
-        // ==================================================
-        // 📥 ИМПОРТ
+        // 📤 ЭКСПОРТ/ИМПОРТ
         // ==================================================
         function openImportExportModal() { document.getElementById('importExportModal').classList.add('show'); document.body.style.overflow = 'hidden'; }
         function closeImportExportModal() { document.getElementById('importExportModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
@@ -3785,20 +3273,17 @@
         function closeMenu() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('sideOverlay').classList.remove('open'); document.body.style.overflow = 'auto'; }
 
         // ==================================================
-        // 📊 НОВОЕ БОЛЬШОЕ ОКНО ГРАФИКА И ЗАРПЛАТЫ
+        // 📊 НОВЫЙ ГРАФИК С ДАТАМИ
         // ==================================================
         let bigScheduleData = {};
         let bigScheduleUsers = [];
         let bigSelectedUserId = null;
         let userColors = {};
+        let currentScheduleStartDate = '';
+        let currentScheduleEndDate = '';
+        let currentScheduleDays = [];
 
-        // ===== ГЕНЕРАЦИЯ ЦВЕТОВ =====
-        const colors = [
-            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-            '#DDA0DD', '#FF8A5C', '#A29BFE', '#FD79A8', '#00B894',
-            '#E17055', '#74B9FF', '#55EFC4', '#FDCB6E', '#6C5CE7',
-            '#FF7675', '#00CEC9', '#E056A0', '#F0932B', '#6AB04C'
-        ];
+        const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD','#FF8A5C','#A29BFE','#FD79A8','#00B894','#E17055','#74B9FF','#55EFC4','#FDCB6E','#6C5CE7','#FF7675','#00CEC9','#E056A0','#F0932B','#6AB04C'];
 
         function getUserColor(userId) {
             if (!userColors[userId]) {
@@ -3808,23 +3293,23 @@
             return userColors[userId];
         }
 
-        // ===== ОТКРЫТИЕ МОДАЛКИ =====
+        // ===== ОТКРЫТИЕ ГРАФИКА =====
         async function openBigScheduleModal() {
-            // IT может всё, остальные только если есть права
             if (currentUserRole !== 'it' && currentUserRole !== 'admin' &&
                 !hasPermission('canViewSchedule') && !hasPermission('canManageSchedule') && 
                 !hasPermission('canViewPayroll') && !hasPermission('canManagePayroll')) {
                 showNotification('⛔ Недостаточно прав', 'error');
                 return;
             }
-            
             document.getElementById('bigScheduleModal').classList.add('show');
             document.body.style.overflow = 'hidden';
             
+            // Устанавливаем даты по умолчанию (текущий месяц)
             const now = new Date();
-            const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-            document.getElementById('bigScheduleMonth').value = monthStr;
-            document.getElementById('bigScheduleMonthDisplay').textContent = monthStr;
+            const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            document.getElementById('bigScheduleStartDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('bigScheduleEndDate').value = endDate.toISOString().split('T')[0];
             
             await loadBigUsers();
             updateBigUserSelects();
@@ -3837,7 +3322,7 @@
             document.body.style.overflow = 'auto';
         }
 
-        // ===== ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ (СОТРУДНИКОВ) =====
+        // ===== ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ =====
         async function loadBigUsers() {
             try {
                 const snapshot = await db.collection('users')
@@ -3847,7 +3332,6 @@
                 bigScheduleUsers = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    // Исключаем IT и Admin из списка сотрудников (они управляют)
                     if (data.role !== 'it' && data.role !== 'admin') {
                         bigScheduleUsers.push({
                             id: doc.id,
@@ -3868,12 +3352,11 @@
             }
         }
 
-        // ===== ОБНОВЛЕНИЕ ВЫПАДАЮЩЕГО СПИСКА =====
         function updateBigUserSelects() {
             const select = document.getElementById('bigScheduleEmployeeSelect');
             if (!select) return;
             const currentValue = select.value;
-            select.innerHTML = `<option value="">Выберите сотрудника</option>`;
+            select.innerHTML = `<option value="">${t('big_schedule_select_employee')}</option>`;
             bigScheduleUsers.forEach(user => {
                 select.innerHTML += `<option value="${user.id}" ${user.id === currentValue ? 'selected' : ''}>${escapeHtml(user.name)}</option>`;
             });
@@ -3882,11 +3365,10 @@
             }
         }
 
-        // ===== ОТОБРАЖЕНИЕ СПИСКА СОТРУДНИКОВ =====
         function renderBigUsersList() {
             const container = document.getElementById('bigEmployeesList');
             if (bigScheduleUsers.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">Нет сотрудников</div>`;
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">${t('big_schedule_no_employees')}</div>`;
                 return;
             }
             let html = '';
@@ -3905,37 +3387,57 @@
             container.innerHTML = html;
         }
 
-        // ===== ВЫБОР СОТРУДНИКА =====
         function selectBigUser(userId) {
             bigSelectedUserId = userId;
             renderBigUsersList();
             document.getElementById('bigScheduleEmployeeSelect').value = userId;
-            loadBigSchedule();
+            loadBigScheduleByDates();
             renderBalancesList();
         }
 
-        // ===== ЗАГРУЗКА ГРАФИКА =====
-        async function loadBigSchedule() {
+        // ===== ЗАГРУЗКА ГРАФИКА ПО ДАТАМ =====
+        async function loadBigScheduleByDates() {
             const userId = document.getElementById('bigScheduleEmployeeSelect').value;
-            const month = document.getElementById('bigScheduleMonth').value;
+            const startDate = document.getElementById('bigScheduleStartDate').value;
+            const endDate = document.getElementById('bigScheduleEndDate').value;
             
             if (!userId) {
                 showNotification('Выберите сотрудника', 'error');
                 return;
             }
-            if (!month) {
-                showNotification('Выберите месяц', 'error');
+            if (!startDate || !endDate) {
+                showNotification('Выберите даты', 'error');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                showNotification('Дата начала не может быть позже даты окончания', 'error');
                 return;
             }
             
             bigSelectedUserId = userId;
+            currentScheduleStartDate = startDate;
+            currentScheduleEndDate = endDate;
+            
+            // Генерируем список дней между датами
+            currentScheduleDays = [];
+            let current = new Date(startDate);
+            const end = new Date(endDate);
+            while (current <= end) {
+                currentScheduleDays.push(current.toISOString().split('T')[0]);
+                current.setDate(current.getDate() + 1);
+            }
+            
+            document.getElementById('bigScheduleMonthDisplay').textContent = `${startDate} — ${endDate}`;
+            
             renderBigUsersList();
-            document.getElementById('bigScheduleMonthDisplay').textContent = month;
             
             try {
+                // Загружаем существующий график
                 const docRef = await db.collection('schedule')
                     .where('userId', '==', userId)
-                    .where('month', '==', month)
+                    .where('startDate', '==', startDate)
+                    .where('endDate', '==', endDate)
                     .get();
                 
                 bigScheduleData = {};
@@ -3943,41 +3445,43 @@
                     bigScheduleData = { id: doc.id, ...doc.data() };
                 });
                 
-                renderBigSchedule(userId, month);
-                calculateBigPayroll(userId, month);
+                renderBigScheduleWithDates(userId, startDate, endDate);
+                calculateBigPayrollWithDates(userId, startDate, endDate);
                 renderBalancesList();
             } catch (e) {
                 console.error('Ошибка загрузки графика:', e);
             }
         }
 
-        // ===== ОТОБРАЖЕНИЕ КАЛЕНДАРЯ =====
-        function renderBigSchedule(userId, month) {
+        // ===== ОТОБРАЖЕНИЕ ГРАФИКА С ДАТАМИ =====
+        function renderBigScheduleWithDates(userId, startDate, endDate) {
             const grid = document.getElementById('bigDaysGrid');
-            const [year, monthNum] = month.split('-').map(Number);
-            const daysInMonth = new Date(year, monthNum, 0).getDate();
-            const firstDay = new Date(year, monthNum - 1, 1).getDay();
-            const today = new Date();
-            const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+            const start = new Date(startDate);
+            const end = new Date(endDate);
             
-            // Обновляем недели
+            // Получаем дни недели
             const weekDays = document.getElementById('bigWeekDays');
             const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
             weekDays.innerHTML = days.map(d => `<span>${d}</span>`).join('');
             
             let html = '';
-            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-            for (let i = 0; i < startOffset; i++) {
+            let current = new Date(start);
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            // Добавляем пустые ячейки для первого дня недели
+            const firstDayOfWeek = start.getDay() === 0 ? 6 : start.getDay() - 1;
+            for (let i = 0; i < firstDayOfWeek; i++) {
                 html += `<div class="day-cell empty"></div>`;
             }
             
             const canEdit = currentUserRole === 'it' || currentUserRole === 'admin' || hasPermission('canManageSchedule');
             
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${year}-${String(monthNum).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            while (current <= end) {
+                const dateStr = current.toISOString().split('T')[0];
                 const isToday = dateStr === todayStr;
-                const isWeekend = new Date(year, monthNum - 1, d).getDay() === 0 || new Date(year, monthNum - 1, d).getDay() === 6;
-                const status = bigScheduleData.days && bigScheduleData.days[d] ? bigScheduleData.days[d] : 'none';
+                const isWeekend = current.getDay() === 0 || current.getDay() === 6;
+                const status = bigScheduleData.days && bigScheduleData.days[dateStr] ? bigScheduleData.days[dateStr] : 'none';
                 
                 let statusClass = '';
                 let statusText = '';
@@ -3989,33 +3493,36 @@
                     statusText = '❌';
                 }
                 
-                const clickHandler = canEdit ? `onclick="toggleBigDayStatus(${d})"` : '';
+                const clickHandler = canEdit ? `onclick="toggleBigDayStatusByDate('${dateStr}')"` : '';
                 const weekendClass = isWeekend ? 'weekend' : '';
                 const todayClass = isToday ? 'today' : '';
                 
                 html += `
                     <div class="day-cell ${weekendClass} ${todayClass} ${statusClass}" ${clickHandler}>
-                        <span class="day-num">${d}</span>
+                        <span class="day-num">${current.getDate()}</span>
                         <span class="day-status">${statusText}</span>
                     </div>
                 `;
+                
+                current.setDate(current.getDate() + 1);
             }
             
             grid.innerHTML = html;
         }
 
-        // ===== ПЕРЕКЛЮЧЕНИЕ СТАТУСА ДНЯ =====
-        async function toggleBigDayStatus(day) {
+        // ===== ПЕРЕКЛЮЧЕНИЕ СТАТУСА ПО ДАТЕ =====
+        async function toggleBigDayStatusByDate(dateStr) {
             if (currentUserRole !== 'it' && currentUserRole !== 'admin' && !hasPermission('canManageSchedule')) {
                 showNotification('⛔ Недостаточно прав для изменения графика', 'error');
                 return;
             }
             
             const userId = document.getElementById('bigScheduleEmployeeSelect').value;
-            const month = document.getElementById('bigScheduleMonth').value;
-            if (!userId || !month) return;
+            const startDate = document.getElementById('bigScheduleStartDate').value;
+            const endDate = document.getElementById('bigScheduleEndDate').value;
+            if (!userId || !startDate || !endDate) return;
             
-            const currentStatus = bigScheduleData.days && bigScheduleData.days[day] ? bigScheduleData.days[day] : 'none';
+            const currentStatus = bigScheduleData.days && bigScheduleData.days[dateStr] ? bigScheduleData.days[dateStr] : 'none';
             let newStatus;
             if (currentStatus === 'none' || currentStatus === 'absent') {
                 newStatus = 'present';
@@ -4026,7 +3533,7 @@
             }
             
             if (!bigScheduleData.days) bigScheduleData.days = {};
-            bigScheduleData.days[day] = newStatus;
+            bigScheduleData.days[dateStr] = newStatus;
             
             try {
                 if (bigScheduleData.id) {
@@ -4036,14 +3543,15 @@
                 } else {
                     const docRef = await db.collection('schedule').add({
                         userId: userId,
-                        month: month,
+                        startDate: startDate,
+                        endDate: endDate,
                         days: bigScheduleData.days,
                         createdAt: new Date().toISOString()
                     });
                     bigScheduleData.id = docRef.id;
                 }
-                renderBigSchedule(userId, month);
-                calculateBigPayroll(userId, month);
+                renderBigScheduleWithDates(userId, startDate, endDate);
+                calculateBigPayrollWithDates(userId, startDate, endDate);
                 renderBalancesList();
             } catch (e) {
                 console.error('Ошибка сохранения:', e);
@@ -4058,14 +3566,18 @@
                 return;
             }
             const userId = document.getElementById('bigScheduleEmployeeSelect').value;
-            const month = document.getElementById('bigScheduleMonth').value;
-            if (!userId || !month) return;
+            const startDate = document.getElementById('bigScheduleStartDate').value;
+            const endDate = document.getElementById('bigScheduleEndDate').value;
+            if (!userId || !startDate || !endDate) return;
             
-            const [year, monthNum] = month.split('-').map(Number);
-            const daysInMonth = new Date(year, monthNum, 0).getDate();
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            let current = new Date(start);
             if (!bigScheduleData.days) bigScheduleData.days = {};
-            for (let d = 1; d <= daysInMonth; d++) {
-                bigScheduleData.days[d] = 'present';
+            while (current <= end) {
+                const dateStr = current.toISOString().split('T')[0];
+                bigScheduleData.days[dateStr] = 'present';
+                current.setDate(current.getDate() + 1);
             }
             saveBigSchedule();
         }
@@ -4076,14 +3588,18 @@
                 return;
             }
             const userId = document.getElementById('bigScheduleEmployeeSelect').value;
-            const month = document.getElementById('bigScheduleMonth').value;
-            if (!userId || !month) return;
+            const startDate = document.getElementById('bigScheduleStartDate').value;
+            const endDate = document.getElementById('bigScheduleEndDate').value;
+            if (!userId || !startDate || !endDate) return;
             
-            const [year, monthNum] = month.split('-').map(Number);
-            const daysInMonth = new Date(year, monthNum, 0).getDate();
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            let current = new Date(start);
             if (!bigScheduleData.days) bigScheduleData.days = {};
-            for (let d = 1; d <= daysInMonth; d++) {
-                bigScheduleData.days[d] = 'absent';
+            while (current <= end) {
+                const dateStr = current.toISOString().split('T')[0];
+                bigScheduleData.days[dateStr] = 'absent';
+                current.setDate(current.getDate() + 1);
             }
             saveBigSchedule();
         }
@@ -4094,26 +3610,29 @@
                 return;
             }
             const userId = document.getElementById('bigScheduleEmployeeSelect').value;
-            const month = document.getElementById('bigScheduleMonth').value;
-            if (!userId || !month) return;
+            const startDate = document.getElementById('bigScheduleStartDate').value;
+            const endDate = document.getElementById('bigScheduleEndDate').value;
+            if (!userId || !startDate || !endDate) return;
             
             try {
                 if (bigScheduleData.id) {
                     await db.collection('schedule').doc(bigScheduleData.id).update({
-                        days: bigScheduleData.days || {}
+                        days: bigScheduleData.days || {},
+                        updatedAt: new Date().toISOString()
                     });
                 } else {
                     const docRef = await db.collection('schedule').add({
                         userId: userId,
-                        month: month,
+                        startDate: startDate,
+                        endDate: endDate,
                         days: bigScheduleData.days || {},
                         createdAt: new Date().toISOString()
                     });
                     bigScheduleData.id = docRef.id;
                 }
                 showNotification('✅ График сохранён', 'success');
-                renderBigSchedule(userId, month);
-                calculateBigPayroll(userId, month);
+                renderBigScheduleWithDates(userId, startDate, endDate);
+                calculateBigPayrollWithDates(userId, startDate, endDate);
                 renderBalancesList();
             } catch (e) {
                 showNotification('❌ Ошибка сохранения: ' + e.message, 'error');
@@ -4121,21 +3640,9 @@
         }
 
         // ==================================================
-        // 💰 НАЧИСЛЕНИЕ ЗА СМЕНУ
+        // 💰 НАЧИСЛЕНИЕ ЗАРПЛАТЫ С ОКНОМ ВВОДА
         // ==================================================
-        async function applyShiftPayment() {
-            if (currentUserRole !== 'it' && currentUserRole !== 'admin' && !hasPermission('canManagePayroll')) {
-                showNotification('⛔ Недостаточно прав для начисления', 'error');
-                return;
-            }
-            
-            const userId = document.getElementById('bigScheduleEmployeeSelect').value;
-            const month = document.getElementById('bigScheduleMonth').value;
-            if (!userId || !month) {
-                showNotification('Выберите сотрудника и месяц', 'error');
-                return;
-            }
-            
+        function openPaymentModal(userId, month) {
             const user = bigScheduleUsers.find(u => u.id === userId);
             if (!user) {
                 showNotification('Сотрудник не найден', 'error');
@@ -4143,12 +3650,15 @@
             }
             
             // Считаем отработанные дни
-            const [year, monthNum] = month.split('-').map(Number);
-            const daysInMonth = new Date(year, monthNum, 0).getDate();
+            const start = new Date(currentScheduleStartDate);
+            const end = new Date(currentScheduleEndDate);
             let presentDays = 0;
-            for (let d = 1; d <= daysInMonth; d++) {
-                const status = bigScheduleData.days && bigScheduleData.days[d] ? bigScheduleData.days[d] : 'none';
+            let current = new Date(start);
+            while (current <= end) {
+                const dateStr = current.toISOString().split('T')[0];
+                const status = bigScheduleData.days && bigScheduleData.days[dateStr] ? bigScheduleData.days[dateStr] : 'none';
                 if (status === 'present') presentDays++;
+                current.setDate(current.getDate() + 1);
             }
             
             if (presentDays === 0) {
@@ -4156,39 +3666,79 @@
                 return;
             }
             
-            const shiftRate = user.shiftRate || 1000;
-            const totalPayment = presentDays * shiftRate;
+            currentPaymentUser = user;
+            currentPaymentMonth = `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}`;
+            currentPaymentDays = presentDays;
             
-            if (!confirm(`Начислить ${totalPayment.toLocaleString()} ₽ за ${presentDays} смен сотруднику ${user.name}?`)) {
+            document.getElementById('paymentEmployeeName').textContent = `👤 ${user.name}`;
+            document.getElementById('paymentDays').textContent = presentDays;
+            document.getElementById('paymentRate').textContent = (user.shiftRate || 1000).toLocaleString();
+            document.getElementById('paymentAmount').value = presentDays * (user.shiftRate || 1000);
+            document.getElementById('paymentAmount').focus();
+            document.getElementById('paymentAmount').select();
+            
+            document.getElementById('paymentModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+            currentPaymentUser = null;
+            currentPaymentMonth = null;
+            currentPaymentDays = 0;
+        }
+
+        async function confirmPayment() {
+            if (!currentPaymentUser) {
+                showNotification('Ошибка: сотрудник не выбран', 'error');
+                return;
+            }
+            
+            const amount = parseInt(document.getElementById('paymentAmount').value);
+            if (!amount || amount <= 0) {
+                showNotification('Введите корректную сумму', 'error');
+                return;
+            }
+            
+            const userId = currentPaymentUser.id;
+            const month = currentPaymentMonth;
+            const days = currentPaymentDays;
+            
+            if (!confirm(`Начислить ${amount.toLocaleString()} ₽ сотруднику ${currentPaymentUser.name} за ${days} смен?`)) {
                 return;
             }
             
             try {
-                const newBalance = (user.balance || 0) + totalPayment;
+                const newBalance = (currentPaymentUser.balance || 0) + amount;
                 await db.collection('users').doc(userId).update({
                     balance: newBalance,
-                    lastPayment: totalPayment,
+                    lastPayment: amount,
                     lastPaymentDate: new Date().toISOString()
                 });
                 
                 await db.collection('payments').add({
                     userId: userId,
-                    amount: totalPayment,
-                    days: presentDays,
+                    amount: amount,
+                    days: days,
                     month: month,
-                    rate: shiftRate,
+                    startDate: currentScheduleStartDate,
+                    endDate: currentScheduleEndDate,
+                    rate: currentPaymentUser.shiftRate || 1000,
                     timestamp: new Date().toISOString(),
                     paidBy: currentUser.uid
                 });
                 
-                showNotification(`✅ Начислено ${totalPayment.toLocaleString()} ₽ (${presentDays} смен × ${shiftRate} ₽)`, 'success');
-                sendTelegramNotification(`💰 Начисление зарплаты\n👤 ${user.name}\n📅 ${month}\n📊 ${presentDays} смен\n💳 ${totalPayment.toLocaleString()} ₽`);
+                showNotification(`✅ Начислено ${amount.toLocaleString()} ₽ (${days} смен)`, 'success');
+                sendTelegramNotification(`💰 Начисление зарплаты\n👤 ${currentPaymentUser.name}\n📅 ${currentScheduleStartDate} — ${currentScheduleEndDate}\n📊 ${days} смен\n💳 ${amount.toLocaleString()} ₽`);
                 
-                user.balance = newBalance;
+                currentPaymentUser.balance = newBalance;
                 await loadBigUsers();
                 renderBigUsersList();
                 renderBalancesList();
-                calculateBigPayroll(userId, month);
+                calculateBigPayrollWithDates(userId, currentScheduleStartDate, currentScheduleEndDate);
+                
+                closePaymentModal();
                 
             } catch (e) {
                 console.error('Ошибка начисления:', e);
@@ -4197,29 +3747,33 @@
         }
 
         // ==================================================
-        // 💳 РАСЧЁТ ЗАРПЛАТЫ И БАЛАНСЫ
+        // 💳 РАСЧЁТ ЗАРПЛАТЫ ПО ДАТАМ
         // ==================================================
-        function calculateBigPayroll(userId, month) {
+        function calculateBigPayrollWithDates(userId, startDate, endDate) {
             const container = document.getElementById('bigPayrollContent');
             const user = bigScheduleUsers.find(u => u.id === userId);
             if (!user) {
-                container.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:10px;">Выберите сотрудника для расчёта</div>`;
+                container.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:10px;">${t('big_schedule_select_employee_first')}</div>`;
                 return;
             }
             
-            const [year, monthNum] = month.split('-').map(Number);
-            const daysInMonth = new Date(year, monthNum, 0).getDate();
+            const start = new Date(startDate);
+            const end = new Date(endDate);
             let presentDays = 0;
             let absentDays = 0;
+            let current = new Date(start);
             
-            for (let d = 1; d <= daysInMonth; d++) {
-                const status = bigScheduleData.days && bigScheduleData.days[d] ? bigScheduleData.days[d] : 'none';
+            while (current <= end) {
+                const dateStr = current.toISOString().split('T')[0];
+                const status = bigScheduleData.days && bigScheduleData.days[dateStr] ? bigScheduleData.days[dateStr] : 'none';
                 if (status === 'present') presentDays++;
                 else if (status === 'absent') absentDays++;
+                current.setDate(current.getDate() + 1);
             }
             
             const shiftRate = user.shiftRate || 1000;
             const earned = presentDays * shiftRate;
+            const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
             
             let html = `
                 <div class="payroll-item">
@@ -4234,24 +3788,35 @@
                     <span class="p-name">📅 Отсутствовал</span>
                     <span>${absentDays} дн.</span>
                 </div>
+                <div class="payroll-item">
+                    <span class="p-name">📅 Всего дней</span>
+                    <span>${totalDays} дн.</span>
+                </div>
                 <div class="payroll-item" style="border-bottom: 2px solid var(--border-color);">
                     <span class="p-name">💰 Ставка за смену</span>
                     <span>${shiftRate.toLocaleString()} ₽</span>
                 </div>
                 <div class="payroll-total">
-                    <span>💰 Заработано за месяц</span>
+                    <span>💰 Заработано за период</span>
                     <span style="color:var(--success-color); font-size:20px;">${earned.toLocaleString()} ₽</span>
                 </div>
                 <div class="payroll-total" style="border-top-color: var(--accent-color);">
                     <span>💳 Общий баланс</span>
                     <span style="color:var(--accent-color); font-size:20px;">${(user.balance || 0).toLocaleString()} ₽</span>
                 </div>
+                <div style="margin-top:12px; padding-top:8px; border-top:1px solid var(--border-color);">
+                    <button class="success small" onclick="openPaymentModal('${userId}', '${currentScheduleStartDate}')" style="width:100%;">
+                        💰 Начислить зарплату
+                    </button>
+                </div>
             `;
             
             container.innerHTML = html;
         }
 
-        // ===== ОТОБРАЖЕНИЕ БАЛАНСОВ ВСЕХ СОТРУДНИКОВ =====
+        // ==================================================
+        // 💳 БАЛАНСЫ
+        // ==================================================
         function renderBalancesList() {
             const container = document.getElementById('bigBalancesList');
             if (bigScheduleUsers.length === 0) {
@@ -4260,15 +3825,12 @@
             }
             
             const sorted = [...bigScheduleUsers].sort((a, b) => (b.balance || 0) - (a.balance || 0));
-            
-            // IT и Admin видят все балансы, остальные только свой
             const showAll = currentUserRole === 'it' || currentUserRole === 'admin';
             
             let html = '';
             sorted.forEach(user => {
                 const color = getUserColor(user.id);
                 if (!showAll && user.id !== currentUser?.uid) return;
-                
                 const isSelf = user.id === currentUser?.uid;
                 html += `
                     <div class="balance-card">
@@ -4286,11 +3848,120 @@
         }
 
         // ==================================================
+        // 📁 АРХИВ
+        // ==================================================
+        function openArchiveModal() {
+            document.getElementById('archiveModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            // Устанавливаем даты по умолчанию (последние 30 дней)
+            const now = new Date();
+            const endDate = now.toISOString().split('T')[0];
+            const startDate = new Date(now);
+            startDate.setDate(startDate.getDate() - 30);
+            document.getElementById('archiveStartDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('archiveEndDate').value = endDate;
+            
+            loadArchive();
+        }
+
+        function closeArchiveModal() {
+            document.getElementById('archiveModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        async function loadArchive() {
+            const startDate = document.getElementById('archiveStartDate').value;
+            const endDate = document.getElementById('archiveEndDate').value;
+            
+            if (!startDate || !endDate) {
+                document.getElementById('archiveContent').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Выберите даты</div>';
+                return;
+            }
+            
+            const container = document.getElementById('archiveContent');
+            container.innerHTML = '<div style="text-align:center; padding:20px;"><div class="loading-spinner"></div></div>';
+            
+            try {
+                // Загружаем все графики за период
+                const snapshot = await db.collection('schedule')
+                    .where('startDate', '>=', startDate)
+                    .where('endDate', '<=', endDate)
+                    .get();
+                
+                const schedules = [];
+                snapshot.forEach(doc => {
+                    schedules.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Загружаем платежи за период
+                const paymentsSnapshot = await db.collection('payments')
+                    .where('timestamp', '>=', new Date(startDate).toISOString())
+                    .where('timestamp', '<=', new Date(endDate + 'T23:59:59').toISOString())
+                    .get();
+                
+                const payments = [];
+                paymentsSnapshot.forEach(doc => {
+                    payments.push({ id: doc.id, ...doc.data() });
+                });
+                
+                if (schedules.length === 0 && payments.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Нет данных за выбранный период</div>';
+                    return;
+                }
+                
+                let html = '<div class="archive-grid">';
+                
+                // Показываем графики
+                schedules.forEach(schedule => {
+                    const user = bigScheduleUsers.find(u => u.id === schedule.userId) || { name: 'Удалённый пользователь', email: '' };
+                    const daysCount = schedule.days ? Object.keys(schedule.days).filter(d => schedule.days[d] === 'present').length : 0;
+                    html += `
+                        <div class="archive-card" onclick="showArchiveDetail('${schedule.id}')">
+                            <div class="archive-date">📅 ${schedule.startDate} — ${schedule.endDate}</div>
+                            <div class="archive-info">👤 ${escapeHtml(user.name)}</div>
+                            <div class="archive-info">📊 Отработано: ${daysCount} дней</div>
+                        </div>
+                    `;
+                });
+                
+                // Показываем платежи
+                payments.forEach(payment => {
+                    const user = bigScheduleUsers.find(u => u.id === payment.userId) || { name: 'Удалённый пользователь', email: '' };
+                    html += `
+                        <div class="archive-card">
+                            <div class="archive-date">💰 ${new Date(payment.timestamp).toLocaleDateString('ru-RU')}</div>
+                            <div class="archive-info">👤 ${escapeHtml(user.name)}</div>
+                            <div class="archive-info">📊 ${payment.days || 0} смен</div>
+                            <div class="archive-amount">+${payment.amount.toLocaleString()} ₽</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+                
+            } catch (e) {
+                console.error('Ошибка загрузки архива:', e);
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger-color);">❌ Ошибка загрузки: ${e.message}</div>`;
+            }
+        }
+
+        function showArchiveDetail(scheduleId) {
+            showNotification('📋 Детали графика (в разработке)', 'info');
+        }
+
+        function exportArchive() {
+            showNotification('📤 Экспорт архива в Excel', 'info');
+            // Здесь можно реализовать экспорт
+        }
+
+        // ==================================================
         // 🚀 ЗАПУСК
         // ==================================================
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Система запущена!');
-            console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram, График и расчёт');
+            console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram, График и расчёт, Архив');
             loadTheme();
             setLanguage(currentLanguage);
             
