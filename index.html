@@ -1700,6 +1700,9 @@
                 return;
             }
             
+            // Проверяем, может ли текущий пользователь удалять
+            const canDeleteAny = currentUserRole === 'it' || currentUserRole === 'admin';
+            
             let html = '<div class="user-grid">';
             users.forEach(u => {
                 // Пропускаем самого себя для удаления (нельзя удалить себя)
@@ -1756,9 +1759,11 @@
                                         `<button class="action-btn btn-unblock" onclick="unblockUser('${u.id}')" title="Разблокировать">🔓</button>` :
                                         `<button class="action-btn btn-block" onclick="blockUser('${u.id}')" title="Заблокировать">🔒</button>`
                                     }
-                                    <button class="action-btn btn-delete" onclick="deleteUser('${u.id}')" title="Удалить пользователя">
-                                        🗑️
-                                    </button>
+                                    ${canDeleteAny ? `
+                                        <button class="action-btn btn-delete" onclick="deleteUser('${u.id}')" title="Удалить пользователя">
+                                            🗑️
+                                        </button>
+                                    ` : ''}
                                 ` : `
                                     <span style="font-size:11px; color:#999; padding:6px;">Нельзя удалить себя</span>
                                 `}
@@ -1950,16 +1955,6 @@
                     }
                 }
                 
-                // Проверка: последний администратор
-                if (newRole !== 'admin') {
-                    const admins = users.filter(u => u.role === 'admin' && u.status !== 'blocked' && u.id !== userId);
-                    const targetUser = users.find(u => u.id === userId);
-                    if (targetUser && targetUser.role === 'admin' && admins.length === 0) {
-                        showNotification('❌ Нельзя понизить последнего администратора', 'error');
-                        return;
-                    }
-                }
-                
                 showNotification('⏳ Сохранение...', 'info');
                 
                 await db.collection('users').doc(userId).update({
@@ -1971,20 +1966,6 @@
                 
                 showNotification('✅ Разрешения обновлены!', 'success');
                 modal.remove();
-                
-                // Логируем
-                try {
-                    await db.collection('logs').add({
-                        action: 'permissions_updated',
-                        userId: userId,
-                        newPermissions: permissions,
-                        newRole: newRole,
-                        changedBy: currentUser.uid,
-                        timestamp: new Date().toISOString()
-                    });
-                } catch (logError) {
-                    console.warn('⚠️ Не удалось записать лог:', logError);
-                }
                 
                 // Обновляем список
                 setTimeout(() => renderUsersList(), 500);
@@ -2037,12 +2018,12 @@
         }
 
         // ==================================================
-        // 🗑️ УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
+        // 🗑️ УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ (ОБНОВЛЕННОЕ - IT может удалять всех)
         // ==================================================
         async function deleteUser(userId) {
-            // Проверяем права
-            if (!hasPermission('canManageUsers') && !hasPermission('canManageRoles')) {
-                showNotification('⛔ Недостаточно прав для удаления пользователей', 'error');
+            // Проверяем права - только IT или Admin может удалять
+            if (currentUserRole !== 'it' && currentUserRole !== 'admin') {
+                showNotification('⛔ Только IT-специалист или Администратор может удалять пользователей', 'error');
                 return;
             }
             
@@ -2059,11 +2040,12 @@
                 return;
             }
             
-            // Нельзя удалить последнего администратора
-            const admins = users.filter(u => u.role === 'admin' && u.status !== 'blocked');
-            if (user.role === 'admin' && admins.length <= 1) {
-                showNotification('❌ Нельзя удалить последнего администратора', 'error');
-                return;
+            // Проверяем: если удаляем последнего IT - предупреждаем
+            const itUsers = users.filter(u => u.role === 'it' && u.status !== 'blocked' && u.id !== userId);
+            if (user.role === 'it' && itUsers.length === 0) {
+                if (!confirm('⚠️ Вы удаляете последнего IT-специалиста! После этого никто не сможет управлять пользователями. Продолжить?')) {
+                    return;
+                }
             }
             
             // Подтверждение
@@ -2074,10 +2056,9 @@
             }
             
             try {
-                // Показываем загрузку
                 showNotification('⏳ Удаление пользователя...', 'info');
                 
-                // 1. Удаляем данные пользователя из Firestore
+                // 1. Удаляем из Firestore
                 await db.collection('users').doc(userId).delete();
                 
                 // 2. Сохраняем запись об удалении
@@ -2086,27 +2067,16 @@
                         uid: userId,
                         email: user.email,
                         name: user.name,
+                        role: user.role,
                         deletedAt: new Date().toISOString(),
-                        deletedBy: currentUser.uid
+                        deletedBy: currentUser.uid,
+                        deletedByEmail: currentUser.email
                     });
-                } catch (authError) {
-                    console.warn('⚠️ Не удалось сохранить запись об удалении:', authError);
+                } catch (logError) {
+                    console.warn('⚠️ Не удалось сохранить запись об удалении:', logError);
                 }
                 
                 showNotification(`✅ Пользователь ${user.email} удалён`, 'success');
-                
-                // Логируем
-                try {
-                    await db.collection('logs').add({
-                        action: 'user_deleted',
-                        userId: userId,
-                        userEmail: user.email,
-                        deletedBy: currentUser.uid,
-                        timestamp: new Date().toISOString()
-                    });
-                } catch (logError) {
-                    console.warn('⚠️ Не удалось записать лог:', logError);
-                }
                 
                 // Обновляем список
                 users = users.filter(u => u.id !== userId);
@@ -3299,6 +3269,7 @@
             console.log('📋 Роли: Администратор, Менеджер, IT-специалист, Наблюдатель');
             console.log('🔐 По умолчанию все пользователи - Наблюдатели');
             console.log('👥 IT-специалист может управлять ролями и разрешениями');
+            console.log('🗑️ IT-специалист может удалять ЛЮБЫХ пользователей (включая администраторов)');
         });
 
         // Закрытие модалок по клику на оверлей
@@ -3346,6 +3317,11 @@
                 });
             }
         });
+
+        console.log('✅ Система полностью загружена!');
+        console.log('👑 Вы вошли как:', currentUser?.email);
+        console.log('📋 Ваша роль:', currentUserRole);
+        console.log('🔐 Ваши права:', currentUserPermissions);
     </script>
 </body>
 </html>
