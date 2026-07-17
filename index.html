@@ -3857,11 +3857,310 @@
         }
 
         // ==================================================
+        // 📅 КАЛЕНДАРЬ (ДОБАВЛЯЕМ)
+        // ==================================================
+        let currentCalendarMonth = new Date();
+        let calendarEvents = [];
+
+        function showCalendarModal() {
+            document.getElementById('calendarModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            renderCalendar();
+            loadEvents();
+        }
+
+        function closeCalendarModal() {
+            document.getElementById('calendarModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        function changeMonth(delta) {
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = currentCalendarMonth.getFullYear();
+            const month = currentCalendarMonth.getMonth();
+            const grid = document.getElementById('calendarGrid');
+            const monthYear = document.getElementById('calendarMonthYear');
+            
+            if (monthYear) {
+                monthYear.textContent = new Date(year, month).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+            }
+            
+            const firstDay = new Date(year, month, 1).getDay() || 7;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            let html = '';
+            for (let i = 1; i < firstDay; i++) {
+                html += `<div class="calendar-day empty"></div>`;
+            }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const isToday = dateStr === todayStr;
+                const isWeekend = new Date(year, month, day).getDay() % 6 === 0;
+                const hasEvent = calendarEvents.some(e => e.date === dateStr);
+                const classes = [];
+                if (isToday) classes.push('today');
+                if (isWeekend) classes.push('weekend');
+                if (hasEvent) classes.push('has-event');
+                html += `<div class="calendar-day ${classes.join(' ')}" onclick="showDayEvents('${dateStr}')">${day}</div>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        async function loadEvents() {
+            try {
+                const snapshot = await db.collection('events').get();
+                calendarEvents = [];
+                snapshot.forEach(doc => {
+                    calendarEvents.push({ id: doc.id, ...doc.data() });
+                });
+                renderEventsList();
+                renderCalendar();
+            } catch (e) {
+                console.warn('Ошибка загрузки событий:', e);
+            }
+        }
+
+        function renderEventsList() {
+            const container = document.getElementById('eventsList');
+            if (!container) return;
+            const today = new Date().toISOString().split('T')[0];
+            const todayEvents = calendarEvents
+                .filter(e => e.date >= today)
+                .sort((a, b) => a.date.localeCompare(b.date));
+            
+            if (todayEvents.length === 0) {
+                container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:8px;">Нет предстоящих событий</div>';
+                return;
+            }
+            
+            let html = '';
+            todayEvents.forEach(event => {
+                const date = new Date(event.date + 'T00:00:00').toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                html += `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border-color);">
+                        <div>
+                            <div style="font-weight:600;font-size:14px;">${escapeHtml(event.title)}</div>
+                            <div style="font-size:12px;color:var(--text-muted);">${date}</div>
+                        </div>
+                        <button class="small danger" onclick="deleteEvent('${event.id}')">✕</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function showDayEvents(dateStr) {
+            const events = calendarEvents.filter(e => e.date === dateStr);
+            if (events.length === 0) {
+                showNotification('На эту дату нет событий', 'info');
+                return;
+            }
+            const titles = events.map(e => e.title).join('\n');
+            alert(`📅 ${dateStr}\n\n${titles}`);
+        }
+
+        async function addEvent() {
+            const date = document.getElementById('eventDate').value;
+            const title = document.getElementById('eventTitle').value.trim();
+            if (!date || !title) {
+                showNotification('Введите дату и название события', 'error');
+                return;
+            }
+            try {
+                await db.collection('events').add({
+                    date,
+                    title,
+                    createdAt: new Date().toISOString(),
+                    createdBy: currentUser?.uid || 'system'
+                });
+                showNotification('✅ Событие добавлено!', 'success');
+                document.getElementById('eventTitle').value = '';
+                loadEvents();
+                sendTelegramNotification(`📅 Добавлено событие: ${title} на ${date}`);
+            } catch (e) {
+                showNotification('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteEvent(eventId) {
+            if (!confirm('Удалить событие?')) return;
+            try {
+                await db.collection('events').doc(eventId).delete();
+                showNotification('✅ Событие удалено', 'success');
+                loadEvents();
+            } catch (e) {
+                showNotification('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        // ==================================================
+        // 📤 ЭКСПОРТ В EXCEL (ДОБАВЛЯЕМ)
+        // ==================================================
+        function exportToExcel() {
+            const checkboxes = document.querySelectorAll('#exportFields input[type="checkbox"]:checked');
+            if (checkboxes.length === 0) {
+                showNotification('Выберите поля для экспорта', 'warning');
+                return;
+            }
+            const fields = Array.from(checkboxes).map(cb => cb.dataset.field);
+            const data = products.map(p => {
+                const row = {};
+                if (fields.includes('name')) row['Название'] = p.name;
+                if (fields.includes('sku')) row['Артикул'] = (p.skus || [p.sku]).join(', ');
+                if (fields.includes('size')) row['Размер'] = p.size;
+                if (fields.includes('quantity')) row['Количество'] = p.quantity;
+                if (fields.includes('category')) {
+                    const sub = subcategories.find(s => s.id === p.subcategoryId);
+                    const cat = categories.find(c => c.id === sub?.categoryId);
+                    row['Категория'] = cat ? `${cat.emoji || ''} ${cat.name}` : '';
+                }
+                if (fields.includes('minStock')) row['Мин. остаток'] = p.minStock || 5;
+                return row;
+            });
+            exportDataToExcel(data, 'Товары');
+        }
+
+        function exportAllProducts() {
+            const data = products.map(p => ({
+                'Название': p.name,
+                'Артикул': (p.skus || [p.sku]).join(', '),
+                'Размер': p.size,
+                'Количество': p.quantity,
+                'Категория': (() => {
+                    const sub = subcategories.find(s => s.id === p.subcategoryId);
+                    const cat = categories.find(c => c.id === sub?.categoryId);
+                    return cat ? `${cat.emoji || ''} ${cat.name}` : '';
+                })(),
+                'Мин. остаток': p.minStock || 5,
+                'ID': p.id
+            }));
+            exportDataToExcel(data, 'Все_товары');
+        }
+
+        function exportToExcelWithFields() {
+            exportToExcel();
+        }
+
+        function exportDataToExcel(data, filename = 'export') {
+            if (!data || data.length === 0) {
+                showNotification('Нет данных для экспорта', 'warning');
+                return;
+            }
+            try {
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${filename}_${new Date().toISOString().slice(0,10)}.xlsx`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                showNotification(`✅ Экспортировано ${data.length} товаров`, 'success');
+            } catch (e) {
+                showNotification('❌ Ошибка экспорта: ' + e.message, 'error');
+            }
+        }
+
+        // ==================================================
+        // 🔄 ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК АВТОРИЗАЦИИ
+        // ==================================================
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginTab = document.getElementById('authLoginTab');
+            const registerTab = document.getElementById('authRegisterTab');
+            
+            if (tab === 'login') {
+                if (loginForm) loginForm.classList.add('active');
+                if (registerForm) registerForm.classList.remove('active');
+                if (loginTab) loginTab.classList.add('active');
+                if (registerTab) registerTab.classList.remove('active');
+            } else {
+                if (registerForm) registerForm.classList.add('active');
+                if (loginForm) loginForm.classList.remove('active');
+                if (registerTab) registerTab.classList.add('active');
+                if (loginTab) loginTab.classList.remove('active');
+            }
+        }
+
+        // ==================================================
+        // 📱 РЕГИСТРАЦИЯ И ВХОД
+        // ==================================================
+        async function loginUser(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                errorEl.style.display = 'none';
+            } catch (e) {
+                errorEl.textContent = '❌ ' + e.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        async function registerUser(event) {
+            event.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const name = document.getElementById('registerName').value.trim();
+            const errorEl = document.getElementById('registerError');
+            const successEl = document.getElementById('registerSuccess');
+            
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+            
+            if (!name) {
+                errorEl.textContent = '❌ Введите ваше имя';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    email,
+                    name,
+                    role: 'viewer',
+                    status: 'active',
+                    balance: 0,
+                    shiftRate: 1000,
+                    permissions: ROLE_CONFIGS.viewer.permissions,
+                    createdAt: new Date().toISOString()
+                });
+                successEl.textContent = '✅ Регистрация успешна! Выполняется вход...';
+                successEl.style.display = 'block';
+                await logAction('user_registered', { email, name });
+                sendTelegramNotification(`👤 Новый пользователь: ${name} (${email})`);
+            } catch (e) {
+                errorEl.textContent = '❌ ' + e.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // ==================================================
         // 📤 ЭКСПОРТ/ИМПОРТ
         // ==================================================
         function openImportExportModal() { document.getElementById('importExportModal').classList.add('show'); document.body.style.overflow = 'hidden'; }
         function closeImportExportModal() { document.getElementById('importExportModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
-        function openImportModeModal() { if (!checkPermission('canImport')) return; closeImportExportModal(); document.getElementById('importModeModal').classList.add('show'); document.body.style.overflow = 'hidden'; }
+        
+        function openImportModeModal() {
+            if (!checkPermission('canImport')) return;
+            closeImportExportModal();
+            document.getElementById('importModeModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
         function closeImportModeModal() { document.getElementById('importModeModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
 
         function startImport(mode) {
