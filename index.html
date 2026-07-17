@@ -5,20 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Склад - Управление товарами</title>
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="data:application/json,{
-        &quot;name&quot;: &quot;Складской учёт&quot;,
-        &quot;short_name&quot;: &quot;Склад&quot;,
-        &quot;description&quot;: &quot;Управление складскими товарами&quot;,
-        &quot;start_url&quot;: &quot;/&quot;,
-        &quot;display&quot;: &quot;standalone&quot;,
-        &quot;orientation&quot;: &quot;portrait&quot;,
-        &quot;background_color&quot;: &quot;#ffffff&quot;,
-        &quot;theme_color&quot;: &quot;#2481cc&quot;,
-        &quot;icons&quot;: [
-            {&quot;src&quot;: &quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%232481cc'/%3E%3Ctext x='256' y='340' font-size='280' text-anchor='middle' fill='white' font-family='Arial'%3E📦%3C/text%3E%3C/svg%3E&quot;, &quot;sizes&quot;: &quot;512x512&quot;, &quot;type&quot;: &quot;image/svg+xml&quot;}
-        ]
-    }">
+    <!-- PWA Manifest - ИСПРАВЛЕННЫЙ -->
+    <link rel="manifest" href='data:application/json,{"name":"Складской учёт","short_name":"Склад","description":"Управление складскими товарами","start_url":"/","display":"standalone","orientation":"portrait","background_color":"#ffffff","theme_color":"#2481cc","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%27100%27 fill=%27%232481cc%27/%3E%3Ctext x=%27256%27 y=%27340%27 font-size=%27280%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27%3E📦%3C/text%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml"}]}'>
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Склад">
@@ -89,14 +78,10 @@
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes glow { 0% { box-shadow: 0 0 5px rgba(74,108,247,0.3); } 50% { box-shadow: 0 0 25px rgba(74,108,247,0.6); } 100% { box-shadow: 0 0 5px rgba(74,108,247,0.3); } }
         
         .fade-in { animation: fadeIn 0.4s ease forwards; }
         .slide-in { animation: slideIn 0.3s ease forwards; }
         .pulse { animation: pulse 0.3s ease; }
-        .bounce-in { animation: bounceIn 0.5s ease; }
-        .glow { animation: glow 2s infinite; }
         
         /* ===== КАРТОЧКИ ===== */
         .card {
@@ -135,8 +120,6 @@
         button.pink { background: var(--pink-color); }
         button.gray { background: var(--text-muted); }
         button.small { padding: 5px 12px; font-size: 12px; }
-        button.outline { background: transparent; color: var(--accent-color); border: 2px solid var(--accent-color); }
-        button.outline:hover { background: var(--accent-color); color: white; }
         
         /* ===== ПОЛЯ ===== */
         input, select, textarea {
@@ -528,105 +511,18 @@
         }
         .modal-header .close-btn:hover { color: var(--danger-color); }
         
-        /* ===== КРАСИВОЕ ОКНО РАЗРЕШЕНИЙ ===== */
-        .permissions-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin: 12px 0;
-        }
-        .perm-item {
+        .add-product-row {
             display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+            padding: 10px;
+            background: var(--border-color);
+            border-radius: 12px;
             align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            background: var(--border-color);
-            border-radius: 10px;
-            transition: all var(--transition);
-            cursor: pointer;
         }
-        .perm-item:hover { background: rgba(74,108,247,0.1); transform: translateX(4px); }
-        .perm-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--accent-color);
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        .perm-item .perm-label {
-            font-size: 13px;
-            font-weight: 500;
-            flex: 1;
-        }
-        .perm-item .perm-icon { font-size: 18px; }
-        .perm-item .perm-status {
-            font-size: 11px;
-            padding: 2px 10px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-        .perm-item .perm-status.active {
-            background: rgba(46,204,113,0.15);
-            color: var(--success-color);
-        }
-        .perm-item .perm-status.inactive {
-            background: rgba(231,76,60,0.15);
-            color: var(--danger-color);
-        }
-        .perm-item.active-bg { background: rgba(46,204,113,0.08); border-left: 3px solid var(--success-color); }
-        .perm-item.inactive-bg { background: rgba(231,76,60,0.05); border-left: 3px solid var(--danger-color); }
-        
-        /* ===== КАЛЕНДАРЬ ===== */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            margin-top: 10px;
-        }
-        .calendar-day {
-            padding: 8px 4px;
-            text-align: center;
-            border-radius: 8px;
-            font-size: 13px;
-            background: var(--border-color);
-            transition: all var(--transition);
-        }
-        .calendar-day:hover { transform: scale(1.05); }
-        .calendar-day.today { background: var(--accent-color); color: white; font-weight: 700; }
-        .calendar-day.has-event { background: var(--warning-color); color: white; cursor: pointer; }
-        .calendar-day.weekend { color: var(--danger-color); }
-        .calendar-day.empty { background: transparent; }
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .calendar-header button {
-            padding: 4px 12px;
-            font-size: 13px;
-            background: var(--border-color);
-            color: var(--text-primary);
-        }
-        .calendar-header button:hover { background: var(--accent-color); color: white; }
-        
-        /* ===== УВЕДОМЛЕНИЯ ===== */
-        .notification {
-            position: fixed;
-            bottom: 80px;
-            left: 16px; right: 16px;
-            padding: 12px 18px;
-            border-radius: 14px;
-            text-align: center;
-            z-index: 200;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 4px 20px var(--shadow-strong);
-            font-weight: 500;
-        }
-        .notification.success { background: var(--success-color); color: white; }
-        .notification.error { background: var(--danger-color); color: white; }
-        .notification.info { background: var(--accent-color); color: white; }
-        .notification.warning { background: var(--warning-color); color: white; }
+        .add-product-row input { flex: 1; min-width: 70px; padding: 6px 10px; font-size: 13px; }
+        .add-product-row button { padding: 6px 12px; font-size: 13px; }
         
         .empty-state { text-align: center; padding: 30px 0; color: var(--text-muted); }
         .empty-state .icon { font-size: 44px; margin-bottom: 8px; }
@@ -644,30 +540,31 @@
             border-top: 1px solid var(--border-color);
         }
         
-        .add-product-row {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin: 10px 0;
-            padding: 10px;
-            background: var(--border-color);
-            border-radius: 12px;
-            align-items: center;
+        .notification {
+            position: fixed;
+            bottom: 80px;
+            left: 16px; right: 16px;
+            padding: 12px 18px;
+            border-radius: 14px;
+            text-align: center;
+            z-index: 200;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 20px var(--shadow-strong);
+            font-weight: 500;
         }
-        .add-product-row input { flex: 1; min-width: 70px; padding: 6px 10px; font-size: 13px; }
-        .add-product-row button { padding: 6px 12px; font-size: 13px; }
+        .notification.success { background: var(--success-color); color: white; }
+        .notification.error { background: var(--danger-color); color: white; }
+        .notification.info { background: var(--accent-color); color: white; }
+        .notification.warning { background: var(--warning-color); color: white; }
         
         @media (max-width: 480px) {
             .category-grid { grid-template-columns: repeat(2, 1fr); }
             .subcategory-grid { grid-template-columns: repeat(2, 1fr); }
-            .permissions-grid { grid-template-columns: 1fr; }
             .side-menu { width: 280px; right: -300px; }
             .search-container input, .search-container select { min-width: 80px; font-size: 12px; }
             .theme-toggle { width: 40px; height: 40px; font-size: 18px; bottom: 60px; right: 12px; }
             .header h1 { font-size: 18px; }
             .modal-content { padding: 16px; }
-            .calendar-grid { gap: 2px; }
-            .calendar-day { font-size: 11px; padding: 4px 2px; }
         }
     </style>
 </head>
@@ -995,7 +892,6 @@
                     <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Управление данными</div>
                     <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Экспортируйте или импортируйте товары</div>
                     
-                    <!-- Улучшенный экспорт -->
                     <div style="background:var(--border-color); border-radius:12px; padding:12px; margin-bottom:12px; text-align:left;">
                         <div style="font-weight:600; font-size:14px; margin-bottom:6px;">📤 Экспорт с выбором полей:</div>
                         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;" id="exportFields">
@@ -1098,6 +994,114 @@
         const db = firebase.firestore();
 
         // ==================================================
+        // 📱 TELEGRAM УВЕДОМЛЕНИЯ - ВАШИ ДАННЫЕ
+        // ==================================================
+        const TELEGRAM_BOT_TOKEN = '8901067381:AAFM93llzCV4PIeaWHVyYPzyVXmxZm0bIiY';
+        const TELEGRAM_CHAT_ID = '1651342419';
+
+        // ==================================================
+        // 📤 ОТПРАВКА УВЕДОМЛЕНИЙ В TELEGRAM
+        // ==================================================
+        async function sendTelegramNotification(message, userId = null) {
+            try {
+                console.log('📤 Отправка уведомления в Telegram...');
+                
+                // Если указан userId, отправляем конкретному пользователю
+                if (userId) {
+                    const userDoc = await db.collection('users').doc(userId).get();
+                    const userData = userDoc.data();
+                    if (userData && userData.telegramChatId) {
+                        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: userData.telegramChatId,
+                                text: message,
+                                parse_mode: 'HTML'
+                            })
+                        });
+                        const result = await response.json();
+                        if (result.ok) {
+                            console.log('✅ Уведомление отправлено пользователю');
+                        } else {
+                            console.warn('⚠️ Ошибка отправки:', result.description);
+                        }
+                        return result;
+                    }
+                } else {
+                    // Отправляем всем пользователям с Telegram
+                    const usersSnapshot = await db.collection('users').where('telegramChatId', '!=', '').get();
+                    let sent = 0;
+                    for (const doc of usersSnapshot.docs) {
+                        const data = doc.data();
+                        if (data.telegramChatId) {
+                            try {
+                                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        chat_id: data.telegramChatId,
+                                        text: message,
+                                        parse_mode: 'HTML'
+                                    })
+                                });
+                                sent++;
+                            } catch (e) {
+                                console.warn('⚠️ Ошибка отправки пользователю:', data.email);
+                            }
+                        }
+                    }
+                    console.log(`✅ Отправлено ${sent} уведомлений`);
+                    return { sent };
+                }
+            } catch (error) {
+                console.error('❌ Ошибка отправки в Telegram:', error);
+                return { error: error.message };
+            }
+        }
+
+        // ==================================================
+        // 📱 ПРОВЕРКА РАБОТЫ TELEGRAM БОТА
+        // ==================================================
+        async function testTelegramBot() {
+            try {
+                console.log('🔍 Проверка Telegram бота...');
+                const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe`);
+                const data = await response.json();
+                
+                if (data.ok) {
+                    console.log('✅ Бот работает! Имя:', data.result.username);
+                    
+                    // Отправляем тестовое сообщение
+                    const testMsg = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: TELEGRAM_CHAT_ID,
+                            text: '✅ <b>Бот настроен!</b>\n\n📦 Система уведомлений работает.\n🕐 Время: ' + new Date().toLocaleString(),
+                            parse_mode: 'HTML'
+                        })
+                    });
+                    const testResult = await testMsg.json();
+                    
+                    if (testResult.ok) {
+                        console.log('✅ Тестовое сообщение отправлено!');
+                        showNotification('✅ Telegram бот работает!', 'success');
+                    } else {
+                        console.warn('⚠️ Не удалось отправить тест:', testResult.description);
+                        showNotification('⚠️ Проверьте Chat ID', 'warning');
+                    }
+                } else {
+                    console.error('❌ Бот не работает:', data.description);
+                    showNotification('❌ Ошибка Telegram бота', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Ошибка проверки:', error);
+                showNotification('❌ Ошибка подключения к Telegram', 'error');
+            }
+        }
+
+        // ==================================================
         // 📋 РОЛИ
         // ==================================================
         const ROLES = { ADMIN: 'admin', MANAGER: 'manager', IT: 'it', VIEWER: 'viewer' };
@@ -1110,24 +1114,12 @@
         };
 
         // ==================================================
-        // 🌍 ЯЗЫКИ (RU, EN, 中文)
+        // 🌍 ЯЗЫКИ
         // ==================================================
         const translations = {
-            ru: {
-                warehouse: 'Управление складом', allProducts: 'Все товары', lowStock: 'Мало',
-                history: 'История изменений', calendar: 'Календарь событий', exportImport: 'ЭКСПОРТ/ИМПОРТ',
-                users: 'Управление пользователями', logout: 'Выйти', categories: 'Категории'
-            },
-            en: {
-                warehouse: 'Warehouse Management', allProducts: 'All Products', lowStock: 'Low Stock',
-                history: 'History', calendar: 'Calendar', exportImport: 'EXPORT/IMPORT',
-                users: 'User Management', logout: 'Logout', categories: 'Categories'
-            },
-            zh: {
-                warehouse: '仓库管理', allProducts: '所有商品', lowStock: '低库存',
-                history: '历史记录', calendar: '日历', exportImport: '导出/导入',
-                users: '用户管理', logout: '退出', categories: '分类'
-            }
+            ru: { warehouse: 'Управление складом', allProducts: 'Все товары', lowStock: 'Мало', history: 'История изменений', calendar: 'Календарь событий', exportImport: 'ЭКСПОРТ/ИМПОРТ', users: 'Управление пользователями', logout: 'Выйти', categories: 'Категории' },
+            en: { warehouse: 'Warehouse Management', allProducts: 'All Products', lowStock: 'Low Stock', history: 'History', calendar: 'Calendar', exportImport: 'EXPORT/IMPORT', users: 'User Management', logout: 'Logout', categories: 'Categories' },
+            zh: { warehouse: '仓库管理', allProducts: '所有商品', lowStock: '低库存', history: '历史记录', calendar: '日历', exportImport: '导出/导入', users: '用户管理', logout: '退出', categories: '分类' }
         };
 
         let currentLanguage = localStorage.getItem('language') || 'ru';
@@ -1142,7 +1134,6 @@
             });
             const searchInput = document.getElementById('searchInput');
             if (searchInput) searchInput.placeholder = lang === 'zh' ? '🔍 搜索名称、SKU...' : lang === 'en' ? '🔍 Search...' : '🔍 Поиск...';
-            showNotification(`🌍 ${lang === 'zh' ? '中文' : lang === 'en' ? 'English' : 'Русский'}`, 'info');
         }
 
         // ==================================================
@@ -1192,53 +1183,6 @@
         function hideInstallBanner() { document.getElementById('installBanner').style.display = 'none'; }
 
         // ==================================================
-        // 📱 TELEGRAM УВЕДОМЛЕНИЯ
-        // ==================================================
-        // ⚠️ ЗАМЕНИТЕ НА СВОИ ДАННЫЕ!
-        const TELEGRAM_BOT_TOKEN = '8901067381:AAFM93llzCV4PIeaWHVyYPzyVXmxZm0bIiY';
-        const TELEGRAM_CHAT_ID = '1651342419';
-
-        async function sendTelegramNotification(message, userId = null) {
-            try {
-                // Если указан userId, отправляем конкретному пользователю
-                if (userId) {
-                    const userDoc = await db.collection('users').doc(userId).get();
-                    const userData = userDoc.data();
-                    if (userData && userData.telegramChatId) {
-                        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                chat_id: userData.telegramChatId,
-                                text: message,
-                                parse_mode: 'HTML'
-                            })
-                        });
-                    }
-                } else {
-                    // Отправляем всем пользователям с правом на получение уведомлений
-                    const usersSnapshot = await db.collection('users').where('telegramChatId', '!=', '').get();
-                    for (const doc of usersSnapshot.docs) {
-                        const data = doc.data();
-                        if (data.telegramChatId) {
-                            await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    chat_id: data.telegramChatId,
-                                    text: message,
-                                    parse_mode: 'HTML'
-                                })
-                            });
-                        }
-                    }
-                }
-            } catch (e) {
-                console.warn('⚠️ Telegram уведомление не отправлено:', e);
-            }
-        }
-
-        // ==================================================
         // 📋 ИСТОРИЯ
         // ==================================================
         async function logAction(action, data) {
@@ -1249,11 +1193,9 @@
                     userEmail: currentUser?.email,
                     timestamp: new Date().toISOString()
                 });
-                // Отправляем уведомление в Telegram при важных событиях
-                if (['product_added', 'product_deleted', 'user_deleted', 'user_role_changed'].includes(action)) {
-                    const msg = `📢 <b>${action}</b>\n👤 ${currentUser?.email}\n📦 ${JSON.stringify(data)}`;
-                    sendTelegramNotification(msg);
-                }
+                // Отправляем уведомление в Telegram
+                const msg = `📢 <b>${action}</b>\n👤 ${currentUser?.email}\n📦 ${JSON.stringify(data)}`;
+                sendTelegramNotification(msg);
             } catch (e) { console.warn('⚠️ Лог не записан:', e); }
         }
 
@@ -1291,7 +1233,6 @@
         let calendarEvents = [];
         let calendarYear = new Date().getFullYear();
         let calendarMonth = new Date().getMonth();
-        let selectedEventDate = '';
 
         function showCalendarModal() {
             document.getElementById('calendarModal').classList.add('show');
@@ -1343,7 +1284,6 @@
         }
 
         function showEventsForDay(date) {
-            selectedEventDate = date;
             document.getElementById('eventDate').value = date;
             renderEventsList();
         }
@@ -1450,122 +1390,15 @@
         }
 
         // ==================================================
-        // 👥 ПОЛЬЗОВАТЕЛИ (красивое окно разрешений)
+        // 👤 АУТЕНТИФИКАЦИЯ
         // ==================================================
-        function renderUsersList() {
-            const list = document.getElementById('usersList');
-            const count = document.getElementById('usersModalCount');
-            count.textContent = `(${users.length})`;
-            if (users.length === 0) { list.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Нет пользователей</p></div>'; return; }
-            
-            let html = '<div style="display:grid; gap:10px;">';
-            users.forEach(u => {
-                const isSelf = currentUser && u.id === currentUser.uid;
-                const roleConfig = ROLE_CONFIGS[u.role] || ROLE_CONFIGS.viewer;
-                const perms = u.permissions || roleConfig.permissions;
-                const permKeys = Object.keys(perms);
-                const activePerms = permKeys.filter(k => perms[k]);
-                
-                html += `
-                    <div style="background:var(--bg-card); border-radius:12px; padding:14px; border:1px solid var(--border-color);">
-                        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                            <div style="width:40px; height:40px; border-radius:50%; background:var(--accent-color); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; flex-shrink:0;">${(u.name || u.email || 'U')[0].toUpperCase()}</div>
-                            <div style="flex:1; min-width:120px;">
-                                <div style="font-weight:600; font-size:14px;">${escapeHtml(u.name || u.email)}</div>
-                                <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(u.email)}</div>
-                                <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
-                                    <span style="font-size:13px;">${roleConfig.icon}</span>
-                                    <span style="font-weight:600; font-size:13px;">${roleConfig.label}</span>
-                                    ${isSelf ? ' <span style="font-size:11px; color:var(--text-muted);">(Вы)</span>' : ''}
-                                </div>
-                            </div>
-                            <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
-                                ${isSelf ? '' : `
-                                    <select onchange="changeUserRole('${u.id}', this.value)" style="padding:4px 8px; font-size:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);">
-                                        ${Object.entries(ROLE_CONFIGS).map(([key, cfg]) => `<option value="${key}" ${u.role === key ? 'selected' : ''}>${cfg.icon} ${cfg.label}</option>`).join('')}
-                                    </select>
-                                    <button class="small purple" onclick="editUserPermissions('${u.id}')" style="padding:4px 10px; font-size:12px;">⚙️</button>
-                                    ${currentUserRole === 'it' || currentUserRole === 'admin' ? `<button class="small danger" onclick="deleteUser('${u.id}')" style="padding:4px 10px; font-size:12px;">🗑️</button>` : ''}
-                                `}
-                            </div>
-                        </div>
-                        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; padding-top:8px; border-top:1px solid var(--border-color);">
-                            ${permKeys.map(k => `
-                                <span style="display:inline-flex; align-items:center; gap:3px; padding:2px 10px; border-radius:10px; font-size:10px; font-weight:600; ${perms[k] ? 'background:rgba(46,204,113,0.15); color:var(--success-color);' : 'background:rgba(231,76,60,0.1); color:var(--danger-color);'}">
-                                    ${perms[k] ? '✅' : '❌'} ${k.replace('can','')}
-                                </span>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            list.innerHTML = html;
-        }
-
-        // ==================================================
-        // 🎨 КРАСИВОЕ ОКНО РАЗРЕШЕНИЙ
-        // ==================================================
-        function editUserPermissions(userId) {
-            const user = users.find(u => u.id === userId);
-            if (!user) return;
-            const perms = user.permissions || ROLE_CONFIGS[user.role]?.permissions || ROLE_CONFIGS.viewer.permissions;
-            
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay show';
-            modal.style.display = 'flex';
-            
-            const permLabels = {
-                canView: '👁️ Просмотр', canCreate: '➕ Создание', canEdit: '✏️ Редактирование',
-                canDelete: '🗑️ Удаление', canManageUsers: '👥 Управление', canExport: '📤 Экспорт',
-                canImport: '📥 Импорт', canManageRoles: '🎯 Роли', canViewHistory: '📋 История',
-                canSendNotifications: '📱 Уведомления'
-            };
-            
-            let permsHtml = Object.keys(perms).map(key => `
-                <div class="perm-item ${perms[key] ? 'active-bg' : 'inactive-bg'}">
-                    <span class="perm-icon">${key === 'canView' ? '👁️' : key === 'canCreate' ? '➕' : key === 'canEdit' ? '✏️' : key === 'canDelete' ? '🗑️' : key === 'canManageUsers' ? '👥' : key === 'canExport' ? '📤' : key === 'canImport' ? '📥' : key === 'canManageRoles' ? '🎯' : key === 'canViewHistory' ? '📋' : '📱'}</span>
-                    <input type="checkbox" ${perms[key] ? 'checked' : ''} data-perm="${key}" id="perm_${key}">
-                    <label for="perm_${key}" class="perm-label">${permLabels[key] || key}</label>
-                    <span class="perm-status ${perms[key] ? 'active' : 'inactive'}">${perms[key] ? '✅ Вкл' : '❌ Выкл'}</span>
-                </div>
-            `).join('');
-            
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width:500px;">
-                    <div class="modal-header">
-                        <div class="modal-title">⚙️ Разрешения</div>
-                        <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
-                    </div>
-                    <div style="padding:4px 0;">
-                        <div style="font-weight:600; margin-bottom:8px; font-size:15px;">👤 ${escapeHtml(user.email)}</div>
-                        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Роль: ${ROLE_CONFIGS[user.role]?.icon} ${ROLE_CONFIGS[user.role]?.label}</div>
-                        <div class="permissions-grid">${permsHtml}</div>
-                        <div style="margin-top:14px; display:flex; gap:8px;">
-                            <button class="success" onclick="saveUserPermissions('${userId}')" style="flex:1;">💾 Сохранить</button>
-                            <button class="gray" onclick="this.closest('.modal-overlay').remove()" style="flex:0.5;">✕</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            window._permModal = modal;
-        }
-
-        async function saveUserPermissions(userId) {
-            const modal = window._permModal;
-            if (!modal) return;
-            const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
-            const permissions = {};
-            checkboxes.forEach(cb => { permissions[cb.dataset.perm] = cb.checked; });
-            try {
-                await db.collection('users').doc(userId).update({ permissions, permissionsUpdatedAt: new Date().toISOString() });
-                showNotification('✅ Разрешения обновлены', 'success');
-                modal.remove();
-                renderUsersList();
-                sendTelegramNotification(`🔐 Изменены разрешения для ${userId}`);
-            } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
-        }
+        let currentUser = null, currentUserRole = null, currentUserPermissions = null, currentUserData = null;
+        let categories = [], subcategories = [], products = [], users = [];
+        let selectedCategoryId = null, currentSubModalId = null;
+        let currentSubPhotoFile = null, currentProductPhotoFile = null, currentEditPhotoFile = null;
+        let editProductId = null, editSkuList = [];
+        let importFileData = null, importMode = 'add';
+        let unsubCategories = null, unsubSubcategories = null, unsubProducts = null, unsubUsers = null;
 
         // ==================================================
         // 🔐 АВТОРИЗАЦИЯ
@@ -1675,51 +1508,71 @@
         function completeLogin(user) {}
 
         // ==================================================
-        // 👤 АУТЕНТИФИКАЦИЯ
+        // 👤 ОБРАБОТЧИК АУТЕНТИФИКАЦИИ
         // ==================================================
-        let currentUser = null, currentUserRole = null, currentUserPermissions = null, currentUserData = null;
-        let categories = [], subcategories = [], products = [], users = [];
-        let selectedCategoryId = null, currentSubModalId = null;
-        let currentSubPhotoFile = null, currentProductPhotoFile = null, currentEditPhotoFile = null;
-        let editProductId = null, editSkuList = [];
-        let importFileData = null, importMode = 'add';
-        let unsubCategories = null, unsubSubcategories = null, unsubProducts = null, unsubUsers = null;
-
         auth.onAuthStateChanged(async (user) => {
             const authPage = document.getElementById('authPage');
             const appPage = document.getElementById('appPage');
+            
             if (user) {
                 currentUser = user;
                 try {
                     const userDoc = await db.collection('users').doc(user.uid).get();
-                    if (!userDoc.exists) { await auth.signOut(); showNotification('❌ Пользователь не найден', 'error'); return; }
+                    if (!userDoc.exists) { 
+                        await auth.signOut(); 
+                        showNotification('❌ Пользователь не найден', 'error'); 
+                        return; 
+                    }
+                    
                     currentUserData = userDoc.data();
                     currentUserRole = currentUserData.role || ROLES.VIEWER;
                     currentUserPermissions = currentUserData.permissions || ROLE_CONFIGS[currentUserRole]?.permissions || ROLE_CONFIGS.viewer.permissions;
-                    if (currentUserData.status === 'blocked') { await auth.signOut(); showNotification('❌ Аккаунт заблокирован', 'error'); return; }
+                    
+                    if (currentUserData.status === 'blocked') { 
+                        await auth.signOut(); 
+                        showNotification('❌ Аккаунт заблокирован', 'error'); 
+                        return; 
+                    }
+                    
                     authPage.style.display = 'none';
-                    appPage.classList.remove('hidden');
-                    document.getElementById('sideUserEmail').textContent = user.email;
+                    if (appPage) appPage.classList.remove('hidden');
+                    
+                    const sideUserEmail = document.getElementById('sideUserEmail');
+                    if (sideUserEmail) sideUserEmail.textContent = user.email;
+                    
                     const roleConfig = ROLE_CONFIGS[currentUserRole] || ROLE_CONFIGS.viewer;
-                    document.getElementById('sideUserRole').textContent = `Роль: ${roleConfig.icon} ${roleConfig.label}`;
-                    document.getElementById('userRoleDisplay').textContent = `${roleConfig.icon} ${roleConfig.label}`;
-                    applyPermissions();
+                    const sideUserRole = document.getElementById('sideUserRole');
+                    if (sideUserRole) sideUserRole.textContent = `Роль: ${roleConfig.icon} ${roleConfig.label}`;
+                    
+                    const userRoleDisplay = document.getElementById('userRoleDisplay');
+                    if (userRoleDisplay) userRoleDisplay.textContent = `${roleConfig.icon} ${roleConfig.label}`;
+                    
+                    // Применяем права
+                    setTimeout(() => {
+                        applyPermissions();
+                    }, 100);
+                    
                     listenCategories();
                     listenProducts();
+                    
                     if (currentUserPermissions.canManageUsers || currentUserPermissions.canManageRoles) {
                         listenUsers();
-                        document.getElementById('adminMenuItems').classList.remove('hidden');
+                        const adminMenu = document.getElementById('adminMenuItems');
+                        if (adminMenu) adminMenu.classList.remove('hidden');
                     }
+                    
                     updateSyncStatus('✅ Готово', 'online');
                     setLanguage(currentLanguage);
                     loadTheme();
-                    // Проверяем Telegram Chat ID
+                    
+                    // Проверка Telegram
                     if (!currentUserData.telegramChatId) {
                         setTimeout(() => {
                             const chatId = prompt('📱 Введите ваш Telegram Chat ID для получения уведомлений (или пропустите):');
                             if (chatId) {
                                 db.collection('users').doc(user.uid).update({ telegramChatId: chatId });
                                 showNotification('✅ Telegram ID сохранён!', 'success');
+                                sendTelegramNotification(`📱 Пользователь ${user.email} подключил Telegram уведомления`);
                             }
                         }, 2000);
                     }
@@ -1728,8 +1581,9 @@
                     showNotification('❌ Ошибка загрузки данных', 'error');
                 }
             } else {
-                authPage.style.display = 'block';
-                appPage.classList.add('hidden');
+                if (authPage) authPage.style.display = 'block';
+                if (appPage) appPage.classList.add('hidden');
+                
                 if (unsubCategories) { unsubCategories(); unsubCategories = null; }
                 if (unsubSubcategories) { unsubSubcategories(); unsubSubcategories = null; }
                 if (unsubProducts) { unsubProducts(); unsubProducts = null; }
@@ -1738,29 +1592,46 @@
         });
 
         // ==================================================
-        // 🔑 ПРАВА
+        // 🔑 ПРАВА (ИСПРАВЛЕННАЯ ВЕРСИЯ)
         // ==================================================
         function hasPermission(p) { return currentUserPermissions && currentUserPermissions[p] === true; }
         function checkPermission(p) { if (!hasPermission(p)) { showNotification('⛔ Недостаточно прав', 'error'); return false; } return true; }
 
+        function safeApplyStyles(id, styles) {
+            const el = document.getElementById(id);
+            if (el) {
+                Object.assign(el.style, styles);
+            }
+            return el;
+        }
+
         function applyPermissions() {
-            const c = hasPermission('canCreate'), e = hasPermission('canEdit'), d = hasPermission('canDelete');
-            const ex = hasPermission('canExport'), im = hasPermission('canImport'), mu = hasPermission('canManageUsers');
-            document.getElementById('addCategoryBtn').style.display = c ? 'inline-flex' : 'none';
-            document.getElementById('addSubcategoryBtn').style.display = c ? 'inline-flex' : 'none';
-            document.getElementById('addSubPhotoBtn').style.display = c ? 'inline-flex' : 'none';
-            document.getElementById('addProductRow').style.display = c ? 'flex' : 'none';
-            document.getElementById('addProductBtn').style.display = c ? 'inline-flex' : 'none';
-            document.getElementById('addProductPhotoBtn').style.display = c ? 'inline-flex' : 'none';
-            document.getElementById('exportBtn').style.display = ex ? 'inline-flex' : 'none';
-            document.getElementById('importBtn').style.display = im ? 'inline-flex' : 'none';
-            document.getElementById('adminMenuItems').style.display = mu ? 'block' : 'none';
-            document.getElementById('editSaveBtn').style.display = e ? 'inline-flex' : 'none';
-            document.getElementById('editDeleteBtn').style.display = d ? 'inline-flex' : 'none';
+            const canCreate = hasPermission('canCreate');
+            const canEdit = hasPermission('canEdit');
+            const canDelete = hasPermission('canDelete');
+            const canExport = hasPermission('canExport');
+            const canImport = hasPermission('canImport');
+            const canManageUsers = hasPermission('canManageUsers');
+            
+            safeApplyStyles('addCategoryBtn', { display: canCreate ? 'inline-flex' : 'none' });
+            safeApplyStyles('addSubcategoryBtn', { display: canCreate ? 'inline-flex' : 'none' });
+            safeApplyStyles('addSubPhotoBtn', { display: canCreate ? 'inline-flex' : 'none' });
+            safeApplyStyles('addProductRow', { display: canCreate ? 'flex' : 'none' });
+            safeApplyStyles('addProductBtn', { display: canCreate ? 'inline-flex' : 'none' });
+            safeApplyStyles('addProductPhotoBtn', { display: canCreate ? 'inline-flex' : 'none' });
+            safeApplyStyles('exportBtn', { display: canExport ? 'inline-flex' : 'none' });
+            safeApplyStyles('importBtn', { display: canImport ? 'inline-flex' : 'none' });
+            safeApplyStyles('editSaveBtn', { display: canEdit ? 'inline-flex' : 'none' });
+            safeApplyStyles('editDeleteBtn', { display: canDelete ? 'inline-flex' : 'none' });
+            
+            const adminMenu = document.getElementById('adminMenuItems');
+            if (adminMenu) {
+                adminMenu.style.display = canManageUsers ? 'block' : 'none';
+            }
         }
 
         // ==================================================
-        // 👥 ПОЛЬЗОВАТЕЛИ (CRUD)
+        // 👥 ПОЛЬЗОВАТЕЛИ
         // ==================================================
         function listenUsers() {
             if (unsubUsers) unsubUsers();
@@ -1787,6 +1658,117 @@
         }
 
         function closeUsersModal() { document.getElementById('usersModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
+
+        function renderUsersList() {
+            const list = document.getElementById('usersList');
+            const count = document.getElementById('usersModalCount');
+            count.textContent = `(${users.length})`;
+            if (users.length === 0) { list.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Нет пользователей</p></div>'; return; }
+            
+            let html = '<div style="display:grid; gap:10px;">';
+            users.forEach(u => {
+                const isSelf = currentUser && u.id === currentUser.uid;
+                const roleConfig = ROLE_CONFIGS[u.role] || ROLE_CONFIGS.viewer;
+                const perms = u.permissions || roleConfig.permissions;
+                const permKeys = Object.keys(perms);
+                
+                html += `
+                    <div style="background:var(--bg-card); border-radius:12px; padding:14px; border:1px solid var(--border-color);">
+                        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                            <div style="width:40px; height:40px; border-radius:50%; background:var(--accent-color); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; flex-shrink:0;">${(u.name || u.email || 'U')[0].toUpperCase()}</div>
+                            <div style="flex:1; min-width:120px;">
+                                <div style="font-weight:600; font-size:14px;">${escapeHtml(u.name || u.email)}</div>
+                                <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(u.email)}</div>
+                                <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
+                                    <span style="font-size:13px;">${roleConfig.icon}</span>
+                                    <span style="font-weight:600; font-size:13px;">${roleConfig.label}</span>
+                                    ${isSelf ? ' <span style="font-size:11px; color:var(--text-muted);">(Вы)</span>' : ''}
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+                                ${isSelf ? '' : `
+                                    <select onchange="changeUserRole('${u.id}', this.value)" style="padding:4px 8px; font-size:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);">
+                                        ${Object.entries(ROLE_CONFIGS).map(([key, cfg]) => `<option value="${key}" ${u.role === key ? 'selected' : ''}>${cfg.icon} ${cfg.label}</option>`).join('')}
+                                    </select>
+                                    <button class="small purple" onclick="editUserPermissions('${u.id}')" style="padding:4px 10px; font-size:12px;">⚙️</button>
+                                    ${currentUserRole === 'it' || currentUserRole === 'admin' ? `<button class="small danger" onclick="deleteUser('${u.id}')" style="padding:4px 10px; font-size:12px;">🗑️</button>` : ''}
+                                `}
+                            </div>
+                        </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; padding-top:8px; border-top:1px solid var(--border-color);">
+                            ${permKeys.map(k => `
+                                <span style="display:inline-flex; align-items:center; gap:3px; padding:2px 10px; border-radius:10px; font-size:10px; font-weight:600; ${perms[k] ? 'background:rgba(46,204,113,0.15); color:var(--success-color);' : 'background:rgba(231,76,60,0.1); color:var(--danger-color);'}">
+                                    ${perms[k] ? '✅' : '❌'} ${k.replace('can','')}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            list.innerHTML = html;
+        }
+
+        function editUserPermissions(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            const perms = user.permissions || ROLE_CONFIGS[user.role]?.permissions || ROLE_CONFIGS.viewer.permissions;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay show';
+            modal.style.display = 'flex';
+            
+            const permLabels = {
+                canView: '👁️ Просмотр', canCreate: '➕ Создание', canEdit: '✏️ Редактирование',
+                canDelete: '🗑️ Удаление', canManageUsers: '👥 Управление', canExport: '📤 Экспорт',
+                canImport: '📥 Импорт', canManageRoles: '🎯 Роли', canViewHistory: '📋 История',
+                canSendNotifications: '📱 Уведомления'
+            };
+            
+            let permsHtml = Object.keys(perms).map(key => `
+                <div class="perm-item" style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--border-color); border-radius:8px; margin:4px 0;">
+                    <span style="font-size:16px;">${key === 'canView' ? '👁️' : key === 'canCreate' ? '➕' : key === 'canEdit' ? '✏️' : key === 'canDelete' ? '🗑️' : key === 'canManageUsers' ? '👥' : key === 'canExport' ? '📤' : key === 'canImport' ? '📥' : key === 'canManageRoles' ? '🎯' : key === 'canViewHistory' ? '📋' : '📱'}</span>
+                    <input type="checkbox" ${perms[key] ? 'checked' : ''} data-perm="${key}" id="perm_${key}" style="width:16px; height:16px; accent-color:var(--accent-color);">
+                    <label for="perm_${key}" style="flex:1; font-size:13px; font-weight:500;">${permLabels[key] || key}</label>
+                    <span style="font-size:11px; padding:2px 10px; border-radius:8px; font-weight:600; ${perms[key] ? 'background:rgba(46,204,113,0.15); color:var(--success-color);' : 'background:rgba(231,76,60,0.1); color:var(--danger-color);'}">${perms[key] ? '✅ Вкл' : '❌ Выкл'}</span>
+                </div>
+            `).join('');
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:500px;">
+                    <div class="modal-header">
+                        <div class="modal-title">⚙️ Разрешения</div>
+                        <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
+                    </div>
+                    <div style="padding:4px 0;">
+                        <div style="font-weight:600; margin-bottom:8px; font-size:15px;">👤 ${escapeHtml(user.email)}</div>
+                        <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Роль: ${ROLE_CONFIGS[user.role]?.icon} ${ROLE_CONFIGS[user.role]?.label}</div>
+                        <div style="display:grid; gap:4px;">${permsHtml}</div>
+                        <div style="margin-top:14px; display:flex; gap:8px;">
+                            <button class="success" onclick="saveUserPermissions('${userId}')" style="flex:1;">💾 Сохранить</button>
+                            <button class="gray" onclick="this.closest('.modal-overlay').remove()" style="flex:0.5;">✕</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            window._permModal = modal;
+        }
+
+        async function saveUserPermissions(userId) {
+            const modal = window._permModal;
+            if (!modal) return;
+            const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
+            const permissions = {};
+            checkboxes.forEach(cb => { permissions[cb.dataset.perm] = cb.checked; });
+            try {
+                await db.collection('users').doc(userId).update({ permissions, permissionsUpdatedAt: new Date().toISOString() });
+                showNotification('✅ Разрешения обновлены', 'success');
+                modal.remove();
+                renderUsersList();
+                sendTelegramNotification(`🔐 Изменены разрешения для пользователя`);
+            } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
+        }
 
         async function changeUserRole(userId, newRole) {
             if (!hasPermission('canManageRoles')) { showNotification('⛔ Недостаточно прав', 'error'); return; }
@@ -2149,7 +2131,7 @@
         function closeLowStockModal() { document.getElementById('lowStockModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
 
         // ==================================================
-        // 📤 ЭКСПОРТ (улучшенный)
+        // 📤 ЭКСПОРТ
         // ==================================================
         function exportToExcel() {
             if (!checkPermission('canExport')) return;
@@ -2209,7 +2191,7 @@
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(link.href);
-                showNotification(`✅ Экспортировано ${products.length} товаров (${fields.length} полей)`, 'success');
+                showNotification(`✅ Экспортировано ${products.length} товаров`, 'success');
             } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
         }
 
@@ -2383,6 +2365,10 @@
             console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram');
             loadTheme();
             setLanguage(currentLanguage);
+            
+            // Проверка Telegram бота
+            setTimeout(testTelegramBot, 3000);
+            
             const dropZone = document.getElementById('fileDropZone');
             if (dropZone) {
                 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent-color)'; dropZone.style.background = 'var(--border-color)'; });
@@ -2396,6 +2382,8 @@
 
         console.log('✅ Все функции загружены!');
         console.log('📋 Доступные функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram');
+        console.log('📱 Telegram бот токен:', TELEGRAM_BOT_TOKEN ? '✅ Установлен' : '❌ Не установлен');
+        console.log('📱 Telegram Chat ID:', TELEGRAM_CHAT_ID ? '✅ Установлен' : '❌ Не установлен');
     </script>
 </body>
 </html>
