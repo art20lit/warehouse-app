@@ -34,6 +34,9 @@
             .side-menu .menu-item:hover { background: rgba(255,255,255,0.05); }
             .auth-tabs { background: #2d2d2d; }
             .auth-tabs button.active { background: #3d3d3d; }
+            .permissions-editor .perm-group { background: rgba(255,255,255,0.05); }
+            .permissions-editor .perm-item .perm-label { color: #ddd; }
+            .permissions-editor .perm-item:hover { background: rgba(36, 129, 204, 0.1); }
         }
         
         .hidden { display: none !important; }
@@ -429,11 +432,139 @@
         .product-item .p-min-stock { font-size: 11px; color: #999; }
         
         /* ============================================
+           УЛУЧШЕННОЕ УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ
+           ============================================ */
+        
+        /* Статус пользователя */
+        .user-status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .user-status-badge.active {
+            background: rgba(0, 184, 148, 0.15);
+            color: #00b894;
+        }
+        .user-status-badge.blocked {
+            background: rgba(255, 92, 92, 0.15);
+            color: #ff5c5c;
+        }
+        
+        /* Кнопки действий пользователя */
+        .user-card .user-actions .action-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .user-card .user-actions .action-group .role-select {
+            flex: 2;
+            min-width: 120px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+            background: white;
+        }
+        .user-card .user-actions .action-group .action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .user-card .user-actions .action-group .action-btn:hover {
+            transform: scale(1.05);
+        }
+        .user-card .user-actions .action-group .action-btn:active {
+            transform: scale(0.95);
+        }
+        .user-card .user-actions .action-group .btn-edit {
+            background: #6c5ce7;
+            color: white;
+        }
+        .user-card .user-actions .action-group .btn-edit:hover {
+            background: #5a4bd1;
+        }
+        .user-card .user-actions .action-group .btn-delete {
+            background: #ff5c5c;
+            color: white;
+        }
+        .user-card .user-actions .action-group .btn-delete:hover {
+            background: #e04444;
+        }
+        .user-card .user-actions .action-group .btn-block {
+            background: #fdcb6e;
+            color: #333;
+        }
+        .user-card .user-actions .action-group .btn-block:hover {
+            background: #f0c050;
+        }
+        .user-card .user-actions .action-group .btn-unblock {
+            background: #00b894;
+            color: white;
+        }
+        .user-card .user-actions .action-group .btn-unblock:hover {
+            background: #00a381;
+        }
+        
+        /* Модалка редактирования разрешений */
+        .permissions-editor {
+            padding: 10px 0;
+        }
+        .permissions-editor .perm-group {
+            margin: 12px 0;
+            padding: 12px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 10px;
+        }
+        .permissions-editor .perm-group-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .permissions-editor .perm-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 6px;
+            padding: 6px 10px;
+        }
+        .permissions-editor .perm-item:hover {
+            background: rgba(36, 129, 204, 0.05);
+        }
+        .permissions-editor .perm-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #2481cc;
+        }
+        .permissions-editor .perm-item .perm-label {
+            font-size: 14px;
+            color: #333;
+        }
+        .permissions-editor .perm-item .perm-desc {
+            font-size: 12px;
+            color: #999;
+            margin-left: 8px;
+        }
+        
+        /* ============================================
            ПОЛЬЗОВАТЕЛИ
            ============================================ */
         .user-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
             gap: 12px;
             margin-top: 12px;
         }
@@ -500,28 +631,6 @@
         }
         .permission-tag.active { background: rgba(0, 184, 148, 0.15); color: #00b894; }
         .permission-tag.inactive { background: rgba(255, 92, 92, 0.1); color: #ff5c5c; }
-        
-        .user-card .user-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-        .user-card .user-actions button {
-            padding: 4px 12px;
-            font-size: 12px;
-            border-radius: 8px;
-            width: auto;
-        }
-        .user-card .user-actions select {
-            padding: 4px 8px;
-            font-size: 12px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            width: auto;
-            flex: 1;
-            min-width: 100px;
-        }
         
         /* ============================================
            МОДАЛЬНЫЕ ОКНА
@@ -767,6 +876,8 @@
             .add-product-row button { width: 100%; }
             .edit-actions { flex-direction: column; }
             .edit-actions button { min-width: auto; }
+            .user-card .user-actions .action-group { flex-direction: column; }
+            .user-card .user-actions .action-group .role-select { width: 100%; }
         }
     </style>
 </head>
@@ -1025,7 +1136,7 @@
         </div>
 
         <!-- ============================================
-        МОДАЛЬНОЕ ОКНО ПОЛЬЗОВАТЕЛЕЙ
+        МОДАЛЬНОЕ ОКНО ПОЛЬЗОВАТЕЛЕЙ (УЛУЧШЕННОЕ)
         ============================================ -->
         <div class="modal-overlay" id="usersModal">
             <div class="modal-content">
@@ -1035,7 +1146,10 @@
                         <span>Управление пользователями</span>
                         <span class="count" id="usersModalCount"></span>
                     </div>
-                    <button class="close-btn" onclick="closeUsersModal()">✕</button>
+                    <div>
+                        <button class="small" onclick="renderUsersList()" style="margin-right:8px;">🔄 Обновить</button>
+                        <button class="close-btn" onclick="closeUsersModal()">✕</button>
+                    </div>
                 </div>
                 <div id="usersList"></div>
             </div>
@@ -1525,7 +1639,7 @@
         }
 
         // ==================================================
-        // 👥 УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ
+        // 👥 УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ (УЛУЧШЕННОЕ)
         // ==================================================
         function listenUsers() {
             if (unsubUsers) unsubUsers();
@@ -1573,6 +1687,9 @@
             document.body.style.overflow = 'auto';
         }
 
+        // ==================================================
+        // 📋 ОТОБРАЖЕНИЕ СПИСКА ПОЛЬЗОВАТЕЛЕЙ (С УДАЛЕНИЕМ)
+        // ==================================================
         function renderUsersList() {
             const list = document.getElementById('usersList');
             const count = document.getElementById('usersModalCount');
@@ -1585,19 +1702,26 @@
             
             let html = '<div class="user-grid">';
             users.forEach(u => {
+                // Пропускаем самого себя для удаления (нельзя удалить себя)
+                const isSelf = currentUser && u.id === currentUser.uid;
                 const initials = (u.name || u.email || 'U').charAt(0).toUpperCase();
                 const roleClass = u.role || 'viewer';
                 const perms = u.permissions || DEFAULT_PERMISSIONS[u.role] || DEFAULT_PERMISSIONS.viewer;
+                const statusClass = u.status === 'blocked' ? 'blocked' : 'active';
+                const statusText = u.status === 'blocked' ? '🔒 Заблокирован' : '✅ Активен';
                 
                 html += `
-                    <div class="user-card">
+                    <div class="user-card" data-userid="${u.id}">
                         <div class="user-header">
                             <div class="user-avatar">${initials}</div>
                             <div class="user-info">
                                 <div class="user-email">${escapeHtml(u.email)}</div>
                                 <div class="user-name">${escapeHtml(u.name || 'Без имени')}</div>
-                                <span class="user-role-badge ${roleClass}">${getRoleDisplay(u.role)}</span>
-                                ${u.status === 'blocked' ? ' <span style="color:#ff5c5c; font-size:12px;">🔒 Заблокирован</span>' : ''}
+                                <div>
+                                    <span class="user-role-badge ${roleClass}">${getRoleDisplay(u.role)}</span>
+                                    <span class="user-status-badge ${statusClass}">${statusText}</span>
+                                    ${isSelf ? ' <span style="font-size:11px; color:#999;">(Вы)</span>' : ''}
+                                </div>
                             </div>
                         </div>
                         
@@ -1615,19 +1739,30 @@
                         </div>
                         
                         <div class="user-actions">
-                            <select onchange="changeUserRole('${u.id}', this.value)">
-                                <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>👀 Наблюдатель</option>
-                                <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>📋 Менеджер</option>
-                                <option value="it" ${u.role === 'it' ? 'selected' : ''}>💻 IT-специалист</option>
-                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>👑 Администратор</option>
-                            </select>
-                            
-                            <button class="success" onclick="editUserPermissions('${u.id}')">⚙️</button>
-                            
-                            ${u.status === 'blocked' ? 
-                                `<button class="success" onclick="unblockUser('${u.id}')">🔓</button>` :
-                                `<button class="danger" onclick="blockUser('${u.id}')">🔒</button>`
-                            }
+                            <div class="action-group">
+                                <select class="role-select" onchange="changeUserRole('${u.id}', this.value)" ${isSelf ? 'disabled' : ''}>
+                                    <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>👀 Наблюдатель</option>
+                                    <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>📋 Менеджер</option>
+                                    <option value="it" ${u.role === 'it' ? 'selected' : ''}>💻 IT-специалист</option>
+                                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>👑 Администратор</option>
+                                </select>
+                                
+                                <button class="action-btn btn-edit" onclick="editUserPermissions('${u.id}')" title="Редактировать разрешения">
+                                    ⚙️
+                                </button>
+                                
+                                ${!isSelf ? `
+                                    ${u.status === 'blocked' ? 
+                                        `<button class="action-btn btn-unblock" onclick="unblockUser('${u.id}')" title="Разблокировать">🔓</button>` :
+                                        `<button class="action-btn btn-block" onclick="blockUser('${u.id}')" title="Заблокировать">🔒</button>`
+                                    }
+                                    <button class="action-btn btn-delete" onclick="deleteUser('${u.id}')" title="Удалить пользователя">
+                                        🗑️
+                                    </button>
+                                ` : `
+                                    <span style="font-size:11px; color:#999; padding:6px;">Нельзя удалить себя</span>
+                                `}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1665,61 +1800,120 @@
             }
         }
 
+        // ==================================================
+        // ⚙️ УЛУЧШЕННОЕ РЕДАКТИРОВАНИЕ РАЗРЕШЕНИЙ
+        // ==================================================
         function editUserPermissions(userId) {
             const user = users.find(u => u.id === userId);
-            if (!user) return;
+            if (!user) {
+                showNotification('❌ Пользователь не найден', 'error');
+                return;
+            }
+            
+            // Нельзя редактировать себя (чтобы не потерять доступ)
+            if (currentUser && user.id === currentUser.uid) {
+                showNotification('⚠️ Нельзя редактировать свои разрешения через этот интерфейс', 'warning');
+                return;
+            }
             
             const perms = user.permissions || DEFAULT_PERMISSIONS[user.role] || DEFAULT_PERMISSIONS.viewer;
             
+            // Создаем модальное окно
             const modal = document.createElement('div');
             modal.className = 'modal-overlay show';
             modal.style.display = 'flex';
             
-            const permKeys = ['canView', 'canCreate', 'canEdit', 'canDelete', 'canManageUsers', 'canExport', 'canImport', 'canManageRoles'];
-            const permLabels = {
-                canView: '👁️ Просмотр',
-                canCreate: '➕ Создание',
-                canEdit: '✏️ Редактирование',
-                canDelete: '🗑️ Удаление',
-                canManageUsers: '👥 Управление пользователями',
-                canExport: '📤 Экспорт',
-                canImport: '📥 Импорт',
-                canManageRoles: '🎯 Управление ролями'
-            };
+            // Группировка разрешений
+            const permGroups = [
+                {
+                    title: '📋 Основные права',
+                    keys: ['canView', 'canCreate', 'canEdit', 'canDelete'],
+                    labels: {
+                        canView: 'Просмотр товаров',
+                        canCreate: 'Создание товаров',
+                        canEdit: 'Редактирование товаров',
+                        canDelete: 'Удаление товаров'
+                    }
+                },
+                {
+                    title: '👥 Управление',
+                    keys: ['canManageUsers', 'canManageRoles'],
+                    labels: {
+                        canManageUsers: 'Управление пользователями',
+                        canManageRoles: 'Управление ролями'
+                    }
+                },
+                {
+                    title: '📊 Данные',
+                    keys: ['canExport', 'canImport'],
+                    labels: {
+                        canExport: 'Экспорт данных',
+                        canImport: 'Импорт данных'
+                    }
+                }
+            ];
             
-            let checkboxesHtml = permKeys.map(key => `
-                <div style="margin:8px 0;">
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                        <input type="checkbox" ${perms[key] ? 'checked' : ''} data-perm="${key}">
-                        ${permLabels[key]}
-                    </label>
-                </div>
-            `).join('');
+            let groupsHtml = '';
+            permGroups.forEach(group => {
+                let itemsHtml = '';
+                group.keys.forEach(key => {
+                    const label = group.labels[key] || key;
+                    itemsHtml += `
+                        <label class="perm-item">
+                            <input type="checkbox" ${perms[key] ? 'checked' : ''} data-perm="${key}">
+                            <span class="perm-label">${label}</span>
+                            <span class="perm-desc">${perms[key] ? '✅ Включено' : '❌ Отключено'}</span>
+                        </label>
+                    `;
+                });
+                groupsHtml += `
+                    <div class="perm-group">
+                        <div class="perm-group-title">${group.title}</div>
+                        ${itemsHtml}
+                    </div>
+                `;
+            });
             
             modal.innerHTML = `
-                <div class="modal-content" style="max-width:500px;">
+                <div class="modal-content" style="max-width:550px;">
                     <div class="modal-header">
-                        <div class="modal-title">⚙️ Редактирование разрешений</div>
+                        <div class="modal-title">
+                            ⚙️ Редактирование разрешений
+                        </div>
                         <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
                     </div>
-                    <div style="padding:10px 0;">
-                        <div style="font-weight:600; margin-bottom:12px;">${escapeHtml(user.email)}</div>
+                    <div class="permissions-editor">
+                        <div style="margin-bottom:16px; padding:12px; background:rgba(36,129,204,0.05); border-radius:10px;">
+                            <div style="font-weight:600;">👤 ${escapeHtml(user.email)}</div>
+                            <div style="font-size:13px; color:#666;">Текущая роль: ${getRoleDisplay(user.role)}</div>
+                        </div>
+                        
                         <div style="margin-bottom:16px;">
-                            <label style="display:block; font-size:13px; color:#666; margin-bottom:4px;">Роль:</label>
-                            <select id="editRoleSelect" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd;">
+                            <label style="display:block; font-size:13px; font-weight:600; color:#666; margin-bottom:6px;">Изменить роль:</label>
+                            <select id="editRoleSelect" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd;">
                                 <option value="viewer" ${user.role === 'viewer' ? 'selected' : ''}>👀 Наблюдатель</option>
                                 <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>📋 Менеджер</option>
                                 <option value="it" ${user.role === 'it' ? 'selected' : ''}>💻 IT-специалист</option>
                                 <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>👑 Администратор</option>
                             </select>
                         </div>
-                        <div style="border-top:1px solid #eee; padding-top:12px;">
-                            <div style="font-weight:600; margin-bottom:8px;">🔐 Индивидуальные разрешения:</div>
-                            ${checkboxesHtml}
+                        
+                        <div style="border-top:1px solid #eee; padding-top:12px; margin-top:12px;">
+                            <div style="font-size:13px; font-weight:600; color:#666; margin-bottom:8px;">🔐 Индивидуальные разрешения:</div>
+                            ${groupsHtml}
                         </div>
+                        
                         <div style="margin-top:16px; display:flex; gap:8px;">
-                            <button class="success" onclick="savePermissions('${userId}')" style="flex:1;">💾 Сохранить</button>
-                            <button class="gray" onclick="this.closest('.modal-overlay').remove()" style="flex:0.5;">✕</button>
+                            <button class="success" onclick="savePermissions('${userId}')" style="flex:1; padding:14px;">
+                                💾 Сохранить
+                            </button>
+                            <button class="gray" onclick="this.closest('.modal-overlay').remove()" style="flex:0.5; padding:14px;">
+                                ✕ Отмена
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top:12px; padding:12px; background:rgba(255,92,92,0.05); border-radius:8px; font-size:12px; color:#999;">
+                            ⚠️ Изменения вступят в силу после перезагрузки страницы у пользователя
                         </div>
                     </div>
                 </div>
@@ -1729,20 +1923,45 @@
             window._permModal = modal;
         }
 
+        // ==================================================
+        // 💾 СОХРАНЕНИЕ РАЗРЕШЕНИЙ
+        // ==================================================
         async function savePermissions(userId) {
             const modal = window._permModal;
-            if (!modal) return;
-            
-            const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
-            const permissions = {};
-            checkboxes.forEach(cb => {
-                permissions[cb.dataset.perm] = cb.checked;
-            });
-            
-            const roleSelect = modal.querySelector('#editRoleSelect');
-            const newRole = roleSelect.value;
+            if (!modal) {
+                showNotification('❌ Ошибка: модальное окно не найдено', 'error');
+                return;
+            }
             
             try {
+                const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
+                const permissions = {};
+                checkboxes.forEach(cb => {
+                    permissions[cb.dataset.perm] = cb.checked;
+                });
+                
+                const roleSelect = modal.querySelector('#editRoleSelect');
+                const newRole = roleSelect.value;
+                
+                // Проверка: нельзя убрать у всех права на просмотр
+                if (!permissions.canView) {
+                    if (!confirm('⚠️ Вы отключаете право на просмотр. Пользователь не сможет видеть данные. Продолжить?')) {
+                        return;
+                    }
+                }
+                
+                // Проверка: последний администратор
+                if (newRole !== 'admin') {
+                    const admins = users.filter(u => u.role === 'admin' && u.status !== 'blocked' && u.id !== userId);
+                    const targetUser = users.find(u => u.id === userId);
+                    if (targetUser && targetUser.role === 'admin' && admins.length === 0) {
+                        showNotification('❌ Нельзя понизить последнего администратора', 'error');
+                        return;
+                    }
+                }
+                
+                showNotification('⏳ Сохранение...', 'info');
+                
                 await db.collection('users').doc(userId).update({
                     role: newRole,
                     permissions: permissions,
@@ -1750,14 +1969,41 @@
                     permissionsUpdatedBy: currentUser.uid
                 });
                 
-                showNotification('✅ Разрешения обновлены', 'success');
+                showNotification('✅ Разрешения обновлены!', 'success');
                 modal.remove();
-            } catch (e) {
-                showNotification('❌ Ошибка: ' + e.message, 'error');
+                
+                // Логируем
+                try {
+                    await db.collection('logs').add({
+                        action: 'permissions_updated',
+                        userId: userId,
+                        newPermissions: permissions,
+                        newRole: newRole,
+                        changedBy: currentUser.uid,
+                        timestamp: new Date().toISOString()
+                    });
+                } catch (logError) {
+                    console.warn('⚠️ Не удалось записать лог:', logError);
+                }
+                
+                // Обновляем список
+                setTimeout(() => renderUsersList(), 500);
+                
+            } catch (error) {
+                console.error('❌ Ошибка сохранения:', error);
+                showNotification('❌ Ошибка: ' + error.message, 'error');
             }
         }
 
+        // ==================================================
+        // 🔒 БЛОКИРОВКА/РАЗБЛОКИРОВКА
+        // ==================================================
         async function blockUser(userId) {
+            if (!hasPermission('canManageUsers')) {
+                showNotification('⛔ Недостаточно прав', 'error');
+                return;
+            }
+            
             if (!confirm('Заблокировать пользователя?')) return;
             try {
                 await db.collection('users').doc(userId).update({
@@ -1772,6 +2018,11 @@
         }
 
         async function unblockUser(userId) {
+            if (!hasPermission('canManageUsers')) {
+                showNotification('⛔ Недостаточно прав', 'error');
+                return;
+            }
+            
             if (!confirm('Разблокировать пользователя?')) return;
             try {
                 await db.collection('users').doc(userId).update({
@@ -1782,6 +2033,88 @@
                 showNotification('🔓 Пользователь разблокирован', 'success');
             } catch (e) {
                 showNotification('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        // ==================================================
+        // 🗑️ УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
+        // ==================================================
+        async function deleteUser(userId) {
+            // Проверяем права
+            if (!hasPermission('canManageUsers') && !hasPermission('canManageRoles')) {
+                showNotification('⛔ Недостаточно прав для удаления пользователей', 'error');
+                return;
+            }
+            
+            // Находим пользователя
+            const user = users.find(u => u.id === userId);
+            if (!user) {
+                showNotification('❌ Пользователь не найден', 'error');
+                return;
+            }
+            
+            // Нельзя удалить себя
+            if (currentUser && user.id === currentUser.uid) {
+                showNotification('❌ Нельзя удалить самого себя', 'error');
+                return;
+            }
+            
+            // Нельзя удалить последнего администратора
+            const admins = users.filter(u => u.role === 'admin' && u.status !== 'blocked');
+            if (user.role === 'admin' && admins.length <= 1) {
+                showNotification('❌ Нельзя удалить последнего администратора', 'error');
+                return;
+            }
+            
+            // Подтверждение
+            const confirmMsg = `Вы уверены, что хотите удалить пользователя?\n\n📧 Email: ${user.email}\n👤 Имя: ${user.name || 'Без имени'}\n👑 Роль: ${getRoleDisplay(user.role)}\n\n⚠️ ВНИМАНИЕ: Это действие необратимо!`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            try {
+                // Показываем загрузку
+                showNotification('⏳ Удаление пользователя...', 'info');
+                
+                // 1. Удаляем данные пользователя из Firestore
+                await db.collection('users').doc(userId).delete();
+                
+                // 2. Сохраняем запись об удалении
+                try {
+                    await db.collection('users_deleted').doc(userId).set({
+                        uid: userId,
+                        email: user.email,
+                        name: user.name,
+                        deletedAt: new Date().toISOString(),
+                        deletedBy: currentUser.uid
+                    });
+                } catch (authError) {
+                    console.warn('⚠️ Не удалось сохранить запись об удалении:', authError);
+                }
+                
+                showNotification(`✅ Пользователь ${user.email} удалён`, 'success');
+                
+                // Логируем
+                try {
+                    await db.collection('logs').add({
+                        action: 'user_deleted',
+                        userId: userId,
+                        userEmail: user.email,
+                        deletedBy: currentUser.uid,
+                        timestamp: new Date().toISOString()
+                    });
+                } catch (logError) {
+                    console.warn('⚠️ Не удалось записать лог:', logError);
+                }
+                
+                // Обновляем список
+                users = users.filter(u => u.id !== userId);
+                renderUsersList();
+                
+            } catch (error) {
+                console.error('❌ Ошибка удаления:', error);
+                showNotification('❌ Ошибка удаления: ' + error.message, 'error');
             }
         }
 
@@ -2766,6 +3099,197 @@
             document.getElementById('sideOverlay').classList.remove('open');
             document.body.style.overflow = 'auto';
         }
+
+        // ==================================================
+        // 👑 СПЕЦИАЛЬНАЯ НАСТРОЙКА ДЛЯ АРХИПА
+        // ==================================================
+        const ADMIN_EMAIL = 'arhip.litvinenko.art80@mail.ru';
+        const ADMIN_PASSWORD = 'a_L.arhip1';
+        const ADMIN_NAME = 'Архип Александрович Литвиненко';
+
+        async function setupAdminUser() {
+            try {
+                console.log('🔧 Проверка пользователя:', ADMIN_EMAIL);
+                
+                try {
+                    await auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
+                    console.log('✅ Вход выполнен');
+                    
+                    setTimeout(async () => {
+                        const user = auth.currentUser;
+                        if (user) {
+                            await updateUserToIT(user);
+                        }
+                    }, 1000);
+                    
+                    return;
+                } catch (loginError) {
+                    console.log('⚠️ Вход не удался, создаём пользователя...');
+                    
+                    try {
+                        const userCredential = await auth.createUserWithEmailAndPassword(
+                            ADMIN_EMAIL, 
+                            ADMIN_PASSWORD
+                        );
+                        const user = userCredential.user;
+                        
+                        console.log('✅ Пользователь создан в Auth');
+                        
+                        await user.updateProfile({
+                            displayName: ADMIN_NAME
+                        });
+                        
+                        await db.collection('users').doc(user.uid).set({
+                            uid: user.uid,
+                            email: ADMIN_EMAIL,
+                            name: ADMIN_NAME,
+                            role: 'it',
+                            permissions: {
+                                canView: true,
+                                canCreate: true,
+                                canEdit: true,
+                                canDelete: true,
+                                canManageUsers: true,
+                                canExport: true,
+                                canImport: true,
+                                canManageRoles: true
+                            },
+                            status: 'active',
+                            createdAt: new Date().toISOString(),
+                            createdBy: 'system',
+                            isSpecialAdmin: true
+                        });
+                        
+                        console.log('✅ Пользователь сохранён в Firestore с ролью IT');
+                        console.log('🎉 ГОТОВО! Войдите в систему.');
+                        
+                        await auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
+                        
+                    } catch (createError) {
+                        console.error('❌ Ошибка создания:', createError);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Ошибка настройки:', error);
+            }
+        }
+
+        async function updateUserToIT(user) {
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                
+                if (!userDoc.exists) {
+                    console.log('⚠️ Документ пользователя не найден, создаём...');
+                    await db.collection('users').doc(user.uid).set({
+                        uid: user.uid,
+                        email: ADMIN_EMAIL,
+                        name: ADMIN_NAME,
+                        role: 'it',
+                        permissions: {
+                            canView: true,
+                            canCreate: true,
+                            canEdit: true,
+                            canDelete: true,
+                            canManageUsers: true,
+                            canExport: true,
+                            canImport: true,
+                            canManageRoles: true
+                        },
+                        status: 'active',
+                        createdAt: new Date().toISOString(),
+                        createdBy: 'system',
+                        isSpecialAdmin: true
+                    });
+                    console.log('✅ Документ создан с ролью IT');
+                } else {
+                    const data = userDoc.data();
+                    if (data.role !== 'it' || !data.permissions?.canManageRoles) {
+                        await db.collection('users').doc(user.uid).update({
+                            role: 'it',
+                            permissions: {
+                                canView: true,
+                                canCreate: true,
+                                canEdit: true,
+                                canDelete: true,
+                                canManageUsers: true,
+                                canExport: true,
+                                canImport: true,
+                                canManageRoles: true
+                            },
+                            status: 'active',
+                            updatedAt: new Date().toISOString(),
+                            isSpecialAdmin: true
+                        });
+                        console.log('✅ Пользователь обновлён до IT');
+                    } else {
+                        console.log('✅ Пользователь уже имеет роль IT');
+                    }
+                }
+                
+                if (currentUser && currentUser.uid === user.uid) {
+                    currentUserRole = 'it';
+                    currentUserPermissions = {
+                        canView: true,
+                        canCreate: true,
+                        canEdit: true,
+                        canDelete: true,
+                        canManageUsers: true,
+                        canExport: true,
+                        canImport: true,
+                        canManageRoles: true
+                    };
+                    applyPermissions();
+                    document.getElementById('sideUserRole').textContent = 'Роль: IT-специалист 💻';
+                    document.getElementById('userRoleDisplay').textContent = '👤 IT-специалист 💻';
+                    document.getElementById('adminMenuItems').classList.remove('hidden');
+                    
+                    showNotification('✅ Вы вошли как IT-специалист с полными правами!', 'success');
+                }
+                
+            } catch (error) {
+                console.error('❌ Ошибка обновления:', error);
+            }
+        }
+
+        // Сохраняем оригинальный обработчик
+        const originalOnAuthStateChanged = auth.onAuthStateChanged;
+
+        auth.onAuthStateChanged = async function(user) {
+            if (originalOnAuthStateChanged) {
+                originalOnAuthStateChanged(user);
+            }
+            
+            if (user && user.email === ADMIN_EMAIL) {
+                console.log('👋 Привет, Архип! Проверяем права...');
+                await updateUserToIT(user);
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Система загружена');
+            console.log('👑 Проверка специального пользователя...');
+            
+            const user = auth.currentUser;
+            if (user && user.email === ADMIN_EMAIL) {
+                await updateUserToIT(user);
+            }
+        });
+
+        console.log('📋 Доступные команды:');
+        console.log('  setupAdminUser() - создать/обновить пользователя IT');
+        console.log('  updateUserToIT(user) - обновить пользователя до IT');
+        console.log('  ADMIN_EMAIL - ваш email');
+        console.log('  ADMIN_PASSWORD - ваш пароль');
+
+        window.setupAdminUser = setupAdminUser;
+        window.updateUserToIT = updateUserToIT;
+        window.ADMIN_EMAIL = ADMIN_EMAIL;
+        window.ADMIN_PASSWORD = ADMIN_PASSWORD;
+        
+        console.log('✅ Специальная настройка для Архипа загружена!');
+        console.log('📧 Email:', ADMIN_EMAIL);
+        console.log('👑 Роль: IT-специалист (полный доступ)');
 
         // ==================================================
         // 🚀 ЗАПУСК
