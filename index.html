@@ -1661,7 +1661,7 @@
                         <div class="export-desc" id="importDesc">Загрузите Excel файл для обновления остатков:</div>
                         <button class="purple" onclick="openImportModeModal()" id="importFileBtn">📥 Выбрать файл</button>
                         <div style="font-size:11px; color:var(--text-muted); margin-top:6px;" id="importHint">
-                            ⚠️ Обновление по полям: <strong id="importFieldsHint">Артикул + Размер</strong>
+                            ⚠️ Обновление по полям: <strong id="importFieldsHint">Артикул продавца (чистый код) + Размер</strong>
                         </div>
                     </div>
                 </div>
@@ -1682,6 +1682,7 @@
                     <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
                         <button class="success" onclick="startImport('add')" id="importAddBtn">➕ ДОБАВИТЬ</button>
                         <button class="danger" onclick="startImport('subtract')" id="importSubBtn">➖ УБАВИТЬ</button>
+                        <button class="warning" onclick="startImport('replace')" id="importReplaceBtn" style="background: #f39c12; color: white;">🔄 ЗАМЕНИТЬ</button>
                     </div>
                 </div>
             </div>
@@ -1991,7 +1992,7 @@
                 import_title: 'Импорт товаров',
                 import_desc: 'Загрузите Excel файл для обновления остатков:',
                 import_file_btn: '📥 Выбрать файл',
-                import_hint: 'Обновление по полям: Артикул + Размер',
+                import_hint: 'Обновление по полям: Артикул продавца (чистый код) + Размер',
                 field_name: 'Название',
                 field_sku: 'Артикул',
                 field_size: 'Размер',
@@ -2013,6 +2014,7 @@
                 import_mode_sub: 'Выберите действие с товарами из файла',
                 import_add: '➕ ДОБАВИТЬ',
                 import_sub: '➖ УБАВИТЬ',
+                import_replace: '🔄 ЗАМЕНИТЬ',
                 import_file_title: 'Загрузка',
                 import_file_sub: 'Загрузите Excel файл',
                 file_drop_text: 'Нажмите или перетащите файл Excel (.xlsx, .xls)',
@@ -2023,7 +2025,8 @@
                 import_added: 'Добавлено: {count}',
                 import_errors: 'Ошибок: {count}',
                 import_no_data: '❌ Нет данных для импорта',
-                import_columns_error: '❌ Не найдены колонки "Артикул" и "Количество"',
+                import_columns_error: '❌ Не найдены колонки "Артикул продавца" и "Количество"',
+                import_grouped: 'Сгруппировано {unique} уникальных товаров из {total} строк',
                 
                 // === PWA ===
                 install_title: '📱 Установить приложение',
@@ -2230,7 +2233,7 @@
                 import_title: 'Import Products',
                 import_desc: 'Upload Excel file to update stock:',
                 import_file_btn: '📥 Select file',
-                import_hint: 'Update by fields: SKU + Size',
+                import_hint: 'Update by fields: Vendor SKU (clean code) + Size',
                 field_name: 'Name',
                 field_sku: 'SKU',
                 field_size: 'Size',
@@ -2252,6 +2255,7 @@
                 import_mode_sub: 'Choose action with products from file',
                 import_add: '➕ ADD',
                 import_sub: '➖ SUBTRACT',
+                import_replace: '🔄 REPLACE',
                 import_file_title: 'Upload',
                 import_file_sub: 'Upload Excel file',
                 file_drop_text: 'Click or drag Excel file (.xlsx, .xls)',
@@ -2262,7 +2266,8 @@
                 import_added: 'Added: {count}',
                 import_errors: 'Errors: {count}',
                 import_no_data: '❌ No data to import',
-                import_columns_error: '❌ Columns "SKU" and "Quantity" not found',
+                import_columns_error: '❌ Columns "Vendor SKU" and "Quantity" not found',
+                import_grouped: 'Grouped {unique} unique products from {total} rows',
                 
                 // === PWA ===
                 install_title: '📱 Install app',
@@ -2469,7 +2474,7 @@
                 import_title: '导入商品',
                 import_desc: '上传 Excel 文件更新库存：',
                 import_file_btn: '📥 选择文件',
-                import_hint: '按字段更新：SKU + 尺寸',
+                import_hint: '按字段更新：供应商 SKU（纯代码）+ 尺寸',
                 field_name: '名称',
                 field_sku: 'SKU',
                 field_size: '尺寸',
@@ -2491,6 +2496,7 @@
                 import_mode_sub: '选择对文件中商品的操作',
                 import_add: '➕ 添加',
                 import_sub: '➖ 减去',
+                import_replace: '🔄 替换',
                 import_file_title: '上传',
                 import_file_sub: '上传 Excel 文件',
                 file_drop_text: '点击或拖拽 Excel 文件 (.xlsx, .xls)',
@@ -2501,7 +2507,8 @@
                 import_added: '添加：{count}',
                 import_errors: '错误：{count}',
                 import_no_data: '❌ 没有数据可导入',
-                import_columns_error: '❌ 未找到 "SKU" 和 "数量" 列',
+                import_columns_error: '❌ 未找到 "供应商 SKU" 和 "数量" 列',
+                import_grouped: '从 {total} 行分组出 {unique} 个唯一商品',
                 
                 // === PWA ===
                 install_title: '📱 安装应用',
@@ -2761,6 +2768,7 @@
                 'importModeSub': 'import_mode_sub',
                 'importAddBtn': 'import_add',
                 'importSubBtn': 'import_sub',
+                'importReplaceBtn': 'import_replace',
                 'importFileTitle': 'import_file_title',
                 'importFileSub': 'import_file_sub',
                 'fileDropText': 'file_drop_text',
@@ -3522,7 +3530,7 @@
         }
 
         // ==================================================
-        // ✏️ РЕДАКТИРОВАНИЕ ТОВАРА (ИСПРАВЛЕННОЕ)
+        // ✏️ РЕДАКТИРОВАНИЕ ТОВАРА
         // ==================================================
         function openEditModal(productId) {
             if (!checkPermission('canEdit')) return;
@@ -3556,7 +3564,6 @@
             const editTitle = document.getElementById('editTitle');
             if (editTitle) editTitle.textContent = t('edit_product');
             
-            // Обновляем все подписи в модалке
             const labels = {
                 'editPhotoLabel': 'edit_photo_label',
                 'editNameLabel': 'edit_name_label',
@@ -3772,7 +3779,7 @@
         }
 
         // ==================================================
-        // 📋 ИСТОРИЯ ИЗМЕНЕНИЙ (ИСПРАВЛЕННАЯ)
+        // 📋 ИСТОРИЯ ИЗМЕНЕНИЙ
         // ==================================================
         async function showHistoryModal() {
             const modal = document.getElementById('historyModal');
@@ -3857,7 +3864,7 @@
         }
 
         // ==================================================
-        // 📅 КАЛЕНДАРЬ (ДОБАВЛЯЕМ)
+        // 📅 КАЛЕНДАРЬ
         // ==================================================
         let currentCalendarMonth = new Date();
         let calendarEvents = [];
@@ -4000,7 +4007,7 @@
         }
 
         // ==================================================
-        // 📤 ЭКСПОРТ В EXCEL (ДОБАВЛЯЕМ)
+        // 📤 ЭКСПОРТ В EXCEL
         // ==================================================
         function exportToExcel() {
             const checkboxes = document.querySelectorAll('#exportFields input[type="checkbox"]:checked');
@@ -4149,7 +4156,7 @@
         }
 
         // ==================================================
-        // 📤 ЭКСПОРТ/ИМПОРТ
+        // 📤 ЭКСПОРТ/ИМПОРТ — НОВАЯ ВЕРСИЯ С ГРУППИРОВКОЙ
         // ==================================================
         function openImportExportModal() { document.getElementById('importExportModal').classList.add('show'); document.body.style.overflow = 'hidden'; }
         function closeImportExportModal() { document.getElementById('importExportModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
@@ -4166,10 +4173,15 @@
         function startImport(mode) {
             closeImportModeModal();
             importMode = mode;
-            document.getElementById('importFileTitle').textContent = `Импорт: ${mode === 'add' ? 'ДОБАВИТЬ' : 'УБАВИТЬ'}`;
-            document.getElementById('importFileModeTitle').textContent = `Режим: ${mode === 'add' ? '➕ ДОБАВИТЬ' : '➖ УБАВИТЬ'}`;
-            document.getElementById('importFileIcon').textContent = mode === 'add' ? '➕' : '➖';
-            document.getElementById('importFileTitleIcon').textContent = mode === 'add' ? '➕' : '➖';
+            const modeNames = {
+                'add': '➕ ДОБАВИТЬ',
+                'subtract': '➖ УБАВИТЬ',
+                'replace': '🔄 ЗАМЕНИТЬ'
+            };
+            document.getElementById('importFileTitle').textContent = `Импорт: ${modeNames[mode] || mode}`;
+            document.getElementById('importFileModeTitle').textContent = `Режим: ${modeNames[mode] || mode}`;
+            document.getElementById('importFileIcon').textContent = mode === 'add' ? '➕' : mode === 'subtract' ? '➖' : '🔄';
+            document.getElementById('importFileTitleIcon').textContent = mode === 'add' ? '➕' : mode === 'subtract' ? '➖' : '🔄';
             document.getElementById('importFileModal').classList.add('show');
             document.body.style.overflow = 'hidden';
             document.getElementById('importPreview').classList.remove('show');
@@ -4181,6 +4193,7 @@
 
         function closeImportFileModal() { document.getElementById('importFileModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
 
+        // ===== ОСНОВНАЯ ФУНКЦИЯ ОБРАБОТКИ ФАЙЛА С ГРУППИРОВКОЙ =====
         function handleImportFile(event) {
             if (!checkPermission('canImport')) return;
             const file = event.target.files[0];
@@ -4191,57 +4204,277 @@
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
-                    if (jsonData.length === 0) { showNotification('❌ Файл пуст', 'error'); return; }
+                    
+                    if (jsonData.length === 0) { 
+                        showNotification(t('import_file_empty'), 'error'); 
+                        return; 
+                    }
+                    
+                    const headers = Object.keys(jsonData[0]);
+                    
+                    // 🔍 Ищем колонку "Артикул продавца"
+                    const skuKey = headers.find(h => 
+                        h.toLowerCase().includes('артикул продавца') || 
+                        h.toLowerCase().includes('артикул') || 
+                        h.toLowerCase().includes('sku') ||
+                        h.toLowerCase().includes('vendor') ||
+                        h.toLowerCase().includes('код')
+                    );
+                    
+                    // 🔍 Ищем колонку "Размер"
+                    const sizeKey = headers.find(h => 
+                        h.toLowerCase().includes('размер') || 
+                        h.toLowerCase().includes('size') ||
+                        h.toLowerCase().includes('р-р')
+                    );
+                    
+                    // 🔍 Ищем колонку "Количество"
+                    const qtyKey = headers.find(h => 
+                        h.toLowerCase().includes('количеств') || 
+                        h.toLowerCase().includes('qty') ||
+                        h.toLowerCase().includes('кол-во') ||
+                        h.toLowerCase().includes('шт')
+                    );
+                    
+                    if (!skuKey || !qtyKey) {
+                        showNotification(t('import_columns_error'), 'error');
+                        return;
+                    }
+                    
+                    // 📊 ГРУППИРУЕМ ДАННЫЕ
+                    const groupedData = groupImportData(jsonData, skuKey, sizeKey, qtyKey);
+                    
                     const preview = document.getElementById('importPreview');
                     document.getElementById('importFileName').textContent = `📄 ${file.name}`;
-                    document.getElementById('importFileCount').textContent = `Найдено ${jsonData.length} строк`;
+                    document.getElementById('importFileCount').textContent = 
+                        t('import_grouped', { 
+                            unique: groupedData.length, 
+                            total: jsonData.length 
+                        });
                     preview.classList.add('show');
-                    importFileData = jsonData;
-                    document.getElementById('importStatus').innerHTML = `<button class="success small" onclick="processImport()">✅ Импортировать ${jsonData.length} товаров</button>`;
-                } catch (e) { showNotification('❌ Ошибка: ' + e.message, 'error'); }
+                    importFileData = groupedData;
+                    
+                    document.getElementById('importStatus').innerHTML = `
+                        <button class="success small" onclick="processImport()">
+                            ✅ Импортировать ${groupedData.length} товаров
+                        </button>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+                            📊 Группировка по: ${skuKey} (чистый код) ${sizeKey ? '+ ' + sizeKey : ''}
+                            ${jsonData.length > groupedData.length ? `| Объединено ${jsonData.length - groupedData.length} дублей` : ''}
+                        </div>
+                    `;
+                    
+                } catch (e) { 
+                    showNotification(t('import_file_error') + ': ' + e.message, 'error'); 
+                    console.error(e);
+                }
             };
             reader.readAsArrayBuffer(file);
         }
 
+        // ===== ФУНКЦИЯ ГРУППИРОВКИ ДАННЫХ =====
+        function groupImportData(rawData, skuKey, sizeKey, qtyKey) {
+            const groups = {};
+            let totalRows = 0;
+            
+            rawData.forEach(row => {
+                // Извлекаем "чистый" артикул
+                let rawSku = String(row[skuKey] || '').trim();
+                let cleanSku = extractCleanSku(rawSku);
+                
+                // Извлекаем размер
+                let size = sizeKey ? String(row[sizeKey] || '').trim().toUpperCase() : '';
+                
+                // Извлекаем количество
+                let qty = parseInt(row[qtyKey]) || 0;
+                if (qty === 0) return;
+                
+                totalRows++;
+                
+                // Создаём ключ для группировки
+                const groupKey = `${cleanSku}|${size}`;
+                
+                if (groups[groupKey]) {
+                    groups[groupKey].quantity += qty;
+                } else {
+                    // Ищем название товара (если есть)
+                    const nameKey = Object.keys(row).find(h => 
+                        h.toLowerCase().includes('назван') || 
+                        h.toLowerCase().includes('наимен') || 
+                        h.toLowerCase().includes('name') ||
+                        h.toLowerCase().includes('товар')
+                    );
+                    const name = nameKey ? String(row[nameKey] || '').trim() : cleanSku;
+                    
+                    groups[groupKey] = {
+                        sku: cleanSku,
+                        originalSku: rawSku,
+                        size: size,
+                        quantity: qty,
+                        name: name || cleanSku,
+                        // Сохраняем все данные из первой строки для возможного использования
+                        rawData: row
+                    };
+                }
+            });
+            
+            console.log(`📊 Группировка: ${Object.keys(groups).length} уникальных товаров из ${totalRows} строк`);
+            return Object.values(groups);
+        }
+
+        // ===== ФУНКЦИЯ ОЧИСТКИ АРТИКУЛА =====
+        function extractCleanSku(sku) {
+            if (!sku) return '';
+            
+            // 1️⃣ Удаляем всё после дефиса (если есть)
+            let clean = sku.split('-')[0];
+            
+            // 2️⃣ Если после дефиса есть ещё что-то, пробуем взять первые две части
+            const parts = sku.split('-');
+            if (parts.length >= 2) {
+                // Берём первые две части (если есть)
+                clean = parts.slice(0, 2).join('-');
+            } else {
+                clean = parts[0];
+            }
+            
+            // 3️⃣ Удаляем лишние пробелы и приводим к верхнему регистру
+            clean = clean.trim().toUpperCase();
+            
+            // 4️⃣ Если осталось пусто, возвращаем оригинал
+            if (!clean) return sku.trim().toUpperCase();
+            
+            return clean;
+        }
+
+        // ===== ОБНОВЛЁННАЯ ФУНКЦИЯ ИМПОРТА =====
         async function processImport() {
             if (!checkPermission('canImport')) return;
-            if (!importFileData || importFileData.length === 0) { showNotification('❌ Нет данных', 'error'); return; }
+            if (!importFileData || importFileData.length === 0) { 
+                showNotification(t('import_no_data'), 'error'); 
+                return; 
+            }
+            
             const progress = document.getElementById('importProgress');
             const bar = document.getElementById('importProgressBar');
             progress.classList.add('show');
             bar.style.width = '0%';
+            
             let updated = 0, added = 0, errors = 0;
-            const headers = Object.keys(importFileData[0]);
-            const skuKey = headers.find(h => h.toLowerCase().includes('артикул') || h.toLowerCase().includes('sku'));
-            const sizeKey = headers.find(h => h.toLowerCase().includes('размер') || h.toLowerCase().includes('size'));
-            const qtyKey = headers.find(h => h.toLowerCase().includes('количеств') || h.toLowerCase().includes('qty'));
-            if (!skuKey || !qtyKey) { showNotification('❌ Не найдены колонки "Артикул" и "Количество"', 'error'); return; }
             const total = importFileData.length;
             let processed = 0;
+            
             for (let row of importFileData) {
                 try {
-                    const sku = String(row[skuKey] || '').trim();
-                    const size = String(row[sizeKey] || '').trim().toUpperCase();
-                    const fileQty = parseInt(row[qtyKey]) || 0;
-                    if (!sku) { errors++; processed++; continue; }
-                    const existing = products.find(p => (p.skus?.includes(sku) || p.sku === sku) && p.size === size);
-                    if (existing) {
-                        const newQty = importMode === 'add' ? existing.quantity + fileQty : Math.max(0, existing.quantity - fileQty);
-                        await db.collection('products').doc(existing.id).update({ quantity: newQty, updatedAt: new Date().toISOString() });
-                        updated++;
-                    } else {
-                        const name = row[headers.find(h => h.toLowerCase().includes('назван'))] || sku;
-                        await db.collection('products').add({ name, skus: [sku], sku, size, quantity: importMode === 'add' ? fileQty : 0, subcategoryId: '', minStock: 5, createdAt: new Date().toISOString() });
-                        added++;
+                    const sku = row.sku; // Уже очищенный артикул
+                    const size = row.size;
+                    const fileQty = row.quantity;
+                    const name = row.name;
+                    
+                    if (!sku) { 
+                        errors++; 
+                        processed++; 
+                        continue; 
                     }
-                } catch (e) { errors++; }
+                    
+                    // 🔍 Ищем существующий товар по артикулу (только основной код) + размер
+                    const existing = products.find(p => {
+                        // Проверяем, содержит ли массив skus наш артикул
+                        const hasSku = Array.isArray(p.skus) 
+                            ? p.skus.some(s => extractCleanSku(s) === sku) 
+                            : extractCleanSku(p.sku) === sku;
+                        
+                        // Проверяем размер (если указан)
+                        const matchSize = size ? p.size === size : true;
+                        
+                        return hasSku && matchSize;
+                    });
+                    
+                    if (existing) {
+                        // ✅ Товар найден → обновляем количество
+                        let newQty;
+                        if (importMode === 'add') {
+                            newQty = existing.quantity + fileQty;
+                        } else if (importMode === 'subtract') {
+                            newQty = Math.max(0, existing.quantity - fileQty);
+                        } else { // replace
+                            newQty = fileQty;
+                        }
+                        
+                        await db.collection('products').doc(existing.id).update({ 
+                            quantity: newQty,
+                            updatedAt: new Date().toISOString(),
+                            updatedBy: currentUser.uid,
+                            lastImportQty: fileQty,
+                            lastImportMode: importMode,
+                            lastImportDate: new Date().toISOString()
+                        });
+                        updated++;
+                        
+                        console.log(`🔄 Обновлён: ${existing.name} | ${sku} | ${size} | ${existing.quantity} → ${newQty}`);
+                        
+                    } else {
+                        // 🆕 Товар не найден → создаём новый
+                        const newProduct = {
+                            name: name || sku,
+                            skus: [sku],
+                            sku: sku,
+                            size: size,
+                            quantity: importMode === 'add' ? fileQty : (importMode === 'subtract' ? 0 : fileQty),
+                            subcategoryId: '',
+                            minStock: 5,
+                            createdAt: new Date().toISOString(),
+                            createdBy: currentUser.uid,
+                            importedFrom: 'excel',
+                            importDate: new Date().toISOString()
+                        };
+                        
+                        await db.collection('products').add(newProduct);
+                        added++;
+                        
+                        console.log(`➕ Добавлен: ${newProduct.name} | ${sku} | ${size} | ${newProduct.quantity}`);
+                    }
+                    
+                } catch (e) {
+                    errors++;
+                    console.error('❌ Ошибка импорта строки:', row, e);
+                }
+                
                 processed++;
                 bar.style.width = `${(processed / total) * 100}%`;
             }
+            
+            // 📊 Показываем результаты
             const status = document.getElementById('importStatus');
-            status.innerHTML = `<div style="font-weight:600;color:${errors > 0 ? 'var(--danger-color)' : 'var(--success-color)'};">✅ Импорт завершён!<br>Обновлено: ${updated} | Добавлено: ${added} ${errors > 0 ? `| Ошибок: ${errors}` : ''}</div>
-                <button class="small" onclick="closeImportFileModal();" style="margin-top:8px;">✕ Закрыть</button>`;
+            const modeNames = {
+                'add': '➕ Добавление',
+                'subtract': '➖ Убавление',
+                'replace': '🔄 Замена'
+            };
+            status.innerHTML = `
+                <div style="font-weight:600;color:${errors > 0 ? 'var(--danger-color)' : 'var(--success-color)'};">
+                    ✅ Импорт завершён!
+                    <br>📦 Обновлено: ${updated} | ➕ Добавлено: ${added} 
+                    ${errors > 0 ? `| ❌ Ошибок: ${errors}` : ''}
+                    <br><span style="font-size:12px; opacity:0.7;">
+                        Режим: ${modeNames[importMode] || importMode}
+                    </span>
+                </div>
+                <button class="small" onclick="closeImportFileModal();" style="margin-top:8px;">
+                    ✕ Закрыть
+                </button>
+            `;
+            
             showNotification(`✅ Импорт: обновлено ${updated}, добавлено ${added}`, 'success');
+            await logAction('import_completed', { 
+                mode: importMode, 
+                updated, 
+                added, 
+                errors,
+                total: total
+            });
+            
+            // Обновляем список товаров
             setTimeout(() => progress.classList.remove('show'), 3000);
         }
 
@@ -4286,7 +4519,7 @@
         }
 
         // ==================================================
-        // 🚪 ВЫХОД ИЗ СИСТЕМЫ (ИСПРАВЛЕННЫЙ)
+        // 🚪 ВЫХОД ИЗ СИСТЕМЫ
         // ==================================================
         function logoutUser() {
             if (confirm(t('logout_confirm'))) {
@@ -5013,6 +5246,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Система запущена!');
             console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram, График и расчёт, Архив');
+            console.log('📊 Импорт: группировка по "Артикул продавца" (очищенный код) + Размер');
             loadTheme();
             setLanguage(currentLanguage);
             
