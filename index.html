@@ -4730,30 +4730,34 @@
             // 1️⃣ Убираем лишние пробелы и приводим к верхнему регистру
             let clean = sku.trim().toUpperCase();
             
-            // 2️⃣ Проверяем, есть ли в артикуле буквы
+            // 2️⃣ Убираем всё после пробела (если есть)
+            clean = clean.split(' ')[0];
+            
+            // 3️⃣ Проверяем, есть ли в артикуле буквы
             const hasLetters = /[A-Z]/.test(clean);
             
             if (hasLetters) {
-                // 🔤 Если есть буквы (например VCT-64536904 или 605-Dime-015576666)
-                // Ищем паттерн: буквы + цифры или буквы + дефис + цифры
-                const match = clean.match(/^([A-Z]+[\-]?[0-9]+)/);
+                // 🔤 Если есть буквы (например VCT-64536904, YH0035618957, LB001-A5620040)
+                // Ищем паттерн: буквы + цифры
+                const match = clean.match(/^([A-Z]+[0-9]+)/);
                 if (match) {
                     clean = match[1];
                 }
                 
-                // Если после очистки осталось что-то типа VCT-64536904, 
-                // пробуем взять только первую часть до дефиса
+                // Если есть дефис, берём часть до дефиса
                 if (clean && clean.includes('-')) {
                     const parts = clean.split('-');
-                    // Если вторая часть состоит только из цифр, берём обе части
-                    // VCT-64536904 → VCT-6 (берём первые две части)
+                    // Если вторая часть состоит только из цифр, берём первую часть + первую цифру второй части
                     if (parts.length >= 2 && /^\d+$/.test(parts[1])) {
-                        // Берём буквенную часть + первую цифру из числовой части
                         const letterPart = parts[0];
                         const numberPart = parts[1];
-                        // Берём первую цифру из числовой части
                         const firstDigit = numberPart.charAt(0);
-                        clean = `${letterPart}-${firstDigit}`;
+                        // Если letterPart содержит цифры (YH003), оставляем как есть
+                        if (/\d/.test(letterPart)) {
+                            clean = letterPart;
+                        } else {
+                            clean = `${letterPart}-${firstDigit}`;
+                        }
                     } else {
                         clean = parts[0];
                     }
@@ -4767,10 +4771,10 @@
                 }
             }
             
-            // 3️⃣ Убираем всё, что не является буквами, цифрами и дефисом
+            // 4️⃣ Убираем всё, что не является буквами, цифрами и дефисом
             clean = clean.replace(/[^A-Z0-9\-]/g, '');
             
-            // 4️⃣ Если осталось пусто, возвращаем оригинал (очищенный от мусора)
+            // 5️⃣ Если осталось пусто, возвращаем оригинал (очищенный от мусора)
             if (!clean) {
                 return sku.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
             }
@@ -4779,7 +4783,7 @@
         }
 
         // ==================================================
-        // ⚠️ ОБНОВЛЁННАЯ ФУНКЦИЯ ИМПОРТА (НЕ СОЗДАЁТ НОВЫЕ ПРИ УБАВЛЕНИИ)
+        // ⚠️ ОБНОВЛЁННАЯ ФУНКЦИЯ ИМПОРТА (С ПОНЯТНЫМИ СООБЩЕНИЯМИ)
         // ==================================================
         async function processImport() {
             if (!checkPermission('canImport')) return;
@@ -4834,6 +4838,8 @@
                 const sku = group.sku;
                 const size = group.size;
                 
+                console.log(`🔍 Ищем: ${sku} | ${size || 'без размера'}`);
+                
                 // 🔍 Ищем существующий товар по артикулу + размер
                 const existing = products.find(p => {
                     const hasSku = Array.isArray(p.skus) 
@@ -4852,6 +4858,7 @@
                         currentQty: existing.quantity,
                         willCreate: false
                     });
+                    console.log(`✅ Найден: ${existing.name} | ${sku} | ${size} (${existing.quantity} шт.)`);
                 } else {
                     notFoundCount++;
                     results.push({
@@ -4861,6 +4868,7 @@
                         currentQty: 0,
                         willCreate: false
                     });
+                    console.log(`❌ НЕ НАЙДЕН: ${sku} | ${size || 'без размера'}`);
                 }
             }
             
@@ -4868,25 +4876,28 @@
             const statusEl = document.getElementById('importStatus');
             
             let foundHtml = results.filter(r => r.found).map(r => 
-                `<div style="color:var(--success-color);">✅ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. (найден: ${r.existing.name})</div>`
+                `<div style="color:var(--success-color);">✅ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. (найден: ${r.existing.name}, сейчас: ${r.currentQty} шт.)</div>`
             ).join('');
             
             let notFoundHtml = results.filter(r => !r.found).map(r => 
-                `<div style="color:var(--danger-color);">❌ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. (НЕ НАЙДЕН в базе) ${importMode === 'subtract' ? '— ПРОПУЩЕН' : '— БУДЕТ СОЗДАН'}</div>`
+                `<div style="color:var(--danger-color);">❌ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. (НЕ НАЙДЕН в базе)</div>`
             ).join('');
+            
+            const modeText = importMode === 'add' ? '➕ ДОБАВЛЕНИЕ' : importMode === 'subtract' ? '➖ УБАВЛЕНИЕ' : '🔄 ЗАМЕНА';
             
             statusEl.innerHTML = `
                 <div style="font-weight:600; margin-bottom:8px;">
-                    📊 Проверка товаров в базе:
+                    📊 Проверка товаров в базе (режим: ${modeText}):
                 </div>
                 <div style="font-size:13px; margin-bottom:8px; max-height:200px; overflow-y:auto; text-align:left; padding:8px; background:var(--bg-card); border-radius:8px;">
                     ${foundHtml}
                     ${notFoundHtml}
                 </div>
                 <div style="font-size:13px; margin-bottom:8px; padding:8px; background:var(--bg-card); border-radius:8px;">
-                    <span style="color:var(--success-color);">✅ Найдено: ${foundCount}</span> | 
+                    <span style="color:var(--success-color);">✅ Найдено в базе: ${foundCount}</span> | 
                     <span style="color:var(--danger-color);">❌ Не найдено: ${notFoundCount}</span>
-                    ${importMode === 'subtract' ? ' | ⛔ Пропущены (режим убавления)' : ''}
+                    ${importMode === 'subtract' && notFoundCount > 0 ? ' | ⛔ Не найденные товары будут ПРОПУЩЕНЫ (режим убавления)' : ''}
+                    ${importMode === 'add' && notFoundCount > 0 ? ' | 🆕 Не найденные товары будут СОЗДАНЫ (режим добавления)' : ''}
                 </div>
                 <div style="font-size:13px; color:var(--text-secondary); margin-bottom:8px;">
                     ⏳ Обработка ${foundCount} найденных товаров...
@@ -4900,6 +4911,7 @@
             // 🔄 Обрабатываем только найденные товары
             for (const result of results) {
                 if (!result.found) {
+                    // ⛔ Пропускаем ненайденные товары
                     processed++;
                     continue;
                 }
@@ -4913,16 +4925,20 @@
                     // ✅ Товар найден → обновляем количество
                     let newQty;
                     let actionText = '';
+                    let actionEmoji = '';
                     
                     if (importMode === 'add') {
                         newQty = existing.quantity + fileQty;
                         actionText = `➕ Добавлено ${fileQty}`;
+                        actionEmoji = '➕';
                     } else if (importMode === 'subtract') {
                         newQty = Math.max(0, existing.quantity - fileQty);
                         actionText = `➖ Убавлено ${fileQty}`;
+                        actionEmoji = '➖';
                     } else { // replace
                         newQty = fileQty;
                         actionText = `🔄 Заменено на ${fileQty}`;
+                        actionEmoji = '🔄';
                     }
                     
                     await db.collection('products').doc(existing.id).update({ 
@@ -4975,12 +4991,14 @@
             // 📊 Показываем результат пользователю
             const status = document.getElementById('importStatus');
             
-            let finalUpdatedHtml = results.filter(r => r.found).map(r => 
-                `<div style="color:var(--success-color);">✅ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. → обновлено</div>`
-            ).join('');
+            let finalUpdatedHtml = results.filter(r => r.found).map(r => {
+                const newQty = r.existing ? (importMode === 'add' ? r.existing.quantity + r.quantity : importMode === 'subtract' ? Math.max(0, r.existing.quantity - r.quantity) : r.quantity) : 0;
+                const emoji = importMode === 'add' ? '➕' : importMode === 'subtract' ? '➖' : '🔄';
+                return `<div style="color:var(--success-color);">${emoji} ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. → обновлено (${r.currentQty} → ${newQty})</div>`;
+            }).join('');
             
             let finalNotFoundHtml = results.filter(r => !r.found).map(r => 
-                `<div style="color:var(--danger-color);">❌ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. → ПРОПУЩЕН (не найден)</div>`
+                `<div style="color:var(--danger-color);">❌ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. → ПРОПУЩЕН (не найден в базе)</div>`
             ).join('');
             
             status.innerHTML = `
@@ -4993,7 +5011,7 @@
                 </div>
                 <div style="font-size:13px; margin-top:8px; padding:8px; background:var(--bg-card); border-radius:8px;">
                     📊 Уникальных групп: ${results.length}
-                    <br>✅ Найдено: ${foundCount} | ❌ Не найдено: ${notFoundCount}
+                    <br>✅ Найдено в базе: ${foundCount} | ❌ Не найдено в базе: ${notFoundCount}
                     <br>🔄 Обновлено: ${updated} | 
                     ${errors > 0 ? `❌ Ошибок: ${errors}` : '🎉 Все успешно!'}
                     <br><span style="font-size:12px; opacity:0.7;">
@@ -5789,7 +5807,7 @@
             console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram, График и расчёт, Архив');
             console.log('📊 Импорт: группировка по "Артикул продавца" (очищенный код) + Размер');
             console.log('📄 Поддержка: Excel (.xlsx, .xls) и PDF (с OCR и HTML-таблицами)');
-            console.log('🔧 Очистка артикулов: VCT-64536904 → VCT-6, 6056763 → 605');
+            console.log('🔧 Очистка артикулов: VCT-64536904 → VCT-6, 6056763 → 605, YH0035618957 → YH003, LB001-A5620040 → LB001');
             loadTheme();
             setLanguage(currentLanguage);
             
