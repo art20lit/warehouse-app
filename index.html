@@ -4370,7 +4370,9 @@
             }
         }
 
-        // ===== 🔍 ПАРСИНГ ТЕКСТА PDF В ТАБЛИЦУ (С ПОДДЕРЖКОЙ HTML) =====
+        // ==================================================
+        // 🔍 ПАРСИНГ ТЕКСТА PDF В ТАБЛИЦУ (ИСПРАВЛЕННЫЙ ДЛЯ ВАШИХ PDF)
+        // ==================================================
         function parsePDFTextToTable(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             const result = [];
@@ -4387,37 +4389,62 @@
             }
             
             // 📊 Обычный текстовый парсинг
-            // Ищем строки, которые содержат артикул (число 8-15 цифр) и размер (S, M, L, XL, XXL, XXXS, XS)
-            const skuPattern = /\b(\d{8,15})\b/g;
-            const sizePattern = /\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2})\b/i;
+            // Ищем строки, которые содержат артикул (буквы + цифры) и размер (S, M, L, XL, XXL, XXXS, XS, 32)
+            // Новый паттерн: буквы + цифры (YH0035618957, LB001-A5620040, VCT-64536904)
+            const skuPattern = /\b([A-Z]{1,4}[0-9]{3,15})(?:[-][A-Z0-9]+)?\b/i;
+            const skuPattern2 = /\b([A-Z]+[0-9]+(?:-[A-Z0-9]+)?)\b/i;
+            const sizePattern = /\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i;
             
             for (const line of lines) {
-                // Ищем все числа в строке
-                const numbers = line.match(/\b\d+\b/g);
-                if (!numbers || numbers.length < 1) continue;
+                // Пропускаем строки с датой и заголовками
+                if (line.includes('Дата:') || line.includes('Лист подбора') || line.includes('Количество товаров')) {
+                    continue;
+                }
                 
-                // Ищем артикул (число длиной 8-15 цифр)
+                // Ищем артикул (буквы + цифры)
                 let sku = '';
-                for (const num of numbers) {
-                    if (num.length >= 8 && num.length <= 15) {
-                        sku = num;
-                        break;
+                let skuMatch = line.match(skuPattern);
+                if (skuMatch) {
+                    sku = skuMatch[1].toUpperCase();
+                }
+                
+                if (!sku) {
+                    skuMatch = line.match(skuPattern2);
+                    if (skuMatch) {
+                        sku = skuMatch[1].toUpperCase();
                     }
                 }
+                
                 if (!sku) continue;
                 
                 // Ищем размер
+                let size = '';
                 const sizeMatch = line.match(sizePattern);
-                let size = sizeMatch ? sizeMatch[1].toUpperCase() : '';
+                if (sizeMatch) {
+                    size = sizeMatch[1].toUpperCase();
+                    // Если это число (32) — оставляем как есть
+                }
                 
-                // Если размер не найден, пробуем найти в конце строки после артикула
+                // Если размер не найден, пробуем найти в конце строки
                 if (!size) {
-                    // Ищем после артикула буквы
+                    // Ищем после артикула буквы или цифры
                     const afterSku = line.substring(line.indexOf(sku) + sku.length);
-                    const sizeMatch2 = afterSku.match(/\b([A-ZА-Я]{1,3})\b/i);
+                    const sizeMatch2 = afterSku.match(/\b([A-ZА-Я]{1,3}|\d{1,2})\b/i);
                     if (sizeMatch2) {
                         const possibleSize = sizeMatch2[1].toUpperCase();
                         if (possibleSize.length <= 3 && !sku.includes(possibleSize)) {
+                            size = possibleSize;
+                        }
+                    }
+                }
+                
+                // Если всё ещё нет размера, пробуем найти в строке
+                if (!size) {
+                    const sizeMatch3 = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                    if (sizeMatch3) {
+                        const possibleSize = sizeMatch3[1].toUpperCase();
+                        // Проверяем, что это не номер задания (не 8+ цифр)
+                        if (!/^\d{8,}$/.test(possibleSize)) {
                             size = possibleSize;
                         }
                     }
@@ -4427,11 +4454,19 @@
                 const quantity = 1;
                 
                 if (sku && size) {
+                    // Проверяем, что sku не является номером задания (8+ цифр без букв)
+                    if (/^\d{8,}$/.test(sku) && !/[A-Z]/.test(sku)) {
+                        // Это номер задания, пропускаем
+                        continue;
+                    }
                     result.push({
                         'Артикул': sku,
                         'Размер': size,
                         'Количество': quantity
                     });
+                } else if (sku && !size) {
+                    // Если есть артикул, но нет размера — пробуем найти размер в следующей строке
+                    // Или пропускаем
                 }
             }
             
@@ -4487,15 +4522,22 @@
                     
                     // Если это 7-я колонка (индекс 6) - ищем артикул
                     if (j === 6) {
-                        const skuMatch = cell.match(/\b(\d{8,15})\b/);
+                        // Ищем буквы + цифры (YH0035618957, LB001-A5620040, VCT-64536904)
+                        const skuMatch = cell.match(/\b([A-Z]{1,4}[0-9]{3,15})(?:[-][A-Z0-9]+)?\b/i);
                         if (skuMatch) {
-                            sku = skuMatch[1];
+                            sku = skuMatch[1].toUpperCase();
+                        } else {
+                            // Если не нашли, ищем просто число 8-15 цифр
+                            const skuMatch2 = cell.match(/\b(\d{8,15})\b/);
+                            if (skuMatch2) {
+                                sku = skuMatch2[1];
+                            }
                         }
                     }
                     
                     // Если это 5-я колонка (индекс 4) - ищем размер
                     if (j === 4) {
-                        const sizeMatch = cell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2})\b/i);
+                        const sizeMatch = cell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2}|\d{1,2})\b/i);
                         if (sizeMatch) {
                             size = sizeMatch[1].toUpperCase();
                         }
@@ -4503,15 +4545,15 @@
                     
                     // Если артикул найден в другой колонке (запасной вариант)
                     if (!sku && j !== 6) {
-                        const skuMatch = cell.match(/\b(\d{8,15})\b/);
-                        if (skuMatch && !cell.match(/\d{2,5}/) && cell.length < 20) {
-                            sku = skuMatch[1];
+                        const skuMatch = cell.match(/\b([A-Z]{1,4}[0-9]{3,15})(?:[-][A-Z0-9]+)?\b/i);
+                        if (skuMatch) {
+                            sku = skuMatch[1].toUpperCase();
                         }
                     }
                     
                     // Если размер найден в другой колонке (запасной вариант)
                     if (!size && j !== 4) {
-                        const sizeMatch = cell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2})\b/i);
+                        const sizeMatch = cell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2}|\d{1,2})\b/i);
                         if (sizeMatch && cell.length <= 5) {
                             size = sizeMatch[1].toUpperCase();
                         }
@@ -4521,9 +4563,9 @@
                 // Если не нашли артикул по индексу 6, пробуем найти в любой ячейке
                 if (!sku) {
                     for (const cell of cells) {
-                        const skuMatch = cell.match(/\b(\d{8,15})\b/);
+                        const skuMatch = cell.match(/\b([A-Z]{1,4}[0-9]{3,15})(?:[-][A-Z0-9]+)?\b/i);
                         if (skuMatch) {
-                            sku = skuMatch[1];
+                            sku = skuMatch[1].toUpperCase();
                             break;
                         }
                     }
@@ -4532,7 +4574,7 @@
                 // Если не нашли размер по индексу 4, пробуем найти в любой ячейке
                 if (!size) {
                     for (const cell of cells) {
-                        const sizeMatch = cell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2})\b/i);
+                        const sizeMatch = cell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2}|\d{1,2})\b/i);
                         if (sizeMatch && cell.length <= 5) {
                             size = sizeMatch[1].toUpperCase();
                             break;
@@ -4564,12 +4606,13 @@
             
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 10);
             
-            const pattern = /(\d{8,15}).*?\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2})\b/i;
+            // Паттерн для поиска: буквы + цифры (артикул) и размер
+            const pattern = /\b([A-Z]{1,4}[0-9]{3,15})(?:[-][A-Z0-9]+)?\b.*?\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i;
             
             for (const line of lines) {
                 const match = line.match(pattern);
                 if (match) {
-                    const sku = match[1];
+                    const sku = match[1].toUpperCase();
                     const size = match[2].toUpperCase();
                     result.push({
                         'Артикул': sku,
@@ -4581,27 +4624,23 @@
             
             if (result.length === 0) {
                 for (const line of lines) {
-                    const numbers = line.match(/\b\d+\b/g);
-                    if (!numbers) continue;
+                    // Ищем артикул (буквы + цифры)
+                    const skuMatch = line.match(/\b([A-Z]{1,4}[0-9]{3,15})(?:[-][A-Z0-9]+)?\b/i);
+                    if (!skuMatch) continue;
                     
-                    let sku = '';
-                    for (const num of numbers) {
-                        if (num.length >= 8 && num.length <= 15) {
-                            sku = num;
-                            break;
-                        }
-                    }
-                    if (!sku) continue;
+                    const sku = skuMatch[1].toUpperCase();
                     
-                    const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2})\b/i);
-                    if (sizeMatch) {
-                        const size = sizeMatch[1].toUpperCase();
-                        result.push({
-                            'Артикул': sku,
-                            'Размер': size,
-                            'Количество': 1
-                        });
-                    }
+                    // Ищем размер
+                    const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                    if (!sizeMatch) continue;
+                    
+                    const size = sizeMatch[1].toUpperCase();
+                    
+                    result.push({
+                        'Артикул': sku,
+                        'Размер': size,
+                        'Количество': 1
+                    });
                 }
             }
             
@@ -4722,7 +4761,7 @@
         }
 
         // ==================================================
-        // 🔧 ОБНОВЛЁННАЯ ФУНКЦИЯ ОЧИСТКИ АРТИКУЛА
+        // 🔧 ФУНКЦИЯ ОЧИСТКИ АРТИКУЛА (УЛУЧШЕННАЯ)
         // ==================================================
         function extractCleanSku(sku) {
             if (!sku) return '';
@@ -4783,7 +4822,7 @@
         }
 
         // ==================================================
-        // ⚠️ ОБНОВЛЁННАЯ ФУНКЦИЯ ИМПОРТА (С ПОНЯТНЫМИ СООБЩЕНИЯМИ)
+        // ⚠️ ФУНКЦИЯ ИМПОРТА (С ПОНЯТНЫМИ СООБЩЕНИЯМИ)
         // ==================================================
         async function processImport() {
             if (!checkPermission('canImport')) return;
@@ -5808,6 +5847,7 @@
             console.log('📊 Импорт: группировка по "Артикул продавца" (очищенный код) + Размер');
             console.log('📄 Поддержка: Excel (.xlsx, .xls) и PDF (с OCR и HTML-таблицами)');
             console.log('🔧 Очистка артикулов: VCT-64536904 → VCT-6, 6056763 → 605, YH0035618957 → YH003, LB001-A5620040 → LB001');
+            console.log('🔍 Парсинг: ищем буквы+цифры (YH0035618957, LB001-A5620040, VCT-64536904)');
             loadTheme();
             setLanguage(currentLanguage);
             
