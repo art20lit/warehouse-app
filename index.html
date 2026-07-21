@@ -3659,7 +3659,7 @@
         }
 
         // ==================================================
-        // 📤 ИМПОРТ (ОСНОВНАЯ ЛОГИКА)
+        // 📤 ИМПОРТ (ОСНОВНАЯ ЛОГИКА) - УНИВЕРСАЛЬНЫЙ
         // ==================================================
         function openImportExportModal() { 
             document.getElementById('importExportModal').classList.add('show'); 
@@ -3723,288 +3723,199 @@
         }
 
         // ==================================================
-        // 🔍 УЛУЧШЕННЫЙ ПАРСИНГ HTML ТАБЛИЦ (ВСЕ СТРОКИ)
+        // 🔥 УНИВЕРСАЛЬНЫЙ ПАРСИНГ PDF - РАБОТАЕТ С ЛЮБЫМИ PDF
         // ==================================================
 
-        function parseHtmlTable(text) {
-            const result = [];
-            
-            console.log('🔍 Начинаем парсинг HTML таблиц...');
-            
-            // Ищем все таблицы
-            const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
-            let tableMatch;
-            
-            while ((tableMatch = tableRegex.exec(text)) !== null) {
-                const tableContent = tableMatch[1];
-                console.log('📋 Найдена таблица, содержимое:', tableContent.substring(0, 200) + '...');
-                
-                // Ищем все строки
-                const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-                let rowMatch;
-                let rows = [];
-                
-                while ((rowMatch = rowRegex.exec(tableContent)) !== null) {
-                    rows.push(rowMatch[1]);
-                }
-                
-                console.log(`📊 Найдено ${rows.length} строк в таблице`);
-                
-                if (rows.length === 0) continue;
-                
-                // Парсим каждую строку
-                for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i];
-                    console.log(`🔍 Обработка строки ${i+1}:`, row.substring(0, 100) + '...');
-                    
-                    // Извлекаем ячейки
-                    const cellRegex = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
-                    let cellMatch;
-                    const cells = [];
-                    
-                    while ((cellMatch = cellRegex.exec(row)) !== null) {
-                        let content = cellMatch[1]
-                            .replace(/<[^>]+>/g, '') // Убираем HTML теги
-                            .trim()
-                            .replace(/\s+/g, ' ');
-                        cells.push(content);
-                    }
-                    
-                    console.log(`📋 Ячейки строки ${i+1}:`, cells);
-                    
-                    if (cells.length === 0) {
-                        console.log(`⚠️ Строка ${i+1} не содержит ячеек`);
-                        continue;
-                    }
-                    
-                    // Проверяем, является ли строка заголовком
-                    const headerKeywords = ['артикул', 'sku', 'размер', 'количество', 'наименование', 'бренд', 'стикер', 'задания'];
-                    const isHeader = cells.some(cell => 
-                        headerKeywords.some(keyword => cell.toLowerCase().includes(keyword))
-                    );
-                    
-                    if (isHeader && i === 0) {
-                        console.log(`📋 Строка ${i+1} - заголовок, пропускаем`);
-                        continue; // Пропускаем заголовок
-                    }
-                    
-                    // Ищем артикул и размер
-                    let sku = '';
-                    let size = '';
-                    let qty = 1;
-                    
-                    // Проходим по всем ячейкам
-                    for (const cell of cells) {
-                        const cleanCell = cell.trim();
-                        if (!cleanCell) continue;
-                        
-                        console.log(`🔍 Ячейка: "${cleanCell}"`);
-                        
-                        // Ищем артикул: YH003, LB001, VCT-6, 605-Dime
-                        const skuMatch = cleanCell.match(/\b([A-Z]{1,4}[0-9]{1,5}(?:-[A-Z0-9]{1,5})?)\b/i);
-                        if (skuMatch && !sku) {
-                            sku = skuMatch[1].toUpperCase();
-                            console.log(`✅ Найден артикул: ${sku}`);
-                            continue;
-                        }
-                        
-                        // Ищем склеенный артикул (буквы + цифры через пробел)
-                        if (!sku) {
-                            const mergedMatch = cleanCell.match(/\b([A-Z]{1,4})\s+([0-9]{4,15})\b/i);
-                            if (mergedMatch) {
-                                sku = (mergedMatch[1] + mergedMatch[2]).toUpperCase();
-                                console.log(`✅ Найден склеенный артикул: ${sku}`);
-                                continue;
-                            }
-                        }
-                        
-                        // Ищем размеры
-                        const sizeMatch = cleanCell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-                        if (sizeMatch && !size) {
-                            size = sizeMatch[1].toUpperCase();
-                            console.log(`✅ Найден размер: ${size}`);
-                            continue;
-                        }
-                    }
-                    
-                    // Если не нашли артикул, пробуем найти в объединенной строке
-                    if (!sku) {
-                        const fullRow = cells.join(' ');
-                        console.log(`🔍 Ищем артикул во всей строке: "${fullRow}"`);
-                        
-                        const skuMatch = fullRow.match(/\b([A-Z]{1,4}[0-9]{1,5}(?:-[A-Z0-9]{1,5})?)\b/i);
-                        if (skuMatch) {
-                            sku = skuMatch[1].toUpperCase();
-                            console.log(`✅ Найден артикул из всей строки: ${sku}`);
-                        }
-                    }
-                    
-                    // Если не нашли размер, пробуем найти во всей строке
-                    if (!size && sku) {
-                        const fullRow = cells.join(' ');
-                        const sizeMatch = fullRow.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-                        if (sizeMatch) {
-                            size = sizeMatch[1].toUpperCase();
-                            console.log(`✅ Найден размер из всей строки: ${size}`);
-                        }
-                    }
-                    
-                    // Добавляем найденный товар
-                    if (sku) {
-                        console.log(`✅ ДОБАВЛЕНО: ${sku} | ${size || 'БЕЗ РАЗМЕРА'} | ${qty}`);
-                        result.push({
-                            'Артикул': sku,
-                            'Размер': size || '',
-                            'Количество': qty
-                        });
-                    } else {
-                        console.log(`⚠️ Строка ${i+1} не содержит артикула`);
-                    }
-                }
-            }
-            
-            console.log(`📊 Итог парсинга HTML: ${result.length} записей`);
-            return result;
-        }
-
-        // ==================================================
-        // 🔍 УЛУЧШЕННЫЙ ПАРСИНГ PDF ТЕКСТА
-        // ==================================================
         function parsePDFTextToTable(text) {
-            console.log('📄 Текст для парсинга:', text);
+            console.log('📄 НАЧИНАЕМ ПАРСИНГ ТЕКСТА');
             
+            // Очищаем текст
             let cleanText = text
                 .replace(/\r/g, '')
+                .replace(/===+ Page \d+ ===/g, '')
                 .replace(/\n{3,}/g, '\n\n')
-                .replace(/\s{3,}/g, '  ');
+                .trim();
             
-            const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            console.log('📄 Длина текста:', cleanText.length);
+            
             const result = [];
             
-            // 🔥 Сначала пробуем найти HTML-таблицы
-            const hasHtmlTable = cleanText.includes('<table') || cleanText.includes('</table>');
-            if (hasHtmlTable) {
-                const htmlResult = parseHtmlTable(cleanText);
-                if (htmlResult.length > 0) {
-                    return htmlResult;
-                }
-            }
+            // Паттерны для поиска артикулов и размеров
+            const skuPattern = /([A-Z]{1,4}[0-9]{1,10}(?:-[A-Z0-9]{1,10})?)/gi;
+            const sizePattern = /\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i;
             
-            // 📊 Если нет HTML, парсим обычный текст
-            let currentSku = '';
-            let currentSize = '';
-            let currentQty = 1;
-            let foundSku = false;
+            // Разбиваем на строки
+            const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             
-            for (const line of lines) {
-                console.log('🔍 Обработка строки:', line);
+            console.log(`📄 Найдено ${lines.length} строк`);
+            
+            // Слова для пропуска (заголовки)
+            const skipWords = ['Дата:', 'Лист подбора', 'Количество товаров', '№ задания', 'Фото', 'Бренд', 
+                             'Наименование', 'Размер', 'Цвет', 'Артикул', 'Стикер', 'WB-GI', 'Склад', 
+                             'Номенклатура', 'Код', 'Наименование'];
+            
+            // Собираем все найденные артикулы с их контекстом
+            let allSkus = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
                 
-                // Пропускаем заголовки
-                if (line.includes('Дата:') || line.includes('Лист подбора') || 
-                    line.includes('Количество товаров') || line.includes('№ задания') ||
-                    line.includes('Фото') || line.includes('Бренд') || line.includes('Наименование')) {
+                // Пропускаем служебные строки
+                let skip = false;
+                for (const word of skipWords) {
+                    if (line.includes(word)) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip || (line.match(/^\d+$/) && line.length > 5)) {
                     continue;
                 }
                 
-                // Ищем артикулы в строке
-                const skuMatches = line.match(/\b([A-Z]{1,4}[0-9]{1,5}(?:-[A-Z0-9]{1,5})?)\b/gi);
+                // Ищем все артикулы в строке
+                const skuMatches = line.match(skuPattern);
                 if (skuMatches) {
-                    for (const match of skuMatches) {
-                        const sku = match.toUpperCase();
-                        // Ищем размер в этой же строке
-                        const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-                        let size = sizeMatch ? sizeMatch[1].toUpperCase() : '';
-                        
-                        // Если размер не найден, ищем в следующих строках
-                        if (!size) {
-                            // Сохраняем артикул для последующего поиска размера
-                            currentSku = sku;
-                            currentSize = '';
-                            foundSku = true;
-                            console.log(`🔍 Найден артикул: ${sku} (размер ищем позже)`);
-                            continue;
+                    for (const skuMatch of skuMatches) {
+                        let sku = skuMatch.toUpperCase();
+                        // Очищаем артикул - берем только буквы + 3-5 цифр
+                        if (sku.length > 5) {
+                            const cleanMatch = sku.match(/^([A-Z]{1,4})(\d{3,5})/);
+                            if (cleanMatch) {
+                                sku = cleanMatch[1] + cleanMatch[2];
+                            }
                         }
-                        
-                        console.log(`✅ Добавлен: ${sku} | ${size} | 1`);
-                        result.push({
-                            'Артикул': sku,
-                            'Размер': size,
-                            'Количество': 1
-                        });
-                        currentSku = '';
-                        foundSku = false;
-                    }
-                } else if (foundSku && currentSku) {
-                    // Если у нас есть сохраненный артикул, ищем размер в текущей строке
-                    const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-                    if (sizeMatch) {
-                        const size = sizeMatch[1].toUpperCase();
-                        console.log(`✅ Добавлен (размер найден позже): ${currentSku} | ${size} | 1`);
-                        result.push({
-                            'Артикул': currentSku,
-                            'Размер': size,
-                            'Количество': 1
-                        });
-                        currentSku = '';
-                        foundSku = false;
+                        if (sku.length >= 3) {
+                            allSkus.push({
+                                sku: sku,
+                                lineIndex: i,
+                                line: line,
+                                original: skuMatch,
+                                context: line
+                            });
+                        }
                     }
                 }
             }
             
-            console.log(`📊 Итог парсинга: ${result.length} записей`);
-            return result;
-        }
-
-        // ==================================================
-        // 🧠 УЛУЧШЕННАЯ ФУНКЦИЯ ГРУППИРОВКИ ДАННЫХ
-        // ==================================================
-        function groupImportData(rawData, skuKey, sizeKey, qtyKey) {
-            const groups = {};
-            let totalRows = 0;
+            console.log(`🔍 Найдено ${allSkus.length} артикулов`);
             
-            console.log('📊 Начинаем группировку данных...');
-            console.log(`📄 Всего записей: ${rawData.length}`);
-            
-            rawData.forEach(row => {
-                let rawSku = String(row[skuKey] || '').trim();
-                let cleanSku = extractCleanSku(rawSku);
+            // Если артикулы найдены - ищем для каждого размер
+            if (allSkus.length > 0) {
+                // Сортируем по индексу строки
+                allSkus.sort((a, b) => a.lineIndex - b.lineIndex);
                 
-                let size = sizeKey ? String(row[sizeKey] || '').trim().toUpperCase() : '';
-                
-                let qty = parseInt(row[qtyKey]) || 1; // По умолчанию 1, если количество не указано
-                if (qty === 0) qty = 1;
-                
-                totalRows++;
-                
-                const groupKey = `${cleanSku}|${size}`;
-                
-                if (groups[groupKey]) {
-                    groups[groupKey].quantity += qty;
-                    console.log(`➕ Суммируем: ${cleanSku} + ${size} = ${groups[groupKey].quantity}`);
-                } else {
-                    const nameKey = Object.keys(row).find(h => 
-                        h.toLowerCase().includes('назван') || 
-                        h.toLowerCase().includes('наимен') || 
-                        h.toLowerCase().includes('name') ||
-                        h.toLowerCase().includes('товар')
-                    );
-                    const name = nameKey ? String(row[nameKey] || '').trim() : cleanSku;
+                for (const item of allSkus) {
+                    let size = '';
+                    const lineIndex = item.lineIndex;
                     
-                    groups[groupKey] = {
-                        sku: cleanSku,
-                        originalSku: rawSku,
-                        size: size,
-                        quantity: qty,
-                        name: name || cleanSku,
-                        rawData: row
-                    };
-                    console.log(`🆕 Новая группа: ${cleanSku} + ${size} = ${qty}`);
+                    // Ищем размер в этой же строке
+                    const sizeMatch = item.line.match(sizePattern);
+                    if (sizeMatch) {
+                        size = sizeMatch[0].toUpperCase();
+                    }
+                    
+                    // Если не нашли - ищем в следующих 3 строках
+                    if (!size) {
+                        for (let j = 1; j <= 3; j++) {
+                            if (lineIndex + j < lines.length) {
+                                const nextLine = lines[lineIndex + j];
+                                // Пропускаем строки с числами (номера заданий)
+                                if (!nextLine.match(/^\d+$/)) {
+                                    const nextSizeMatch = nextLine.match(sizePattern);
+                                    if (nextSizeMatch) {
+                                        size = nextSizeMatch[0].toUpperCase();
+                                        console.log(`🔍 Размер найден в строке ${lineIndex+j+1}: ${size}`);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Если не нашли - ищем в предыдущей строке
+                    if (!size && lineIndex > 0) {
+                        const prevLine = lines[lineIndex - 1];
+                        if (!prevLine.match(/^\d+$/)) {
+                            const prevSizeMatch = prevLine.match(sizePattern);
+                            if (prevSizeMatch) {
+                                size = prevSizeMatch[0].toUpperCase();
+                                console.log(`🔍 Размер найден в строке ${lineIndex}: ${size}`);
+                            }
+                        }
+                    }
+                    
+                    // Проверяем на дубликат
+                    const exists = result.some(r => r['Артикул'] === item.sku && r['Размер'] === size);
+                    if (!exists) {
+                        console.log(`✅ ДОБАВЛЕН: ${item.sku} | ${size || 'БЕЗ РАЗМЕРА'} | 1`);
+                        result.push({
+                            'Артикул': item.sku,
+                            'Размер': size || '',
+                            'Количество': 1
+                        });
+                    }
                 }
-            });
+            }
             
-            const result = Object.values(groups);
-            console.log(`📊 Группировка завершена: ${result.length} уникальных товаров из ${totalRows} строк`);
-            return result;
+            // Если ничего не нашли - пробуем альтернативный метод (ищем по всему тексту)
+            if (result.length === 0) {
+                console.log('🔄 Альтернативный метод - поиск по всему тексту...');
+                
+                // Ищем все комбинации букв+цифр во всем тексте
+                const allMatches = cleanText.match(/([A-Z]{1,4}[0-9]{3,10})/gi);
+                if (allMatches) {
+                    const uniqueSkus = [...new Set(allMatches.map(s => s.toUpperCase()))];
+                    console.log(`🔍 Найдено ${uniqueSkus.length} уникальных артикулов`);
+                    
+                    for (const sku of uniqueSkus) {
+                        // Очищаем артикул
+                        let cleanSku = sku;
+                        if (cleanSku.length > 5) {
+                            const match = cleanSku.match(/^([A-Z]{1,4})(\d{3,5})/);
+                            if (match) {
+                                cleanSku = match[1] + match[2];
+                            }
+                        }
+                        
+                        if (cleanSku.length < 3) continue;
+                        
+                        // Ищем размер рядом с артикулом
+                        const idx = cleanText.indexOf(sku);
+                        const start = Math.max(0, idx - 60);
+                        const end = Math.min(cleanText.length, idx + 60);
+                        const context = cleanText.substring(start, end);
+                        
+                        const sizeMatch = context.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                        const size = sizeMatch ? sizeMatch[0].toUpperCase() : '';
+                        
+                        const exists = result.some(r => r['Артикул'] === cleanSku && r['Размер'] === size);
+                        if (!exists) {
+                            console.log(`✅ ДОБАВЛЕН (альт): ${cleanSku} | ${size || 'БЕЗ РАЗМЕРА'} | 1`);
+                            result.push({
+                                'Артикул': cleanSku,
+                                'Размер': size || '',
+                                'Количество': 1
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Удаляем дубликаты по артикул+размер
+            const uniqueResult = [];
+            const seen = new Set();
+            for (const item of result) {
+                const key = `${item['Артикул']}|${item['Размер']}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueResult.push(item);
+                }
+            }
+            
+            console.log(`📊 ИТОГ: найдено ${uniqueResult.length} уникальных товаров`);
+            console.log('📊 Результат:', JSON.stringify(uniqueResult, null, 2));
+            
+            return uniqueResult;
         }
 
         async function handlePDFImport(file) {
@@ -4013,53 +3924,89 @@
             try {
                 ocrStatus.classList.add('show');
                 ocrText.textContent = '📖 Чтение PDF файла...';
+                
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                
+                console.log(`📄 PDF: ${pdf.numPages} страниц`);
+                
+                // Собираем текст со всех страниц
                 let fullText = '';
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(item => item.str).join(' ') + '\n';
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                    console.log(`📄 Страница ${i} текст (PDF.js): ${pageText.length} символов`);
                 }
-                ocrText.textContent = '🔄 Запуск OCR распознавания...';
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                let ocrTextResult = '';
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: 2.0 });
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-                    const imageData = canvas.toDataURL('image/png');
-                    const result = await Tesseract.recognize(imageData, 'rus+eng', {
-                        logger: m => {
-                            if (m.status === 'recognizing text') {
-                                ocrText.textContent = `🔄 OCR страница ${i}/${pdf.numPages}: ${Math.round(m.progress * 100)}%`;
+                
+                // Если текст есть - парсим
+                let parsedData = [];
+                if (fullText.trim().length > 0) {
+                    parsedData = parsePDFTextToTable(fullText);
+                }
+                
+                // Если не нашли данные или текста мало - запускаем OCR
+                if (parsedData.length === 0) {
+                    console.log('🔄 Запускаем OCR для распознавания...');
+                    ocrText.textContent = '🔄 Запуск OCR распознавания...';
+                    
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    let ocrTextResult = '';
+                    
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        console.log(`🔄 OCR страница ${i}...`);
+                        const page = await pdf.getPage(i);
+                        
+                        const viewport = page.getViewport({ scale: 2.0 });
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                        
+                        const imageData = canvas.toDataURL('image/png');
+                        const result = await Tesseract.recognize(imageData, 'rus+eng', {
+                            logger: m => {
+                                if (m.status === 'recognizing text') {
+                                    ocrText.textContent = `🔄 OCR страница ${i}/${pdf.numPages}: ${Math.round(m.progress * 100)}%`;
+                                }
                             }
-                        }
-                    });
-                    ocrTextResult += result.data.text + '\n';
+                        });
+                        ocrTextResult += result.data.text + '\n';
+                        console.log(`🔄 OCR страница ${i} результат: ${result.data.text.length} символов`);
+                    }
+                    
+                    ocrStatus.classList.remove('show');
+                    
+                    if (ocrTextResult.trim().length > 0) {
+                        parsedData = parsePDFTextToTable(ocrTextResult);
+                    } else {
+                        showNotification('❌ Не удалось распознать текст в PDF', 'error');
+                        return;
+                    }
+                } else {
+                    ocrStatus.classList.remove('show');
                 }
-                let finalText = fullText;
-                if (ocrTextResult.trim().length > fullText.trim().length) finalText = ocrTextResult;
-                else if (ocrTextResult.trim().length > 0) finalText += '\n' + ocrTextResult;
-                ocrStatus.classList.remove('show');
-                const parsedData = parsePDFTextToTable(finalText);
+                
                 if (parsedData.length === 0) {
                     showNotification('❌ Не удалось извлечь данные из PDF', 'error');
                     return;
                 }
+                
+                // Группируем данные
                 const groupedData = groupImportData(parsedData, 'Артикул', 'Размер', 'Количество');
+                
                 const preview = document.getElementById('importPreview');
                 document.getElementById('importFileName').textContent = `📄 ${file.name} (PDF)`;
                 document.getElementById('importFileCount').textContent = `Сгруппировано ${groupedData.length} уникальных товаров из ${parsedData.length} строк`;
                 preview.classList.add('show');
                 importFileData = groupedData;
+                
                 await loadMasterSkuCache();
                 const matchedData = matchSkuWithDatabase(groupedData);
                 document.getElementById('importStatus').innerHTML = generateImportStatusHTML(matchedData);
                 showNotification(`✅ Извлечено ${parsedData.length} записей из PDF, сопоставлено ${matchedData.matchedCount} артикулов`, 'success');
+                
             } catch (e) {
                 console.error('❌ Ошибка обработки PDF:', e);
                 ocrStatus.classList.remove('show');
@@ -4102,6 +4049,53 @@
                 }
             };
             reader.readAsArrayBuffer(file);
+        }
+
+        function groupImportData(rawData, skuKey, sizeKey, qtyKey) {
+            const groups = {};
+            let totalRows = 0;
+            
+            console.log('📊 Начинаем группировку данных...');
+            console.log(`📄 Всего записей: ${rawData.length}`);
+            
+            rawData.forEach(row => {
+                let rawSku = String(row[skuKey] || '').trim();
+                let cleanSku = extractCleanSku(rawSku);
+                
+                let size = sizeKey ? String(row[sizeKey] || '').trim().toUpperCase() : '';
+                
+                let qty = parseInt(row[qtyKey]) || 1;
+                if (qty === 0) qty = 1;
+                
+                totalRows++;
+                
+                const groupKey = `${cleanSku}|${size}`;
+                
+                if (groups[groupKey]) {
+                    groups[groupKey].quantity += qty;
+                } else {
+                    const nameKey = Object.keys(row).find(h => 
+                        h.toLowerCase().includes('назван') || 
+                        h.toLowerCase().includes('наимен') || 
+                        h.toLowerCase().includes('name') ||
+                        h.toLowerCase().includes('товар')
+                    );
+                    const name = nameKey ? String(row[nameKey] || '').trim() : cleanSku;
+                    
+                    groups[groupKey] = {
+                        sku: cleanSku,
+                        originalSku: rawSku,
+                        size: size,
+                        quantity: qty,
+                        name: name || cleanSku,
+                        rawData: row
+                    };
+                }
+            });
+            
+            const result = Object.values(groups);
+            console.log(`📊 Группировка завершена: ${result.length} уникальных товаров из ${totalRows} строк`);
+            return result;
         }
 
         async function processImportWithIntelligentMatch() {
