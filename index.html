@@ -1901,6 +1901,11 @@
         const db = firebase.firestore();
 
         // ==================================================
+        // ⚙️ НАСТРОЙКА PDF.JS
+        // ==================================================
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // ==================================================
         // 📱 TELEGRAM
         // ==================================================
         const TELEGRAM_BOT_TOKEN = '8901067381:AAFM93llzCV4PIeaWHVyYPzyVXmxZm0bIiY';
@@ -4245,30 +4250,9 @@
 
         function closeImportFileModal() { document.getElementById('importFileModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
 
-        // ===== ОБНОВЛЁННАЯ ФУНКЦИЯ ОБРАБОТКИ ФАЙЛА (PDF + Excel) =====
-        function handleImportFile(event) {
-            if (!checkPermission('canImport')) return;
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const fileExt = file.name.split('.').pop().toLowerCase();
-            
-            // 📄 Если PDF — используем PDF.js + OCR
-            if (fileExt === 'pdf') {
-                handlePDFImport(file);
-                return;
-            }
-            
-            // 📊 Если Excel — старая логика
-            if (['xlsx', 'xls'].includes(fileExt)) {
-                handleExcelImport(file);
-                return;
-            }
-            
-            showNotification('❌ Поддерживаются только .xlsx, .xls и .pdf', 'error');
-        }
-
-        // ===== 📄 ОБРАБОТКА PDF С OCR =====
+        // ==================================================
+        // 📄 ОБРАБОТКА PDF С ПРИНУДИТЕЛЬНЫМ OCR
+        // ==================================================
         async function handlePDFImport(file) {
             const ocrStatus = document.getElementById('ocrStatus');
             const ocrText = document.getElementById('ocrStatusText');
@@ -4276,69 +4260,93 @@
             try {
                 // Показываем статус OCR
                 ocrStatus.classList.add('show');
-                ocrText.textContent = t('import_pdf_ocr');
+                ocrText.textContent = '📖 Чтение PDF файла...';
                 
-                // 1️⃣ Пробуем извлечь текст через PDF.js
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 
+                console.log('📄 Количество страниц:', pdf.numPages);
+                
+                // 1️⃣ Сначала пробуем извлечь текст через PDF.js
                 let fullText = '';
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
                     const pageText = textContent.items.map(item => item.str).join(' ');
                     fullText += pageText + '\n';
+                    console.log(`📄 Страница ${i} текст (PDF.js):`, pageText.substring(0, 200));
                 }
                 
-                // Если текста мало — пробуем OCR через Tesseract.js
-                if (fullText.trim().length < 50) {
-                    ocrText.textContent = '🔄 Запуск OCR распознавания...';
+                // 2️⃣ Всегда запускаем OCR для лучшего распознавания
+                // Даже если текст есть, OCR даст более структурированный результат
+                ocrText.textContent = '🔄 Запуск OCR распознавания (для лучшей точности)...';
+                
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                let ocrTextResult = '';
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    console.log(`🔄 OCR страница ${i}...`);
+                    const page = await pdf.getPage(i);
                     
-                    // Конвертируем PDF в изображения (через canvas)
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    let ocrTextResult = '';
+                    // Увеличиваем масштаб для лучшего распознавания
+                    const viewport = page.getViewport({ scale: 2.0 });
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
                     
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const viewport = page.getViewport({ scale: 1.5 });
-                        canvas.width = viewport.width;
-                        canvas.height = viewport.height;
-                        
-                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-                        
-                        // Распознаём через Tesseract
-                        const imageData = canvas.toDataURL('image/png');
-                        const result = await Tesseract.recognize(imageData, 'rus+eng', {
-                            logger: m => {
-                                if (m.status === 'recognizing text') {
-                                    ocrText.textContent = `🔄 OCR: ${Math.round(m.progress * 100)}%`;
-                                }
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                    
+                    // Конвертируем в изображение
+                    const imageData = canvas.toDataURL('image/png');
+                    
+                    // Распознаём через Tesseract
+                    const result = await Tesseract.recognize(imageData, 'rus+eng', {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                ocrText.textContent = `🔄 OCR страница ${i}/${pdf.numPages}: ${Math.round(m.progress * 100)}%`;
                             }
-                        });
-                        
-                        ocrTextResult += result.data.text + '\n';
-                    }
+                        }
+                    });
                     
-                    fullText = ocrTextResult;
+                    ocrTextResult += result.data.text + '\n';
+                    console.log(`🔄 OCR страница ${i} результат:`, result.data.text.substring(0, 200));
+                }
+                
+                // Сравниваем результаты и берём лучший
+                let finalText = fullText;
+                if (ocrTextResult.trim().length > fullText.trim().length) {
+                    console.log('✅ OCR дал больше текста, используем его');
+                    finalText = ocrTextResult;
+                } else {
+                    console.log('✅ PDF.js дал больше текста, используем его');
+                    // Но всё равно добавляем OCR как дополнение
+                    if (ocrTextResult.trim().length > 0) {
+                        finalText += '\n' + ocrTextResult;
+                    }
                 }
                 
                 ocrStatus.classList.remove('show');
                 
-                // 🔍 Парсим текст в структуру (ищем таблицы)
-                const parsedData = parsePDFTextToTable(fullText);
+                // 🔍 Парсим текст
+                console.log('🔍 Начинаем парсинг текста...');
+                console.log('📄 Итоговый текст для парсинга:', finalText);
+                
+                const parsedData = parsePDFTextToTable(finalText);
+                console.log('📊 Результат парсинга:', parsedData);
                 
                 if (parsedData.length === 0) {
-                    showNotification(t('import_pdf_no_text'), 'error');
+                    console.log('❌ Не удалось извлечь данные из PDF');
+                    showNotification('❌ Не удалось извлечь данные из PDF. Попробуйте другой файл.', 'error');
                     return;
                 }
                 
-                // 📊 Группируем данные (как в Excel)
+                // 📊 Группируем данные
                 const skuKey = 'Артикул';
                 const sizeKey = 'Размер';
                 const qtyKey = 'Количество';
                 
                 const groupedData = groupImportData(parsedData, skuKey, sizeKey, qtyKey);
+                console.log('📊 Сгруппированные данные:', groupedData);
                 
                 const preview = document.getElementById('importPreview');
                 document.getElementById('importFileName').textContent = `📄 ${file.name} (PDF)`;
@@ -4356,34 +4364,40 @@
                     </button>
                     <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
                         📄 Извлечено из PDF: ${parsedData.length} строк | Группировка по Артикулу + Размеру
-                        ${fullText.includes('OCR') ? ' | 🔍 Использован OCR' : ''}
-                        ${fullText.includes('<table') ? ' | 📊 Распознана HTML-таблица' : ''}
+                        ${finalText.includes('OCR') ? ' | 🔍 Использован OCR' : ''}
+                        ${finalText.includes('<table') ? ' | 📊 Распознана HTML-таблица' : ''}
                     </div>
                 `;
                 
-                showNotification(t('import_pdf_ocr_done', { count: parsedData.length }), 'success');
+                showNotification(`✅ Извлечено ${parsedData.length} записей из PDF`, 'success');
                 
             } catch (e) {
-                console.error('Ошибка PDF:', e);
+                console.error('❌ Ошибка обработки PDF:', e);
                 ocrStatus.classList.remove('show');
-                showNotification(t('import_pdf_ocr_error', { error: e.message }), 'error');
+                showNotification('❌ Ошибка: ' + e.message, 'error');
             }
         }
 
         // ==================================================
-        // 🔍 ПАРСИНГ ТЕКСТА PDF В ТАБЛИЦУ (ГАРАНТИРОВАННО РАБОТАЕТ)
+        // 🔍 ПАРСИНГ ТЕКСТА PDF В ТАБЛИЦУ (СУПЕР ГИБКИЙ)
         // ==================================================
         function parsePDFTextToTable(text) {
             console.log('📄 Текст для парсинга:', text);
             
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            // 🔥 Очищаем текст от лишних символов
+            let cleanText = text
+                .replace(/\r/g, '')
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/\s{3,}/g, '  ');
+            
+            const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             const result = [];
             
             // 🔥 Проверяем, есть ли HTML-таблица
-            const hasHtmlTable = text.includes('<table') || text.includes('</table>');
+            const hasHtmlTable = cleanText.includes('<table') || cleanText.includes('</table>');
             
             if (hasHtmlTable) {
-                const htmlResult = parseHtmlTable(text);
+                const htmlResult = parseHtmlTable(cleanText);
                 if (htmlResult.length > 0) {
                     return htmlResult;
                 }
@@ -4406,87 +4420,81 @@
                 
                 if (words.length < 3) continue;
                 
-                // 🔥 Ищем номер задания (8-10 цифр)
-                let taskNumber = '';
-                let taskIndex = -1;
-                for (let i = 0; i < words.length; i++) {
-                    if (/^\d{8,10}$/.test(words[i])) {
-                        taskNumber = words[i];
-                        taskIndex = i;
-                        break;
-                    }
-                }
-                if (!taskNumber) continue;
-                console.log(`🔍 Номер задания: ${taskNumber} на позиции ${taskIndex}`);
-                
-                // 🔥 Ищем артикул (после номера задания)
+                // 🔥 Ищем номер задания (8-10 цифр) или артикул (буквы+цифры)
                 let sku = '';
-                let skuParts = [];
                 let foundSize = '';
-                let sizeIndex = -1;
+                let taskIndex = -1;
                 
-                // Проходим по словам после номера задания
-                for (let i = taskIndex + 1; i < words.length; i++) {
+                // Сначала ищем артикул (буквы+цифры)
+                for (let i = 0; i < words.length; i++) {
                     const word = words[i];
                     
-                    // 🔥 Проверяем, не размер ли это
-                    if (/^(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})$/.test(word)) {
-                        foundSize = word.toUpperCase();
-                        sizeIndex = i;
-                        console.log(`🔍 Найден размер: ${foundSize} на позиции ${i}`);
+                    // Ищем артикул: YH003, LB001-A, VCT-6, 605-Dime и т.д.
+                    if (/^[A-Z]{1,4}[0-9]{1,5}(?:-[A-Z0-9]+)?$/i.test(word)) {
+                        sku = word.toUpperCase();
+                        taskIndex = i;
+                        console.log(`🔍 Найден артикул: ${sku} на позиции ${i}`);
                         break;
                     }
-                    
-                    // 🔥 Собираем части артикула (буквы + цифры)
-                    // YH003, LB001-A, VCT-6 и т.д.
-                    if (/^[A-Z]{1,4}[0-9]{1,5}$/.test(word)) {
-                        skuParts.push(word);
-                        console.log(`🔍 Часть артикула: ${word}`);
-                    } else if (/^[A-Z]{1,4}[0-9]{1,5}-[A-Z]{1,2}$/.test(word)) {
-                        skuParts.push(word);
-                        console.log(`🔍 Часть артикула с дефисом: ${word}`);
-                    } else if (/^[0-9]+$/.test(word) && skuParts.length > 0) {
-                        // Если это цифры и у нас уже есть части артикула - добавляем
-                        skuParts.push(word);
-                        console.log(`🔍 Добавляем цифры к артикулу: ${word}`);
-                    } else if (/^[A-Z]{1,4}$/.test(word) && skuParts.length > 0) {
-                        // Если это буквы и у нас уже есть части артикула - добавляем (для LB001-A)
-                        skuParts.push(word);
-                        console.log(`🔍 Добавляем буквы к артикулу: ${word}`);
-                    }
                 }
                 
-                // 🔥 Склеиваем артикул
-                if (skuParts.length > 0) {
-                    sku = skuParts.join('').toUpperCase();
-                    console.log(`🔍 Склеенный артикул: ${sku}`);
-                }
-                
-                // 🔥 Если не нашли размер, пробуем найти его в строке
-                if (!foundSize) {
-                    const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-                    if (sizeMatch) {
-                        foundSize = sizeMatch[1].toUpperCase();
-                        console.log(`🔍 Найден размер (запасной): ${foundSize}`);
-                    }
-                }
-                
-                // 🔥 Если не нашли артикул, пробуем найти в строке
+                // Если не нашли артикул, ищем номер задания и пытаемся найти артикул после него
                 if (!sku) {
-                    // Ищем паттерн: буквы + цифры (могут быть разделены)
+                    for (let i = 0; i < words.length; i++) {
+                        if (/^\d{8,10}$/.test(words[i])) {
+                            taskIndex = i;
+                            console.log(`🔍 Номер задания: ${words[i]} на позиции ${i}`);
+                            break;
+                        }
+                    }
+                    
+                    // Ищем артикул после номера задания
+                    if (taskIndex !== -1) {
+                        for (let i = taskIndex + 1; i < words.length; i++) {
+                            const word = words[i];
+                            // Проверяем, не размер ли это
+                            if (/^(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})$/.test(word)) {
+                                foundSize = word.toUpperCase();
+                                console.log(`🔍 Найден размер: ${foundSize} на позиции ${i}`);
+                                continue;
+                            }
+                            // Ищем артикул (буквы+цифры)
+                            if (/^[A-Z]{1,4}[0-9]{1,5}$/i.test(word) || /^[A-Z]{1,4}[0-9]{1,5}-[A-Z]{1,2}$/i.test(word)) {
+                                sku = word.toUpperCase();
+                                console.log(`🔍 Найден артикул после номера задания: ${sku}`);
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Если нашли артикул, но он без цифр, ищем цифры рядом
+                if (sku && !sku.match(/[0-9]/)) {
+                    // Ищем цифры в следующих словах
+                    for (let i = 0; i < words.length; i++) {
+                        if (words[i] === sku && i + 1 < words.length && /^\d+$/.test(words[i + 1])) {
+                            sku = sku + words[i + 1];
+                            console.log(`🔍 Добавлены цифры к артикулу: ${sku}`);
+                            break;
+                        }
+                    }
+                }
+                
+                // Если всё ещё нет артикула, пробуем найти в строке
+                if (!sku) {
                     const skuMatch = line.match(/\b([A-Z]{1,4})\s+([0-9]{4,15})\b/i);
                     if (skuMatch) {
                         sku = (skuMatch[1] + skuMatch[2]).toUpperCase();
                         console.log(`🔍 Найден артикул (склеенный из строки): ${sku}`);
                     }
-                    
-                    // Если не нашли, пробуем другой паттерн
-                    if (!sku) {
-                        const skuMatch2 = line.match(/\b([A-Z]{1,4}[0-9]{3,15}(?:-[A-Z0-9]+)?)\b/i);
-                        if (skuMatch2) {
-                            sku = skuMatch2[1].toUpperCase();
-                            console.log(`🔍 Найден артикул (запасной): ${sku}`);
-                        }
+                }
+                
+                // Если не нашли размер, пробуем найти его в строке
+                if (!foundSize) {
+                    const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                    if (sizeMatch) {
+                        foundSize = sizeMatch[1].toUpperCase();
+                        console.log(`🔍 Найден размер (запасной): ${foundSize}`);
                     }
                 }
                 
@@ -4500,7 +4508,7 @@
                 } else if (sku) {
                     console.log(`⚠️ Найден артикул ${sku}, но не найден размер`);
                 } else {
-                    console.log(`⚠️ Не найден артикул в строке`);
+                    console.log(`⚠️ Не найден артикул в строке: ${line.substring(0, 100)}...`);
                 }
             }
             
@@ -5789,6 +5797,7 @@
             console.log('📄 Поддержка: Excel (.xlsx, .xls) и PDF (с OCR и HTML-таблицами)');
             console.log('🔧 Очистка артикулов: VCT-64536904 → VCT-6, 6056763 → 605, YH0035618957 → YH003, LB001-A5620040 → LB001');
             console.log('🔍 Парсинг: ищем буквы+цифры (YH0035618957, LB001-A5620040, VCT-64536904)');
+            console.log('🔄 Принудительный OCR для всех PDF файлов');
             loadTheme();
             setLanguage(currentLanguage);
             
