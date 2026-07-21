@@ -2213,8 +2213,7 @@
                 close: 'Закрыть'
             },
             en: {
-                // === COMMON ===
-                warehouse: 'Warehouse Management',
+                // === COMMON ===                warehouse: 'Warehouse Management',
                 allProducts: 'All Products',
                 lowStock: 'Low Stock',
                 history: 'History',
@@ -4722,27 +4721,66 @@
             return Object.values(groups);
         }
 
-        // ===== ФУНКЦИЯ ОЧИСТКИ АРТИКУЛА =====
+        // ==================================================
+        // 🔧 ОБНОВЛЁННАЯ ФУНКЦИЯ ОЧИСТКИ АРТИКУЛА
+        // ==================================================
         function extractCleanSku(sku) {
             if (!sku) return '';
             
-            let clean = sku.split('-')[0];
+            // 1️⃣ Убираем лишние пробелы и приводим к верхнему регистру
+            let clean = sku.trim().toUpperCase();
             
-            const parts = sku.split('-');
-            if (parts.length >= 2) {
-                clean = parts.slice(0, 2).join('-');
+            // 2️⃣ Проверяем, есть ли в артикуле буквы
+            const hasLetters = /[A-Z]/.test(clean);
+            
+            if (hasLetters) {
+                // 🔤 Если есть буквы (например VCT-64536904 или 605-Dime-015576666)
+                // Ищем паттерн: буквы + цифры или буквы + дефис + цифры
+                const match = clean.match(/^([A-Z]+[\-]?[0-9]+)/);
+                if (match) {
+                    clean = match[1];
+                }
+                
+                // Если после очистки осталось что-то типа VCT-64536904, 
+                // пробуем взять только первую часть до дефиса
+                if (clean && clean.includes('-')) {
+                    const parts = clean.split('-');
+                    // Если вторая часть состоит только из цифр, берём обе части
+                    // VCT-64536904 → VCT-6 (берём первые две части)
+                    if (parts.length >= 2 && /^\d+$/.test(parts[1])) {
+                        // Берём буквенную часть + первую цифру из числовой части
+                        const letterPart = parts[0];
+                        const numberPart = parts[1];
+                        // Берём первую цифру из числовой части
+                        const firstDigit = numberPart.charAt(0);
+                        clean = `${letterPart}-${firstDigit}`;
+                    } else {
+                        clean = parts[0];
+                    }
+                }
             } else {
-                clean = parts[0];
+                // 🔢 Если только цифры (например 6056763 или 60412345)
+                // Ищем паттерн: 3 цифры (артикул) + любые другие цифры
+                const match = clean.match(/^(\d{3})/);
+                if (match) {
+                    clean = match[1];
+                }
             }
             
-            clean = clean.trim().toUpperCase();
+            // 3️⃣ Убираем всё, что не является буквами, цифрами и дефисом
+            clean = clean.replace(/[^A-Z0-9\-]/g, '');
             
-            if (!clean) return sku.trim().toUpperCase();
+            // 4️⃣ Если осталось пусто, возвращаем оригинал (очищенный от мусора)
+            if (!clean) {
+                return sku.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+            }
             
             return clean;
         }
 
-        // ===== ОБНОВЛЁННАЯ ФУНКЦИЯ ИМПОРТА (ДОБАВЛЯЕТ НОВЫЕ ТОВАРЫ) =====
+        // ==================================================
+        // ⚠️ ОБНОВЛЁННАЯ ФУНКЦИЯ ИМПОРТА (НЕ СОЗДАЁТ НОВЫЕ ПРИ УБАВЛЕНИИ)
+        // ==================================================
         async function processImport() {
             if (!checkPermission('canImport')) return;
             if (!importFileData || importFileData.length === 0) { 
@@ -4821,7 +4859,7 @@
                         found: false,
                         existing: null,
                         currentQty: 0,
-                        willCreate: true
+                        willCreate: false
                     });
                 }
             }
@@ -4834,7 +4872,7 @@
             ).join('');
             
             let notFoundHtml = results.filter(r => !r.found).map(r => 
-                `<div style="color:var(--warning-color);">🆕 ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. (БУДЕТ СОЗДАН)</div>`
+                `<div style="color:var(--danger-color);">❌ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. (НЕ НАЙДЕН в базе) ${importMode === 'subtract' ? '— ПРОПУЩЕН' : '— БУДЕТ СОЗДАН'}</div>`
             ).join('');
             
             statusEl.innerHTML = `
@@ -4847,104 +4885,65 @@
                 </div>
                 <div style="font-size:13px; margin-bottom:8px; padding:8px; background:var(--bg-card); border-radius:8px;">
                     <span style="color:var(--success-color);">✅ Найдено: ${foundCount}</span> | 
-                    <span style="color:var(--warning-color);">🆕 Будет создано: ${notFoundCount}</span>
+                    <span style="color:var(--danger-color);">❌ Не найдено: ${notFoundCount}</span>
+                    ${importMode === 'subtract' ? ' | ⛔ Пропущены (режим убавления)' : ''}
                 </div>
                 <div style="font-size:13px; color:var(--text-secondary); margin-bottom:8px;">
-                    ⏳ Обработка ${results.length} товаров...
+                    ⏳ Обработка ${foundCount} найденных товаров...
                 </div>
             `;
             
             let updated = 0, added = 0, errors = 0;
-            const total = results.length;
+            const total = results.filter(r => r.found).length;
             let processed = 0;
             
-            // 🔄 Обрабатываем ВСЕ товары (и найденные, и новые)
+            // 🔄 Обрабатываем только найденные товары
             for (const result of results) {
+                if (!result.found) {
+                    processed++;
+                    continue;
+                }
+                
                 try {
                     const sku = result.sku;
                     const size = result.size;
                     const fileQty = result.quantity;
-                    const name = result.name || sku;
+                    const existing = result.existing;
                     
-                    if (result.found) {
-                        // ✅ Товар найден → обновляем количество
-                        const existing = result.existing;
-                        let newQty;
-                        let actionText = '';
-                        
-                        if (importMode === 'add') {
-                            newQty = existing.quantity + fileQty;
-                            actionText = `➕ Добавлено ${fileQty}`;
-                        } else if (importMode === 'subtract') {
-                            newQty = Math.max(0, existing.quantity - fileQty);
-                            actionText = `➖ Убавлено ${fileQty}`;
-                        } else { // replace
-                            newQty = fileQty;
-                            actionText = `🔄 Заменено на ${fileQty}`;
-                        }
-                        
-                        await db.collection('products').doc(existing.id).update({ 
-                            quantity: newQty,
-                            updatedAt: new Date().toISOString(),
-                            updatedBy: currentUser.uid,
-                            lastImportQty: fileQty,
-                            lastImportMode: importMode,
-                            lastImportDate: new Date().toISOString()
-                        });
-                        updated++;
-                        
-                        console.log(`✅ Обновлён: ${existing.name} | ${sku} | ${size} | ${existing.quantity} → ${newQty} (${actionText})`);
-                        
-                        await sendTelegramNotification(
-                            `🔄 Обновлён товар: ${existing.name}\n` +
-                            `📦 Артикул: ${sku}\n` +
-                            `📏 Размер: ${size || 'не указан'}\n` +
-                            `${actionText}\n` +
-                            `📊 Было: ${existing.quantity} → Стало: ${newQty}`
-                        );
-                        
-                    } else {
-                        // 🆕 Товар НЕ найден → СОЗДАЁМ новый
-                        let initialQty;
-                        let actionText = '';
-                        
-                        if (importMode === 'add') {
-                            initialQty = fileQty;
-                            actionText = '➕ Добавлен (новый)';
-                        } else if (importMode === 'subtract') {
-                            initialQty = 0;
-                            actionText = '➖ Создан с 0 (убавление)';
-                        } else { // replace
-                            initialQty = fileQty;
-                            actionText = '🔄 Создан (замена)';
-                        }
-                        
-                        const newProduct = {
-                            name: name || sku,
-                            skus: [sku],
-                            sku: sku,
-                            size: size || '',
-                            quantity: initialQty,
-                            subcategoryId: '',
-                            minStock: 5,
-                            createdAt: new Date().toISOString(),
-                            createdBy: currentUser.uid,
-                            importedFrom: 'excel',
-                            importDate: new Date().toISOString()
-                        };
-                        
-                        await db.collection('products').add(newProduct);
-                        added++;
-                        
-                        console.log(`➕ Добавлен новый товар: ${newProduct.name} | ${sku} | ${size} | ${initialQty} (${actionText})`);
-                        
-                        await sendTelegramNotification(
-                            `➕ Добавлен новый товар: ${newProduct.name}\n` +
-                            `📦 Артикул: ${sku}\n` +
-                            `📏 Размер: ${size || 'не указан'}\n` +
-                            `📊 Количество: ${initialQty}`
-                        );
+                    // ✅ Товар найден → обновляем количество
+                    let newQty;
+                    let actionText = '';
+                    
+                    if (importMode === 'add') {
+                        newQty = existing.quantity + fileQty;
+                        actionText = `➕ Добавлено ${fileQty}`;
+                    } else if (importMode === 'subtract') {
+                        newQty = Math.max(0, existing.quantity - fileQty);
+                        actionText = `➖ Убавлено ${fileQty}`;
+                    } else { // replace
+                        newQty = fileQty;
+                        actionText = `🔄 Заменено на ${fileQty}`;
                     }
+                    
+                    await db.collection('products').doc(existing.id).update({ 
+                        quantity: newQty,
+                        updatedAt: new Date().toISOString(),
+                        updatedBy: currentUser.uid,
+                        lastImportQty: fileQty,
+                        lastImportMode: importMode,
+                        lastImportDate: new Date().toISOString()
+                    });
+                    updated++;
+                    
+                    console.log(`✅ Обновлён: ${existing.name} | ${sku} | ${size} | ${existing.quantity} → ${newQty} (${actionText})`);
+                    
+                    await sendTelegramNotification(
+                        `🔄 Обновлён товар: ${existing.name}\n` +
+                        `📦 Артикул: ${sku}\n` +
+                        `📏 Размер: ${size || 'не указан'}\n` +
+                        `${actionText}\n` +
+                        `📊 Было: ${existing.quantity} → Стало: ${newQty}`
+                    );
                     
                 } catch (e) {
                     errors++;
@@ -4966,8 +4965,9 @@
                 `✅ Импорт завершён!\n` +
                 `📊 Режим: ${modeNames[importMode] || importMode}\n` +
                 `📦 Уникальных групп: ${results.length}\n` +
-                `✅ Обновлено: ${updated}\n` +
-                `🆕 Добавлено новых: ${added}\n` +
+                `✅ Найдено в базе: ${foundCount}\n` +
+                `❌ Не найдено в базе: ${notFoundCount}\n` +
+                `🔄 Обновлено: ${updated}\n` +
                 `${errors > 0 ? `❌ Ошибок: ${errors}` : '🎉 Все успешно!'}`;
             
             await sendTelegramNotification(resultMessage);
@@ -4979,8 +4979,8 @@
                 `<div style="color:var(--success-color);">✅ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. → обновлено</div>`
             ).join('');
             
-            let finalAddedHtml = results.filter(r => !r.found).map(r => 
-                `<div style="color:var(--warning-color);">🆕 ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. → СОЗДАН</div>`
+            let finalNotFoundHtml = results.filter(r => !r.found).map(r => 
+                `<div style="color:var(--danger-color);">❌ ${r.sku} | ${r.size || 'без размера'} = ${r.quantity} шт. → ПРОПУЩЕН (не найден)</div>`
             ).join('');
             
             status.innerHTML = `
@@ -4989,12 +4989,13 @@
                 </div>
                 <div style="font-size:13px; margin-top:8px; max-height:200px; overflow-y:auto; text-align:left; padding:8px; background:var(--bg-card); border-radius:8px;">
                     ${finalUpdatedHtml}
-                    ${finalAddedHtml}
+                    ${finalNotFoundHtml}
                 </div>
                 <div style="font-size:13px; margin-top:8px; padding:8px; background:var(--bg-card); border-radius:8px;">
                     📊 Уникальных групп: ${results.length}
-                    <br>🔄 Обновлено: ${updated} | 🆕 Добавлено новых: ${added}
-                    ${errors > 0 ? `| ❌ Ошибок: ${errors}` : '| 🎉 Все успешно!'}
+                    <br>✅ Найдено: ${foundCount} | ❌ Не найдено: ${notFoundCount}
+                    <br>🔄 Обновлено: ${updated} | 
+                    ${errors > 0 ? `❌ Ошибок: ${errors}` : '🎉 Все успешно!'}
                     <br><span style="font-size:12px; opacity:0.7;">
                         Режим: ${modeNames[importMode] || importMode}
                     </span>
@@ -5004,13 +5005,15 @@
                 </button>
             `;
             
-            showNotification(`✅ Импорт: обновлено ${updated}, добавлено новых ${added}`, 'success');
+            showNotification(`✅ Импорт: обновлено ${updated} из ${foundCount} найденных товаров`, 'success');
             await logAction('import_completed', { 
                 mode: importMode, 
                 updated, 
-                added,
                 errors,
-                total: results.length
+                total: results.length,
+                found: foundCount,
+                notFound: notFoundCount,
+                originalRows: importFileData.length
             });
             
             setTimeout(() => progress.classList.remove('show'), 3000);
@@ -5786,6 +5789,7 @@
             console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram, График и расчёт, Архив');
             console.log('📊 Импорт: группировка по "Артикул продавца" (очищенный код) + Размер');
             console.log('📄 Поддержка: Excel (.xlsx, .xls) и PDF (с OCR и HTML-таблицами)');
+            console.log('🔧 Очистка артикулов: VCT-64536904 → VCT-6, 6056763 → 605');
             loadTheme();
             setLanguage(currentLanguage);
             
