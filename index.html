@@ -19,6 +19,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
+    <!-- 📄 PDF.js для чтения PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <!-- 🔍 Tesseract.js для OCR (сканированные PDF) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
     <style>
         /* ===== ПЕРЕМЕННЫЕ ===== */
         :root {
@@ -1246,6 +1252,29 @@
             margin-top: 4px;
         }
         
+        /* ===== OCR СТАТУС ===== */
+        .ocr-status {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(74,108,247,0.1);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .ocr-status.show { display: block; }
+        .ocr-status .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
         @media (max-width: 768px) {
             .schedule-big-grid {
                 grid-template-columns: 1fr;
@@ -1658,10 +1687,11 @@
                             <span>📥</span>
                             <span id="importTitle">Импорт товаров</span>
                         </div>
-                        <div class="export-desc" id="importDesc">Загрузите Excel файл для обновления остатков:</div>
+                        <div class="export-desc" id="importDesc">Загрузите Excel или PDF файл для обновления остатков:</div>
                         <button class="purple" onclick="openImportModeModal()" id="importFileBtn">📥 Выбрать файл</button>
                         <div style="font-size:11px; color:var(--text-muted); margin-top:6px;" id="importHint">
                             ⚠️ Обновление по полям: <strong id="importFieldsHint">Артикул продавца (чистый код) + Размер</strong>
+                            <br>📄 Поддерживаются: Excel (.xlsx, .xls) и PDF
                         </div>
                     </div>
                 </div>
@@ -1698,12 +1728,19 @@
                 <div style="text-align:center; padding:10px 0;">
                     <div style="font-size:44px; margin-bottom:8px;" id="importFileIcon">📂</div>
                     <div style="font-size:18px; font-weight:700; margin-bottom:4px;" id="importFileModeTitle">Режим: ДОБАВИТЬ</div>
-                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" id="importFileSub">Загрузите Excel файл</div>
+                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" id="importFileSub">Загрузите Excel или PDF файл</div>
+                    
+                    <!-- OCR статус -->
+                    <div class="ocr-status" id="ocrStatus">
+                        <div class="spinner"></div>
+                        <span id="ocrStatusText">Распознавание текста в PDF...</span>
+                    </div>
+                    
                     <div class="file-drop-zone" id="fileDropZone" onclick="document.getElementById('importFileInput').click()">
                         <div style="font-size:40px; margin-bottom:4px;">📂</div>
-                        <div style="font-size:13px; color:var(--text-muted);" id="fileDropText">Нажмите или перетащите файл <strong>Excel (.xlsx, .xls)</strong></div>
+                        <div style="font-size:13px; color:var(--text-muted);" id="fileDropText">Нажмите или перетащите файл <strong>Excel (.xlsx, .xls) или PDF</strong></div>
                     </div>
-                    <input type="file" id="importFileInput" accept=".xlsx,.xls" onchange="handleImportFile(event)">
+                    <input type="file" id="importFileInput" accept=".xlsx,.xls,.pdf" onchange="handleImportFile(event)">
                     <div class="import-preview" id="importPreview">
                         <div class="ip-filename" id="importFileName"></div>
                         <div class="ip-count" id="importFileCount"></div>
@@ -1990,7 +2027,7 @@
                 export_title: 'Экспорт товаров',
                 export_desc: 'Выберите поля для экспорта в Excel:',
                 import_title: 'Импорт товаров',
-                import_desc: 'Загрузите Excel файл для обновления остатков:',
+                import_desc: 'Загрузите Excel или PDF файл для обновления остатков:',
                 import_file_btn: '📥 Выбрать файл',
                 import_hint: 'Обновление по полям: Артикул продавца (чистый код) + Размер',
                 field_name: 'Название',
@@ -2016,8 +2053,8 @@
                 import_sub: '➖ УБАВИТЬ',
                 import_replace: '🔄 ЗАМЕНИТЬ',
                 import_file_title: 'Загрузка',
-                import_file_sub: 'Загрузите Excel файл',
-                file_drop_text: 'Нажмите или перетащите файл Excel (.xlsx, .xls)',
+                import_file_sub: 'Загрузите Excel или PDF файл',
+                file_drop_text: 'Нажмите или перетащите файл Excel (.xlsx, .xls) или PDF',
                 import_file_empty: '❌ Файл пуст',
                 import_file_error: '❌ Ошибка чтения файла',
                 import_complete: '✅ Импорт завершён!',
@@ -2027,6 +2064,11 @@
                 import_no_data: '❌ Нет данных для импорта',
                 import_columns_error: '❌ Не найдены колонки "Артикул продавца" и "Количество"',
                 import_grouped: 'Сгруппировано {unique} уникальных товаров из {total} строк',
+                import_pdf_ocr: 'Распознавание текста в PDF с помощью OCR...',
+                import_pdf_ocr_done: '✅ OCR завершён, извлечено {count} записей',
+                import_pdf_ocr_error: '❌ Ошибка OCR: {error}',
+                import_pdf_no_text: '❌ Не удалось извлечь текст из PDF (возможно, это сканированный документ без OCR)',
+                import_pdf_supported: '📄 Поддерживаются: Excel (.xlsx, .xls) и PDF',
                 
                 // === PWA ===
                 install_title: '📱 Установить приложение',
@@ -2231,7 +2273,7 @@
                 export_title: 'Export Products',
                 export_desc: 'Select fields to export to Excel:',
                 import_title: 'Import Products',
-                import_desc: 'Upload Excel file to update stock:',
+                import_desc: 'Upload Excel or PDF file to update stock:',
                 import_file_btn: '📥 Select file',
                 import_hint: 'Update by fields: Vendor SKU (clean code) + Size',
                 field_name: 'Name',
@@ -2257,8 +2299,8 @@
                 import_sub: '➖ SUBTRACT',
                 import_replace: '🔄 REPLACE',
                 import_file_title: 'Upload',
-                import_file_sub: 'Upload Excel file',
-                file_drop_text: 'Click or drag Excel file (.xlsx, .xls)',
+                import_file_sub: 'Upload Excel or PDF file',
+                file_drop_text: 'Click or drag Excel (.xlsx, .xls) or PDF file',
                 import_file_empty: '❌ File is empty',
                 import_file_error: '❌ File read error',
                 import_complete: '✅ Import completed!',
@@ -2268,6 +2310,11 @@
                 import_no_data: '❌ No data to import',
                 import_columns_error: '❌ Columns "Vendor SKU" and "Quantity" not found',
                 import_grouped: 'Grouped {unique} unique products from {total} rows',
+                import_pdf_ocr: 'OCR text recognition in PDF...',
+                import_pdf_ocr_done: '✅ OCR completed, extracted {count} records',
+                import_pdf_ocr_error: '❌ OCR error: {error}',
+                import_pdf_no_text: '❌ Failed to extract text from PDF (possibly scanned without OCR)',
+                import_pdf_supported: '📄 Supported: Excel (.xlsx, .xls) and PDF',
                 
                 // === PWA ===
                 install_title: '📱 Install app',
@@ -2472,7 +2519,7 @@
                 export_title: '导出商品',
                 export_desc: '选择要导出到 Excel 的字段：',
                 import_title: '导入商品',
-                import_desc: '上传 Excel 文件更新库存：',
+                import_desc: '上传 Excel 或 PDF 文件更新库存：',
                 import_file_btn: '📥 选择文件',
                 import_hint: '按字段更新：供应商 SKU（纯代码）+ 尺寸',
                 field_name: '名称',
@@ -2498,8 +2545,8 @@
                 import_sub: '➖ 减去',
                 import_replace: '🔄 替换',
                 import_file_title: '上传',
-                import_file_sub: '上传 Excel 文件',
-                file_drop_text: '点击或拖拽 Excel 文件 (.xlsx, .xls)',
+                import_file_sub: '上传 Excel 或 PDF 文件',
+                file_drop_text: '点击或拖拽 Excel (.xlsx, .xls) 或 PDF 文件',
                 import_file_empty: '❌ 文件为空',
                 import_file_error: '❌ 文件读取错误',
                 import_complete: '✅ 导入完成！',
@@ -2509,6 +2556,11 @@
                 import_no_data: '❌ 没有数据可导入',
                 import_columns_error: '❌ 未找到 "供应商 SKU" 和 "数量" 列',
                 import_grouped: '从 {total} 行分组出 {unique} 个唯一商品',
+                import_pdf_ocr: 'PDF 中的 OCR 文本识别...',
+                import_pdf_ocr_done: '✅ OCR 完成，提取了 {count} 条记录',
+                import_pdf_ocr_error: '❌ OCR 错误：{error}',
+                import_pdf_no_text: '❌ 无法从 PDF 提取文本（可能是没有 OCR 的扫描件）',
+                import_pdf_supported: '📄 支持：Excel (.xlsx, .xls) 和 PDF',
                 
                 // === PWA ===
                 install_title: '📱 安装应用',
@@ -4156,7 +4208,7 @@
         }
 
         // ==================================================
-        // 📤 ЭКСПОРТ/ИМПОРТ — НОВАЯ ВЕРСИЯ С ГРУППИРОВКОЙ
+        // 📤 ЭКСПОРТ/ИМПОРТ — НОВАЯ ВЕРСИЯ С ГРУППИРОВКОЙ + PDF
         // ==================================================
         function openImportExportModal() { document.getElementById('importExportModal').classList.add('show'); document.body.style.overflow = 'hidden'; }
         function closeImportExportModal() { document.getElementById('importExportModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
@@ -4189,15 +4241,202 @@
             document.getElementById('importFileInput').value = '';
             importFileData = null;
             document.getElementById('importStatus').innerHTML = '';
+            document.getElementById('ocrStatus').classList.remove('show');
         }
 
         function closeImportFileModal() { document.getElementById('importFileModal').classList.remove('show'); document.body.style.overflow = 'auto'; }
 
-        // ===== ОСНОВНАЯ ФУНКЦИЯ ОБРАБОТКИ ФАЙЛА С ГРУППИРОВКОЙ =====
+        // ===== ОБНОВЛЁННАЯ ФУНКЦИЯ ОБРАБОТКИ ФАЙЛА (PDF + Excel) =====
         function handleImportFile(event) {
             if (!checkPermission('canImport')) return;
             const file = event.target.files[0];
             if (!file) return;
+            
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            
+            // 📄 Если PDF — используем PDF.js + OCR
+            if (fileExt === 'pdf') {
+                handlePDFImport(file);
+                return;
+            }
+            
+            // 📊 Если Excel — старая логика
+            if (['xlsx', 'xls'].includes(fileExt)) {
+                handleExcelImport(file);
+                return;
+            }
+            
+            showNotification('❌ Поддерживаются только .xlsx, .xls и .pdf', 'error');
+        }
+
+        // ===== 📄 ОБРАБОТКА PDF С OCR =====
+        async function handlePDFImport(file) {
+            const ocrStatus = document.getElementById('ocrStatus');
+            const ocrText = document.getElementById('ocrStatusText');
+            
+            try {
+                // Показываем статус OCR
+                ocrStatus.classList.add('show');
+                ocrText.textContent = t('import_pdf_ocr');
+                
+                // 1️⃣ Пробуем извлечь текст через PDF.js
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                
+                let fullText = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                }
+                
+                // Если текста мало — пробуем OCR через Tesseract.js
+                if (fullText.trim().length < 50) {
+                    ocrText.textContent = '🔄 Запуск OCR распознавания...';
+                    
+                    // Конвертируем PDF в изображения (через canvas)
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    let ocrTextResult = '';
+                    
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                        
+                        // Распознаём через Tesseract
+                        const imageData = canvas.toDataURL('image/png');
+                        const result = await Tesseract.recognize(imageData, 'rus+eng', {
+                            logger: m => {
+                                if (m.status === 'recognizing text') {
+                                    ocrText.textContent = `🔄 OCR: ${Math.round(m.progress * 100)}%`;
+                                }
+                            }
+                        });
+                        
+                        ocrTextResult += result.data.text + '\n';
+                    }
+                    
+                    fullText = ocrTextResult;
+                }
+                
+                ocrStatus.classList.remove('show');
+                
+                // 🔍 Парсим текст в структуру (ищем таблицы)
+                const parsedData = parsePDFTextToTable(fullText);
+                
+                if (parsedData.length === 0) {
+                    showNotification(t('import_pdf_no_text'), 'error');
+                    return;
+                }
+                
+                // 📊 Группируем данные (как в Excel)
+                const skuKey = 'Артикул';
+                const sizeKey = 'Размер';
+                const qtyKey = 'Количество';
+                
+                const groupedData = groupImportData(parsedData, skuKey, sizeKey, qtyKey);
+                
+                const preview = document.getElementById('importPreview');
+                document.getElementById('importFileName').textContent = `📄 ${file.name} (PDF)`;
+                document.getElementById('importFileCount').textContent = 
+                    t('import_grouped', { 
+                        unique: groupedData.length, 
+                        total: parsedData.length 
+                    });
+                preview.classList.add('show');
+                importFileData = groupedData;
+                
+                document.getElementById('importStatus').innerHTML = `
+                    <button class="success small" onclick="processImport()">
+                        ✅ Импортировать ${groupedData.length} товаров
+                    </button>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+                        📄 Извлечено из PDF: ${parsedData.length} строк | Группировка по Артикулу + Размеру
+                        ${fullText.includes('OCR') ? ' | 🔍 Использован OCR' : ''}
+                    </div>
+                `;
+                
+                showNotification(t('import_pdf_ocr_done', { count: parsedData.length }), 'success');
+                
+            } catch (e) {
+                console.error('Ошибка PDF:', e);
+                ocrStatus.classList.remove('show');
+                showNotification(t('import_pdf_ocr_error', { error: e.message }), 'error');
+            }
+        }
+
+        // ===== 🔍 ПАРСИНГ ТЕКСТА PDF В ТАБЛИЦУ =====
+        function parsePDFTextToTable(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const result = [];
+            
+            // Ищем строки, похожие на данные (артикул + количество)
+            // Паттерн: что-то похожее на артикул (буквы/цифры/дефисы) + число
+            const skuPattern = /([A-Z0-9\-]{3,20})\s+(\d+)/i;
+            const skuPattern2 = /([A-Z0-9\-]{3,20})\s+([A-ZА-Я]{1,3})\s+(\d+)/i; // с размером
+            const skuPattern3 = /([A-Z0-9\-]{3,20})\s+(\d+)\s+([A-ZА-Я]{1,3})/i; // артикул + кол-во + размер
+            
+            for (const line of lines) {
+                // Пробуем найти паттерн: артикул + размер + количество
+                let match = line.match(skuPattern2);
+                if (match) {
+                    result.push({
+                        'Артикул': match[1],
+                        'Размер': match[2],
+                        'Количество': parseInt(match[3])
+                    });
+                    continue;
+                }
+                
+                // Пробуем: артикул + количество + размер
+                match = line.match(skuPattern3);
+                if (match) {
+                    result.push({
+                        'Артикул': match[1],
+                        'Размер': match[3],
+                        'Количество': parseInt(match[2])
+                    });
+                    continue;
+                }
+                
+                // Пробуем найти паттерн без размера
+                match = line.match(skuPattern);
+                if (match) {
+                    result.push({
+                        'Артикул': match[1],
+                        'Размер': '',
+                        'Количество': parseInt(match[2])
+                    });
+                    continue;
+                }
+                
+                // Если строка содержит несколько артикулов в одной строке (через пробел/табуляцию)
+                const parts = line.split(/\s{2,}|\t/).filter(p => p.trim());
+                if (parts.length >= 2) {
+                    const skuPart = parts[0].trim();
+                    const qtyPart = parts[parts.length - 1].trim();
+                    const sizePart = parts.length >= 3 ? parts[1].trim() : '';
+                    
+                    if (/[A-Z0-9\-]{3,}/i.test(skuPart) && /^\d+$/.test(qtyPart)) {
+                        result.push({
+                            'Артикул': skuPart,
+                            'Размер': sizePart,
+                            'Количество': parseInt(qtyPart)
+                        });
+                    }
+                }
+            }
+            
+            return result;
+        }
+
+        // ===== 📊 ОБРАБОТКА EXCEL (старая логика, вынесена в отдельную функцию) =====
+        function handleExcelImport(file) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -4212,27 +4451,21 @@
                     
                     const headers = Object.keys(jsonData[0]);
                     
-                    // 🔍 Ищем колонку "Артикул продавца"
                     const skuKey = headers.find(h => 
                         h.toLowerCase().includes('артикул продавца') || 
                         h.toLowerCase().includes('артикул') || 
                         h.toLowerCase().includes('sku') ||
-                        h.toLowerCase().includes('vendor') ||
                         h.toLowerCase().includes('код')
                     );
                     
-                    // 🔍 Ищем колонку "Размер"
                     const sizeKey = headers.find(h => 
                         h.toLowerCase().includes('размер') || 
-                        h.toLowerCase().includes('size') ||
-                        h.toLowerCase().includes('р-р')
+                        h.toLowerCase().includes('size')
                     );
                     
-                    // 🔍 Ищем колонку "Количество"
                     const qtyKey = headers.find(h => 
                         h.toLowerCase().includes('количеств') || 
                         h.toLowerCase().includes('qty') ||
-                        h.toLowerCase().includes('кол-во') ||
                         h.toLowerCase().includes('шт')
                     );
                     
@@ -4241,7 +4474,6 @@
                         return;
                     }
                     
-                    // 📊 ГРУППИРУЕМ ДАННЫЕ
                     const groupedData = groupImportData(jsonData, skuKey, sizeKey, qtyKey);
                     
                     const preview = document.getElementById('importPreview');
@@ -4312,7 +4544,6 @@
                         size: size,
                         quantity: qty,
                         name: name || cleanSku,
-                        // Сохраняем все данные из первой строки для возможного использования
                         rawData: row
                     };
                 }
@@ -4332,7 +4563,6 @@
             // 2️⃣ Если после дефиса есть ещё что-то, пробуем взять первые две части
             const parts = sku.split('-');
             if (parts.length >= 2) {
-                // Берём первые две части (если есть)
                 clean = parts.slice(0, 2).join('-');
             } else {
                 clean = parts[0];
@@ -4366,7 +4596,7 @@
             
             for (let row of importFileData) {
                 try {
-                    const sku = row.sku; // Уже очищенный артикул
+                    const sku = row.sku;
                     const size = row.size;
                     const fileQty = row.quantity;
                     const name = row.name;
@@ -4377,27 +4607,22 @@
                         continue; 
                     }
                     
-                    // 🔍 Ищем существующий товар по артикулу (только основной код) + размер
+                    // 🔍 Ищем существующий товар по артикулу + размер
                     const existing = products.find(p => {
-                        // Проверяем, содержит ли массив skus наш артикул
                         const hasSku = Array.isArray(p.skus) 
                             ? p.skus.some(s => extractCleanSku(s) === sku) 
                             : extractCleanSku(p.sku) === sku;
-                        
-                        // Проверяем размер (если указан)
                         const matchSize = size ? p.size === size : true;
-                        
                         return hasSku && matchSize;
                     });
                     
                     if (existing) {
-                        // ✅ Товар найден → обновляем количество
                         let newQty;
                         if (importMode === 'add') {
                             newQty = existing.quantity + fileQty;
                         } else if (importMode === 'subtract') {
                             newQty = Math.max(0, existing.quantity - fileQty);
-                        } else { // replace
+                        } else {
                             newQty = fileQty;
                         }
                         
@@ -4411,10 +4636,7 @@
                         });
                         updated++;
                         
-                        console.log(`🔄 Обновлён: ${existing.name} | ${sku} | ${size} | ${existing.quantity} → ${newQty}`);
-                        
                     } else {
-                        // 🆕 Товар не найден → создаём новый
                         const newProduct = {
                             name: name || sku,
                             skus: [sku],
@@ -4425,14 +4647,12 @@
                             minStock: 5,
                             createdAt: new Date().toISOString(),
                             createdBy: currentUser.uid,
-                            importedFrom: 'excel',
+                            importedFrom: importFileData[0]?.rawData ? 'excel' : 'pdf',
                             importDate: new Date().toISOString()
                         };
                         
                         await db.collection('products').add(newProduct);
                         added++;
-                        
-                        console.log(`➕ Добавлен: ${newProduct.name} | ${sku} | ${size} | ${newProduct.quantity}`);
                     }
                     
                 } catch (e) {
@@ -4444,7 +4664,6 @@
                 bar.style.width = `${(processed / total) * 100}%`;
             }
             
-            // 📊 Показываем результаты
             const status = document.getElementById('importStatus');
             const modeNames = {
                 'add': '➕ Добавление',
@@ -4474,7 +4693,6 @@
                 total: total
             });
             
-            // Обновляем список товаров
             setTimeout(() => progress.classList.remove('show'), 3000);
         }
 
@@ -5247,6 +5465,7 @@
             console.log('🚀 Система запущена!');
             console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram, График и расчёт, Архив');
             console.log('📊 Импорт: группировка по "Артикул продавца" (очищенный код) + Размер');
+            console.log('📄 Поддержка: Excel (.xlsx, .xls) и PDF (с OCR)');
             loadTheme();
             setLanguage(currentLanguage);
             
@@ -5287,6 +5506,8 @@
         console.log('✅ Все функции загружены!');
         console.log('📱 Telegram бот токен:', TELEGRAM_BOT_TOKEN ? '✅ Установлен' : '❌ Не установлен');
         console.log('📱 Telegram Chat ID:', TELEGRAM_CHAT_ID ? '✅ Установлен' : '❌ Не установлен');
+        console.log('📄 PDF.js:', typeof pdfjsLib !== 'undefined' ? '✅ Загружен' : '❌ Не загружен');
+        console.log('🔍 Tesseract.js:', typeof Tesseract !== 'undefined' ? '✅ Загружен' : '❌ Не загружен');
     </script>
 </body>
 </html>
