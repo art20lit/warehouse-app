@@ -177,32 +177,6 @@
         }
         .theme-toggle:hover { transform: scale(1.1) rotate(20deg); }
         
-        /* ===== ЯЗЫКИ ===== */
-        .language-selector {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            padding: 4px 8px;
-        }
-        .language-selector button {
-            padding: 3px 8px;
-            font-size: 11px;
-            border-radius: 6px;
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all var(--transition);
-        }
-        .language-selector button:hover {
-            border-color: var(--accent-color);
-        }
-        .language-selector button.active {
-            background: var(--accent-color);
-            color: white;
-            border-color: var(--accent-color);
-        }
-        
         /* ===== АВТОРИЗАЦИЯ ===== */
         .auth-container {
             max-width: 420px;
@@ -1378,71 +1352,64 @@
         <div class="side-menu-overlay" id="sideOverlay" onclick="closeMenu()"></div>
         <div class="side-menu" id="sideMenu">
             <button class="close-menu" onclick="closeMenu()">✕</button>
-            <div class="menu-title" id="menuTitle">📋 Меню</div>
+            <div class="menu-title">📋 Меню</div>
             <div class="user-info">
                 <div class="user-email" id="sideUserEmail">user@email.com</div>
                 <div class="user-role" id="sideUserRole">Роль: Наблюдатель 👀</div>
             </div>
             <div class="menu-item" onclick="closeMenu(); showAllProducts();">
                 <span class="icon">📦</span>
-                <span class="label" id="menuAllProducts">Все товары</span>
+                <span class="label">Все товары</span>
             </div>
             <div class="menu-divider"></div>
             <div class="menu-item" onclick="closeMenu(); showLowStockModal();">
                 <span class="icon">⚠️</span>
-                <span class="label" id="menuLowStock">Мало</span>
+                <span class="label">Мало</span>
                 <span class="badge" id="menuLowBadge">0</span>
             </div>
             <div class="menu-divider"></div>
             <div class="menu-item" onclick="closeMenu(); showHistoryModal();">
                 <span class="icon">📋</span>
-                <span class="label" id="menuHistory">История изменений</span>
+                <span class="label">История изменений</span>
             </div>
             <div class="menu-divider"></div>
             <div class="menu-item" onclick="closeMenu(); showCalendarModal();">
                 <span class="icon">📅</span>
-                <span class="label" id="menuCalendar">Календарь событий</span>
+                <span class="label">Календарь событий</span>
             </div>
             <div class="menu-divider"></div>
             
             <!-- ===== КНОПКА ГРАФИК/ЗАРПЛАТА ===== -->
             <div class="menu-item" onclick="closeMenu(); openBigScheduleModal();">
                 <span class="icon">📊</span>
-                <span class="label" id="menuSchedule">График / Зарплата</span>
+                <span class="label">График / Зарплата</span>
             </div>
             <div class="menu-divider"></div>
             
             <!-- ===== АРХИВ ===== -->
             <div class="menu-item" onclick="closeMenu(); openArchiveModal();">
                 <span class="icon">📁</span>
-                <span class="label" id="menuArchive">Архив графика</span>
+                <span class="label">Архив графика</span>
             </div>
             <div class="menu-divider"></div>
             
             <div class="menu-item" onclick="closeMenu(); openImportExportModal();">
                 <span class="icon">📊</span>
-                <span class="label" id="menuExportImport">ЭКСПОРТ/ИМПОРТ</span>
+                <span class="label">ЭКСПОРТ/ИМПОРТ</span>
             </div>
             
             <div id="adminMenuItems" class="hidden">
                 <div class="menu-divider"></div>
                 <div class="menu-item" onclick="closeMenu(); openUsersModal();">
                     <span class="icon">👥</span>
-                    <span class="label" id="menuUsers">Управление пользователями</span>
+                    <span class="label">Управление пользователями</span>
                     <span class="badge" id="menuPendingBadge">0</span>
                 </div>
             </div>
             <div class="menu-divider"></div>
-            <div class="language-selector" style="padding:4px 14px;">
-                <span style="font-size:12px; color:var(--text-muted); margin-right:6px;">🌍</span>
-                <button class="active" onclick="setLanguage('ru')">RU</button>
-                <button onclick="setLanguage('en')">EN</button>
-                <button onclick="setLanguage('zh')">中文</button>
-            </div>
-            <div class="menu-divider"></div>
             <div class="menu-item" onclick="closeMenu(); logoutUser();">
                 <span class="icon">🚪</span>
-                <span class="label" id="menuLogout">Выйти</span>
+                <span class="label">Выйти</span>
             </div>
         </div>
 
@@ -1463,12 +1430,12 @@
                 <select id="filterCategory" onchange="filterProducts()"><option value="">Все категории</option></select>
                 <select id="filterSubcategory" onchange="filterProducts()"><option value="">Все подкатегории</option></select>
                 <select id="filterStock" onchange="filterProducts()">
-                    <option value="" id="stockAll">Все товары</option>
-                    <option value="low" id="stockLow">⚠️ Низкий остаток</option>
-                    <option value="high" id="stockHigh">✅ В наличии</option>
-                    <option value="zero" id="stockZero">❌ Закончились</option>
+                    <option value="">Все товары</option>
+                    <option value="low">⚠️ Низкий остаток</option>
+                    <option value="high">✅ В наличии</option>
+                    <option value="zero">❌ Закончились</option>
                 </select>
-                <button class="small gray" onclick="clearFilters()" id="clearBtn">✕ Сбросить</button>
+                <button class="small gray" onclick="clearFilters()">✕ Сбросить</button>
             </div>
             <div class="search-results" id="searchResults"></div>
         </div>
@@ -1476,7 +1443,7 @@
         <!-- Категории -->
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-                <h3 style="font-size:17px;" id="categoriesTitle">📂 Категории</h3>
+                <h3 style="font-size:17px;">📂 Категории</h3>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
                     <input type="text" id="newCategoryName" placeholder="Название" style="width:140px; padding:6px 10px; font-size:13px;">
                     <input type="text" id="newCategoryEmoji" placeholder="Emoji" style="width:50px; padding:6px 10px; text-align:center; font-size:13px;" value="📁">
@@ -1484,20 +1451,20 @@
                 </div>
             </div>
             <div class="category-grid" id="categoryGrid">
-                <div class="empty-state"><div class="icon">📭</div><p id="noCategories">Нет категорий</p></div>
+                <div class="empty-state"><div class="icon">📭</div><p>Нет категорий</p></div>
             </div>
         </div>
 
         <!-- Подкатегории -->
         <div class="card" id="subcategorySection" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-                <h3 style="font-size:17px;" id="subcategoryTitle">📂 <span id="selectedCategoryName">Выберите категорию</span></h3>
+                <h3 style="font-size:17px;">📂 <span id="selectedCategoryName">Выберите категорию</span></h3>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
                     <input type="file" id="subPhotoInput" accept="image/*" style="display:none;" onchange="previewSubPhoto(this)">
                     <button class="small" id="addSubPhotoBtn" onclick="document.getElementById('subPhotoInput').click()">📷</button>
                     <input type="text" id="newSubcategoryName" placeholder="Название" style="width:120px; padding:6px 10px; font-size:13px;">
                     <button class="success small" id="addSubcategoryBtn" onclick="addSubcategory()">➕ Добавить</button>
-                    <button class="small gray" onclick="closeSubcategorySection()" id="closeSubBtn">✕ Закрыть</button>
+                    <button class="small gray" onclick="closeSubcategorySection()">✕ Закрыть</button>
                 </div>
             </div>
             <div id="subPhotoPreview" class="photo-preview"></div>
@@ -1532,25 +1499,25 @@
         <div class="modal-overlay" id="editModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title" id="editTitle">✏️ Редактирование</div>
+                    <div class="modal-title">✏️ Редактирование</div>
                     <button class="close-btn" onclick="closeEditModal()">✕</button>
                 </div>
                 <div id="editForm">
-                    <div class="edit-photo-preview" id="editPhotoPreview"><div class="no-photo" id="editNoPhoto">📷 Нет фото</div></div>
-                    <div class="input-group"><label id="editPhotoLabel">📷 Фото</label><input type="file" id="editPhotoInput" accept="image/*" onchange="previewEditPhoto(this)"></div>
-                    <div class="input-group"><label id="editNameLabel">📝 Название</label><input type="text" id="editName" placeholder="Название"></div>
+                    <div class="edit-photo-preview" id="editPhotoPreview"><div class="no-photo">📷 Нет фото</div></div>
+                    <div class="input-group"><label>📷 Фото</label><input type="file" id="editPhotoInput" accept="image/*" onchange="previewEditPhoto(this)"></div>
+                    <div class="input-group"><label>📝 Название</label><input type="text" id="editName" placeholder="Название"></div>
                     <div class="input-group">
-                        <label id="editSkusLabel">🔢 Артикулы</label>
+                        <label>🔢 Артикулы</label>
                         <div class="sku-list" id="editSkuList"></div>
                         <div class="add-sku-row"><input type="text" id="editNewSku" placeholder="Новый артикул"><button class="small" onclick="addSkuToEdit()" style="background:var(--purple-color);">➕</button></div>
                     </div>
-                    <div class="input-group"><label id="editSizeLabel">📏 Размер</label><input type="text" id="editSize" placeholder="Размер"></div>
-                    <div class="input-group"><label id="editQtyLabel">🔢 Количество</label><input type="number" id="editQty" placeholder="0" min="0"></div>
-                    <div class="input-group"><label id="editMinStockLabel">⚠️ Мин. остаток</label><input type="number" id="editMinStock" placeholder="5" min="0"></div>
+                    <div class="input-group"><label>📏 Размер</label><input type="text" id="editSize" placeholder="Размер"></div>
+                    <div class="input-group"><label>🔢 Количество</label><input type="number" id="editQty" placeholder="0" min="0"></div>
+                    <div class="input-group"><label>⚠️ Мин. остаток</label><input type="number" id="editMinStock" placeholder="5" min="0"></div>
                     <div class="edit-actions" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
                         <button class="success" id="editSaveBtn" onclick="saveEditProduct()">💾 Сохранить</button>
                         <button class="danger" id="editDeleteBtn" onclick="deleteEditProduct()">🗑️ Удалить</button>
-                        <button class="small gray" onclick="closeEditModal()" id="editCancelBtn">✕ Отмена</button>
+                        <button class="small gray" onclick="closeEditModal()">✕ Отмена</button>
                     </div>
                 </div>
             </div>
@@ -1560,7 +1527,7 @@
         <div class="modal-overlay" id="allProductsModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title" id="allProductsTitle">📦 Все товары <span class="count" id="allProductsCount"></span></div>
+                    <div class="modal-title">📦 Все товары <span class="count" id="allProductsCount"></span></div>
                     <button class="close-btn" onclick="closeAllProductsModal()">✕</button>
                 </div>
                 <div id="allProductsList"></div>
@@ -1571,7 +1538,7 @@
         <div class="modal-overlay" id="lowStockModal">
             <div class="modal-content">
                 <div class="modal-header" style="border-bottom-color:var(--danger-color);">
-                    <div class="modal-title" id="lowStockTitle">⚠️ Товары с низким остатком <span class="count" id="lowModalCount"></span></div>
+                    <div class="modal-title">⚠️ Товары с низким остатком <span class="count" id="lowModalCount"></span></div>
                     <button class="close-btn" onclick="closeLowStockModal()">✕</button>
                 </div>
                 <div id="lowStockModalList"></div>
@@ -1582,7 +1549,7 @@
         <div class="modal-overlay" id="historyModal">
             <div class="modal-content">
                 <div class="modal-header" style="border-bottom-color:var(--purple-color);">
-                    <div class="modal-title" id="historyTitle">📋 История изменений <span class="count" id="historyCount"></span></div>
+                    <div class="modal-title">📋 История изменений <span class="count" id="historyCount"></span></div>
                     <button class="close-btn" onclick="closeHistoryModal()">✕</button>
                 </div>
                 <div id="historyList"></div>
@@ -1593,24 +1560,24 @@
         <div class="modal-overlay" id="calendarModal">
             <div class="modal-content">
                 <div class="modal-header" style="border-bottom-color:var(--warning-color);">
-                    <div class="modal-title" id="calendarTitle">📅 Календарь событий</div>
+                    <div class="modal-title">📅 Календарь событий</div>
                     <button class="close-btn" onclick="closeCalendarModal()">✕</button>
                 </div>
                 <div id="calendarContent">
                     <div class="calendar-header">
-                        <button onclick="changeMonth(-1)" id="calendarPrev">◀</button>
+                        <button onclick="changeMonth(-1)">◀</button>
                         <span id="calendarMonthYear" style="font-weight:600; font-size:16px;"></span>
-                        <button onclick="changeMonth(1)" id="calendarNext">▶</button>
+                        <button onclick="changeMonth(1)">▶</button>
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px; font-size:11px; font-weight:600; color:var(--text-muted); text-align:center;">
-                        <span id="calMon">Пн</span><span id="calTue">Вт</span><span id="calWed">Ср</span><span id="calThu">Чт</span><span id="calFri">Пт</span><span id="calSat">Сб</span><span id="calSun">Вс</span>
+                        <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
                     </div>
                     <div class="calendar-grid" id="calendarGrid"></div>
                     <div style="margin-top:14px;">
                         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
                             <input type="date" id="eventDate" style="flex:1; min-width:140px; padding:6px 10px; font-size:13px;">
                             <input type="text" id="eventTitle" placeholder="Название события" style="flex:2; min-width:140px; padding:6px 10px; font-size:13px;">
-                            <button class="success small" onclick="addEvent()" id="addEventBtn">➕ Добавить</button>
+                            <button class="success small" onclick="addEvent()">➕ Добавить</button>
                         </div>
                         <div id="eventsList" style="max-height:150px; overflow-y:auto;"></div>
                     </div>
@@ -1622,8 +1589,8 @@
         <div class="modal-overlay" id="usersModal">
             <div class="modal-content">
                 <div class="modal-header" style="border-bottom-color:var(--purple-color);">
-                    <div class="modal-title" id="usersTitle">👥 Управление пользователями <span class="count" id="usersModalCount"></span></div>
-                    <div><button class="small" onclick="renderUsersList()" id="usersRefreshBtn" style="margin-right:6px;">🔄</button><button class="close-btn" onclick="closeUsersModal()">✕</button></div>
+                    <div class="modal-title">👥 Управление пользователями <span class="count" id="usersModalCount"></span></div>
+                    <div><button class="small" onclick="renderUsersList()" style="margin-right:6px;">🔄</button><button class="close-btn" onclick="closeUsersModal()">✕</button></div>
                 </div>
                 <div id="usersList"></div>
             </div>
@@ -1633,21 +1600,21 @@
         <div class="modal-overlay" id="twoFactorModal">
             <div class="modal-content" style="max-width:400px;">
                 <div class="modal-header" style="border-bottom-color:var(--success-color);">
-                    <div class="modal-title" id="twofaTitle">🔐 Двухфакторная аутентификация</div>
+                    <div class="modal-title">🔐 Двухфакторная аутентификация</div>
                     <button class="close-btn" onclick="closeTwoFactorModal()">✕</button>
                 </div>
                 <div style="text-align:center; padding:16px 0;">
                     <div style="font-size:44px; margin-bottom:8px;">📱</div>
-                    <p style="color:var(--text-secondary); margin-bottom:4px; font-weight:600;" id="twofaDesc">Код отправлен в Telegram</p>
-                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;" id="twofaBot">Проверьте сообщения от бота @Skladotm_Bot</p>
+                    <p style="color:var(--text-secondary); margin-bottom:4px; font-weight:600;">Код отправлен в Telegram</p>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Проверьте сообщения от бота @Skladotm_Bot</p>
                     <div class="input-group" style="margin-bottom:12px;">
-                        <label id="twofaCodeLabel" style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:var(--text-muted);">Введите код из Telegram:</label>
+                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:var(--text-muted);">Введите код из Telegram:</label>
                         <input type="text" id="twoFactorCode" placeholder="000000" maxlength="6" 
                                style="text-align:center; font-size:22px; letter-spacing:6px; padding:12px; border:2px solid var(--input-border); border-radius:12px; width:100%; background:var(--bg-input); color:var(--text-primary);">
                     </div>
-                    <button class="success" onclick="verifyTwoFactor()" style="width:100%; margin-top:6px; padding:12px;" id="twofaVerifyBtn">✅ Подтвердить</button>
+                    <button class="success" onclick="verifyTwoFactor()" style="width:100%; margin-top:6px; padding:12px;">✅ Подтвердить</button>
                     <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button class="small gray" onclick="resendTwoFactorCode()" style="flex:1;" id="twofaResendBtn">🔄 Отправить повторно</button>
+                        <button class="small gray" onclick="resendTwoFactorCode()" style="flex:1;">🔄 Отправить повторно</button>
                     </div>
                     <div id="twoFactorTimer" style="font-size:12px; color:var(--text-muted); margin-top:8px;"></div>
                 </div>
@@ -1658,40 +1625,41 @@
         <div class="modal-overlay" id="importExportModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title" id="exportModalTitle">📊 ЭКСПОРТ / ИМПОРТ</div>
+                    <div class="modal-title">📊 ЭКСПОРТ / ИМПОРТ</div>
                     <button class="close-btn" onclick="closeImportExportModal()">✕</button>
                 </div>
                 <div style="padding:10px 0;">
                     <div class="export-section">
                         <div class="export-title">
                             <span>📤</span>
-                            <span id="exportTitle">Экспорт товаров</span>
+                            <span>Экспорт товаров</span>
                         </div>
-                        <div class="export-desc" id="exportDesc">Выберите поля для экспорта в Excel:</div>
+                        <div class="export-desc">Выберите поля для экспорта в Excel:</div>
                         <div class="export-fields" id="exportFields">
-                            <label><input type="checkbox" checked data-field="name"> <span id="fieldName">Название</span></label>
-                            <label><input type="checkbox" checked data-field="sku"> <span id="fieldSku">Артикул</span></label>
-                            <label><input type="checkbox" checked data-field="size"> <span id="fieldSize">Размер</span></label>
-                            <label><input type="checkbox" checked data-field="quantity"> <span id="fieldQty">Количество</span></label>
-                            <label><input type="checkbox" checked data-field="category"> <span id="fieldCategory">Категория</span></label>
-                            <label><input type="checkbox" checked data-field="minStock"> <span id="fieldMinStock">Мин. остаток</span></label>
+                            <label><input type="checkbox" checked data-field="name"> Название</label>
+                            <label><input type="checkbox" checked data-field="sku"> Артикул</label>
+                            <label><input type="checkbox" checked data-field="size"> Размер</label>
+                            <label><input type="checkbox" checked data-field="quantity"> Количество</label>
+                            <label><input type="checkbox" checked data-field="category"> Категория</label>
+                            <label><input type="checkbox" checked data-field="minStock"> Мин. остаток</label>
                         </div>
                         <div class="export-buttons">
-                            <button class="success small" onclick="exportToExcel()" id="exportSelectedBtn">📤 Выбранные поля</button>
-                            <button class="purple small" onclick="exportToExcelWithFields()" id="exportAdvancedBtn">📤 Расширенный</button>
-                            <button class="small" onclick="exportAllProducts()" style="background:var(--success-color);" id="exportAllBtn">📤 Все поля</button>
+                            <button class="success small" onclick="exportToExcel()">📤 Выбранные поля</button>
+                            <button class="purple small" onclick="exportToExcelWithFields()">📤 Расширенный</button>
+                            <button class="small" onclick="exportAllProducts()" style="background:var(--success-color);">📤 Все поля</button>
                         </div>
                     </div>
                     <div class="export-section" style="margin-bottom:0;">
                         <div class="export-title">
                             <span>📥</span>
-                            <span id="importTitle">Импорт товаров</span>
+                            <span>Импорт товаров</span>
                         </div>
-                        <div class="export-desc" id="importDesc">Загрузите Excel или PDF файл для обновления остатков:</div>
-                        <button class="purple" onclick="openImportModeModal()" id="importFileBtn">📥 Выбрать файл</button>
-                        <div style="font-size:11px; color:var(--text-muted); margin-top:6px;" id="importHint">
-                            ⚠️ Обновление по полям: <strong id="importFieldsHint">Артикул продавца (чистый код) + Размер</strong>
+                        <div class="export-desc">Загрузите Excel или PDF файл для обновления остатков:</div>
+                        <button class="purple" onclick="openImportModeModal()">📥 Выбрать файл</button>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">
+                            ⚠️ Обновление по полям: <strong>Артикул продавца (чистый код) + Размер</strong>
                             <br>📄 Поддерживаются: Excel (.xlsx, .xls) и PDF (включая HTML-таблицы)
+                            <br>🧠 Интеллектуальное сопоставление артикулов
                         </div>
                     </div>
                 </div>
@@ -1702,17 +1670,17 @@
         <div class="modal-overlay" id="importModeModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title" id="importModeTitle">📥 Режим импорта</div>
+                    <div class="modal-title">📥 Режим импорта</div>
                     <button class="close-btn" onclick="closeImportModeModal()">✕</button>
                 </div>
                 <div style="text-align:center; padding:16px 0;">
                     <div style="font-size:44px; margin-bottom:8px;">⚙️</div>
-                    <div style="font-size:18px; font-weight:700; margin-bottom:4px;" id="importModeDesc">Как обновить количество?</div>
-                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" id="importModeSub">Выберите действие с товарами из файла</div>
+                    <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Как обновить количество?</div>
+                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Выберите действие с товарами из файла</div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-                        <button class="success" onclick="startImport('add')" id="importAddBtn">➕ ДОБАВИТЬ</button>
-                        <button class="danger" onclick="startImport('subtract')" id="importSubBtn">➖ УБАВИТЬ</button>
-                        <button class="warning" onclick="startImport('replace')" id="importReplaceBtn" style="background: #f39c12; color: white;">🔄 ЗАМЕНИТЬ</button>
+                        <button class="success" onclick="startImport('add')">➕ ДОБАВИТЬ</button>
+                        <button class="danger" onclick="startImport('subtract')">➖ УБАВИТЬ</button>
+                        <button class="warning" onclick="startImport('replace')" style="background: #f39c12; color: white;">🔄 ЗАМЕНИТЬ</button>
                     </div>
                 </div>
             </div>
@@ -1728,7 +1696,7 @@
                 <div style="text-align:center; padding:10px 0;">
                     <div style="font-size:44px; margin-bottom:8px;" id="importFileIcon">📂</div>
                     <div style="font-size:18px; font-weight:700; margin-bottom:4px;" id="importFileModeTitle">Режим: ДОБАВИТЬ</div>
-                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" id="importFileSub">Загрузите Excel или PDF файл</div>
+                    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Загрузите Excel или PDF файл</div>
                     
                     <!-- OCR статус -->
                     <div class="ocr-status" id="ocrStatus">
@@ -1738,7 +1706,7 @@
                     
                     <div class="file-drop-zone" id="fileDropZone" onclick="document.getElementById('importFileInput').click()">
                         <div style="font-size:40px; margin-bottom:4px;">📂</div>
-                        <div style="font-size:13px; color:var(--text-muted);" id="fileDropText">Нажмите или перетащите файл <strong>Excel (.xlsx, .xls) или PDF</strong></div>
+                        <div style="font-size:13px; color:var(--text-muted);">Нажмите или перетащите файл <strong>Excel (.xlsx, .xls) или PDF</strong></div>
                     </div>
                     <input type="file" id="importFileInput" accept=".xlsx,.xls,.pdf" onchange="handleImportFile(event)">
                     <div class="import-preview" id="importPreview">
@@ -1759,7 +1727,7 @@
                 <div class="modal-header" style="border-bottom-color:var(--warning-color);">
                     <div class="modal-title">
                         <span class="icon">📊</span>
-                        <span id="bigScheduleTitle">График выхода и зарплата</span>
+                        <span>График выхода и зарплата</span>
                         <span class="count" id="bigScheduleMonthDisplay"></span>
                     </div>
                     <button class="close-btn" onclick="closeBigScheduleModal()">✕</button>
@@ -1789,7 +1757,7 @@
                     
                     <!-- Календарь -->
                     <div class="calendar-wrapper" id="bigCalendarWrapper">
-                        <div class="week-days" id="bigWeekDays">
+                        <div class="week-days">
                             <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
                         </div>
                         <div class="days-grid" id="bigDaysGrid">
@@ -1824,7 +1792,7 @@
                 <div class="modal-header" style="border-bottom-color:var(--success-color);">
                     <div class="modal-title">
                         <span class="icon">📁</span>
-                        <span id="archiveTitle">Архив графика и зарплат</span>
+                        <span>Архив графика и зарплат</span>
                     </div>
                     <button class="close-btn" onclick="closeArchiveModal()">✕</button>
                 </div>
@@ -1850,7 +1818,7 @@
                 <div class="modal-header" style="border-bottom-color:var(--success-color);">
                     <div class="modal-title">
                         <span class="icon">💰</span>
-                        <span id="paymentModalTitle">Начисление зарплаты</span>
+                        <span>Начисление зарплаты</span>
                     </div>
                     <button class="close-btn" onclick="closePaymentModal()">✕</button>
                 </div>
@@ -1968,925 +1936,6 @@
         }
 
         // ==================================================
-        // 🌍 МУЛЬТИЯЗЫЧНОСТЬ (ПОЛНАЯ)
-        // ==================================================
-        const translations = {
-            ru: {
-                // === ОБЩИЕ ===
-                warehouse: 'Управление складом',
-                allProducts: 'Все товары',
-                lowStock: 'Мало',
-                history: 'История изменений',
-                calendar: 'Календарь событий',
-                exportImport: 'ЭКСПОРТ/ИМПОРТ',
-                users: 'Управление пользователями',
-                logout: 'Выйти',
-                categories: 'Категории',
-                schedule: 'График / Зарплата',
-                archive: 'Архив графика',
-                
-                // === ПОИСК ===
-                search_placeholder: '🔍 Поиск по названию, артикулу...',
-                search_all_categories: 'Все категории',
-                search_all_subcategories: 'Все подкатегории',
-                search_all_products: 'Все товары',
-                search_low_stock: '⚠️ Низкий остаток',
-                search_in_stock: '✅ В наличии',
-                search_out_of_stock: '❌ Закончились',
-                search_clear: '✕ Сбросить',
-                search_results: '📊 Найдено: {count} из {total}',
-                search_not_found: '🔍 Ничего не найдено',
-                no_categories: 'Нет категорий',
-                
-                // === АВТОРИЗАЦИЯ ===
-                auth_title: '📦 Склад',
-                auth_subtitle: 'Войдите или зарегистрируйтесь',
-                auth_login: 'Вход',
-                auth_register: 'Регистрация',
-                login_email: '📧 Email',
-                login_password: '🔒 Пароль',
-                login_btn: 'Войти',
-                register_email: '📧 Email',
-                register_password: '🔒 Пароль',
-                register_name: '👤 Ваше имя',
-                register_btn: 'Зарегистрироваться',
-                register_success: '✅ Регистрация успешна!',
-                
-                // === 2FA ===
-                twofa_title: '🔐 Двухфакторная аутентификация',
-                twofa_desc: 'Код отправлен в Telegram',
-                twofa_bot: 'Проверьте сообщения от бота @Skladotm_Bot',
-                twofa_code_label: 'Введите код из Telegram:',
-                twofa_code_placeholder: '000000',
-                twofa_verify: '✅ Подтвердить',
-                twofa_resend: '🔄 Отправить повторно',
-                twofa_verified: '✅ 2FA подтверждена!',
-                twofa_invalid: '❌ Неверный код!',
-                twofa_code_sent: '📱 Код отправлен в Telegram!',
-                twofa_resend_sent: '📱 Новый код отправлен в Telegram!',
-                twofa_error: '⚠️ Ошибка отправки, проверьте консоль',
-                twofa_expired: '⏰ Код истёк',
-                twofa_timer: '⏳ {time}',
-                
-                // === ЭКСПОРТ ===
-                export_title: 'Экспорт товаров',
-                export_desc: 'Выберите поля для экспорта в Excel:',
-                import_title: 'Импорт товаров',
-                import_desc: 'Загрузите Excel или PDF файл для обновления остатков:',
-                import_file_btn: '📥 Выбрать файл',
-                import_hint: 'Обновление по полям: Артикул продавца (чистый код) + Размер',
-                field_name: 'Название',
-                field_sku: 'Артикул',
-                field_size: 'Размер',
-                field_qty: 'Количество',
-                field_category: 'Категория',
-                field_min_stock: 'Мин. остаток',
-                export_selected: '📤 Выбранные поля',
-                export_advanced: '📤 Расширенный',
-                export_all: '📤 Все поля',
-                export_success: '✅ Экспортировано {count} товаров',
-                export_error: '❌ Ошибка экспорта',
-                export_no_products: '⚠️ Нет товаров для экспорта',
-                export_no_fields: 'Выберите поля для экспорта',
-                export_all_success: '✅ Экспортировано {count} товаров (все поля)',
-                
-                // === ИМПОРТ ===
-                import_mode_title: '📥 Режим импорта',
-                import_mode_desc: 'Как обновить количество?',
-                import_mode_sub: 'Выберите действие с товарами из файла',
-                import_add: '➕ ДОБАВИТЬ',
-                import_sub: '➖ УБАВИТЬ',
-                import_replace: '🔄 ЗАМЕНИТЬ',
-                import_file_title: 'Загрузка',
-                import_file_sub: 'Загрузите Excel или PDF файл',
-                file_drop_text: 'Нажмите или перетащите файл Excel (.xlsx, .xls) или PDF',
-                import_file_empty: '❌ Файл пуст',
-                import_file_error: '❌ Ошибка чтения файла',
-                import_complete: '✅ Импорт завершён!',
-                import_updated: 'Обновлено: {count}',
-                import_added: 'Добавлено: {count}',
-                import_errors: 'Ошибок: {count}',
-                import_no_data: '❌ Нет данных для импорта',
-                import_columns_error: '❌ Не найдены колонки "Артикул продавца" и "Количество"',
-                import_grouped: 'Сгруппировано {unique} уникальных товаров из {total} строк',
-                import_pdf_ocr: 'Распознавание текста в PDF с помощью OCR...',
-                import_pdf_ocr_done: '✅ OCR завершён, извлечено {count} записей',
-                import_pdf_ocr_error: '❌ Ошибка OCR: {error}',
-                import_pdf_no_text: '❌ Не удалось извлечь текст из PDF (возможно, это сканированный документ без OCR)',
-                import_pdf_supported: '📄 Поддерживаются: Excel (.xlsx, .xls) и PDF (включая HTML-таблицы)',
-                
-                // === PWA ===
-                install_title: '📱 Установить приложение',
-                install_desc: 'Склад всегда под рукой',
-                install_btn: 'Установить',
-                
-                // === УВЕДОМЛЕНИЯ ===
-                notification_telegram_ok: '✅ Telegram бот работает!',
-                
-                // === РОЛИ ===
-                role_admin: 'Администратор 👑',
-                role_manager: 'Менеджер 📋',
-                role_it: 'IT-специалист 💻',
-                role_viewer: 'Наблюдатель 👀',
-                role_accountant: 'Бухгалтер 🧾',
-                
-                // === МЕНЮ ===
-                menu_title: '📋 Меню',
-                menu_all_products: 'Все товары',
-                menu_low_stock: 'Мало',
-                menu_history: 'История изменений',
-                menu_calendar: 'Календарь событий',
-                menu_export_import: 'ЭКСПОРТ/ИМПОРТ',
-                menu_users: 'Управление пользователями',
-                menu_logout: 'Выйти',
-                menu_schedule: 'График / Зарплата',
-                menu_archive: 'Архив графика',
-                
-                // === КАЛЕНДАРЬ ===
-                calendar_days: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
-                calendar_event_add: '➕ Добавить',
-                
-                // === РЕДАКТИРОВАНИЕ ===
-                edit_title: '✏️ Редактирование',
-                edit_no_photo: '📷 Нет фото',
-                edit_photo: '📷 Фото',
-                edit_name: '📝 Название',
-                edit_skus: '🔢 Артикулы',
-                edit_size: '📏 Размер',
-                edit_qty: '🔢 Количество',
-                edit_min_stock: '⚠️ Мин. остаток',
-                edit_save: '💾 Сохранить',
-                edit_delete: '🗑️ Удалить',
-                edit_cancel: '✕ Отмена',
-                
-                // === ГРАФИК ===
-                big_schedule_title: 'График выхода и зарплата',
-                big_schedule_select_employee: 'Выберите сотрудника',
-                big_schedule_load: '📅 Загрузить',
-                big_schedule_all_present: '✅ Все пришли',
-                big_schedule_all_absent: '❌ Все отсутствуют',
-                big_schedule_save: '💾 Сохранить',
-                big_schedule_payroll: '💰 Расчёт зарплаты',
-                big_schedule_no_employees: 'Загрузите сотрудников',
-                big_schedule_select_employee_first: 'Выберите сотрудника для расчёта',
-                big_schedule_total: '💰 Итого:',
-                big_schedule_week: 'Неделя',
-                big_schedule_worked: 'Отработано',
-                big_schedule_earned: 'Заработано',
-                big_schedule_present: '✅ Пришёл',
-                big_schedule_absent: '❌ Отсутствует',
-                big_schedule_weekend: 'Выходной',
-                big_schedule_today: 'Сегодня',
-                big_schedule_saved: '✅ График сохранён',
-                big_schedule_no_permission: '⛔ Недостаточно прав',
-                
-                // === АРХИВ ===
-                archive_title: 'Архив графика и зарплат',
-                archive_show: '📂 Показать',
-                archive_export: '📤 Экспорт',
-                archive_no_data: 'Нет данных за выбранный период',
-                archive_employee: 'Сотрудник',
-                archive_date: 'Дата',
-                archive_status: 'Статус',
-                archive_amount: 'Сумма',
-                
-                // === ПЛАТЕЖИ ===
-                payment_title: 'Начисление зарплаты',
-                payment_amount_label: '💳 Сумма начисления:',
-                payment_confirm: '✅ Начислить',
-                payment_cancel: '✕ Отмена',
-                payment_enter: 'Введите сумму',
-                payment_days: 'Отработано: {days} смен',
-                payment_rate: 'Ставка за смену: {rate} ₽',
-                
-                // === ВЫХОД ===
-                logout_confirm: 'Вы уверены, что хотите выйти?',
-                logout_error: '❌ Ошибка выхода',
-                logout_success: '✅ Выход выполнен',
-                
-                // === РЕДАКТИРОВАНИЕ (ДОПОЛНИТЕЛЬНО) ===
-                edit_product: '✏️ Редактирование товара',
-                edit_name_label: '📝 Название',
-                edit_sku_label: '🔢 Артикулы',
-                edit_size_label: '📏 Размер',
-                edit_qty_label: '🔢 Количество',
-                edit_min_stock_label: '⚠️ Мин. остаток',
-                edit_photo_label: '📷 Фото',
-                edit_save: '💾 Сохранить',
-                edit_delete: '🗑️ Удалить',
-                edit_cancel: '✕ Отмена',
-                edit_no_photo: '📷 Нет фото',
-                edit_sku_add: '➕ Добавить',
-                edit_sku_enter: 'Введите артикул',
-                edit_sku_exists: 'Этот артикул уже добавлен',
-                edit_sku_added: '✅ Артикул "{sku}" добавлен',
-                edit_sku_removed: '✅ Артикул "{sku}" удалён',
-                edit_sku_remove_confirm: 'Удалить артикул?',
-                edit_no_skus: 'Нет артикулов',
-                edit_save_success: '✅ Товар "{name}" обновлён',
-                edit_save_error: '❌ Ошибка сохранения',
-                edit_delete_confirm: 'Удалить товар "{name}" ({sku})?',
-                edit_delete_success: '✅ Товар удалён',
-                
-                // === ИСТОРИЯ ===
-                history_title: '📋 История изменений',
-                history_loading: 'Загрузка истории...',
-                history_empty: 'История изменений пуста',
-                history_error: '❌ Ошибка загрузки истории',
-                history_count: '({count} записей)',
-                history_actions: {
-                    product_added: '➕ Добавление товара',
-                    product_updated: '✏️ Обновление товара',
-                    product_deleted: '🗑️ Удаление товара',
-                    category_added: '📂 Добавление категории',
-                    category_deleted: '📂 Удаление категории',
-                    user_registered: '👤 Регистрация пользователя',
-                    user_role_changed: '🔄 Изменение роли',
-                    user_deleted: '🗑️ Удаление пользователя'
-                },
-                history_user: 'Пользователь',
-                history_system: 'Система',
-                
-                // === ОБЩИЕ ===
-                confirm: 'Подтвердить',
-                cancel: 'Отмена',
-                yes: 'Да',
-                no: 'Нет',
-                delete: 'Удалить',
-                edit: 'Редактировать',
-                save: 'Сохранить',
-                close: 'Закрыть'
-            },
-            en: {
-                // === COMMON ===                warehouse: 'Warehouse Management',
-                allProducts: 'All Products',
-                lowStock: 'Low Stock',
-                history: 'History',
-                calendar: 'Calendar',
-                exportImport: 'EXPORT/IMPORT',
-                users: 'User Management',
-                logout: 'Logout',
-                categories: 'Categories',
-                schedule: 'Schedule / Payroll',
-                archive: 'Schedule Archive',
-                
-                // === SEARCH ===
-                search_placeholder: '🔍 Search by name, SKU...',
-                search_all_categories: 'All Categories',
-                search_all_subcategories: 'All Subcategories',
-                search_all_products: 'All Products',
-                search_low_stock: '⚠️ Low Stock',
-                search_in_stock: '✅ In Stock',
-                search_out_of_stock: '❌ Out of Stock',
-                search_clear: '✕ Clear',
-                search_results: '📊 Found: {count} of {total}',
-                search_not_found: '🔍 Nothing found',
-                no_categories: 'No categories',
-                
-                // === AUTH ===
-                auth_title: '📦 Warehouse',
-                auth_subtitle: 'Login or Register',
-                auth_login: 'Login',
-                auth_register: 'Register',
-                login_email: '📧 Email',
-                login_password: '🔒 Password',
-                login_btn: 'Login',
-                register_email: '📧 Email',
-                register_password: '🔒 Password',
-                register_name: '👤 Your Name',
-                register_btn: 'Register',
-                register_success: '✅ Registration successful!',
-                
-                // === 2FA ===
-                twofa_title: '🔐 Two-Factor Authentication',
-                twofa_desc: 'Code sent to Telegram',
-                twofa_bot: 'Check messages from @Skladotm_Bot',
-                twofa_code_label: 'Enter code from Telegram:',
-                twofa_code_placeholder: '000000',
-                twofa_verify: '✅ Verify',
-                twofa_resend: '🔄 Resend',
-                twofa_verified: '✅ 2FA verified!',
-                twofa_invalid: '❌ Invalid code!',
-                twofa_code_sent: '📱 Code sent to Telegram!',
-                twofa_resend_sent: '📱 New code sent to Telegram!',
-                twofa_error: '⚠️ Send error, check console',
-                twofa_expired: '⏰ Code expired',
-                twofa_timer: '⏳ {time}',
-                
-                // === EXPORT ===
-                export_title: 'Export Products',
-                export_desc: 'Select fields to export to Excel:',
-                import_title: 'Import Products',
-                import_desc: 'Upload Excel or PDF file to update stock:',
-                import_file_btn: '📥 Select file',
-                import_hint: 'Update by fields: Vendor SKU (clean code) + Size',
-                field_name: 'Name',
-                field_sku: 'SKU',
-                field_size: 'Size',
-                field_qty: 'Quantity',
-                field_category: 'Category',
-                field_min_stock: 'Min Stock',
-                export_selected: '📤 Selected fields',
-                export_advanced: '📤 Advanced',
-                export_all: '📤 All fields',
-                export_success: '✅ Exported {count} products',
-                export_error: '❌ Export error',
-                export_no_products: '⚠️ No products to export',
-                export_no_fields: 'Select fields to export',
-                export_all_success: '✅ Exported {count} products (all fields)',
-                
-                // === IMPORT ===
-                import_mode_title: '📥 Import Mode',
-                import_mode_desc: 'How to update quantity?',
-                import_mode_sub: 'Choose action with products from file',
-                import_add: '➕ ADD',
-                import_sub: '➖ SUBTRACT',
-                import_replace: '🔄 REPLACE',
-                import_file_title: 'Upload',
-                import_file_sub: 'Upload Excel or PDF file',
-                file_drop_text: 'Click or drag Excel (.xlsx, .xls) or PDF file',
-                import_file_empty: '❌ File is empty',
-                import_file_error: '❌ File read error',
-                import_complete: '✅ Import completed!',
-                import_updated: 'Updated: {count}',
-                import_added: 'Added: {count}',
-                import_errors: 'Errors: {count}',
-                import_no_data: '❌ No data to import',
-                import_columns_error: '❌ Columns "Vendor SKU" and "Quantity" not found',
-                import_grouped: 'Grouped {unique} unique products from {total} rows',
-                import_pdf_ocr: 'OCR text recognition in PDF...',
-                import_pdf_ocr_done: '✅ OCR completed, extracted {count} records',
-                import_pdf_ocr_error: '❌ OCR error: {error}',
-                import_pdf_no_text: '❌ Failed to extract text from PDF (possibly scanned without OCR)',
-                import_pdf_supported: '📄 Supported: Excel (.xlsx, .xls) and PDF (including HTML tables)',
-                
-                // === PWA ===
-                install_title: '📱 Install app',
-                install_desc: 'Warehouse always at hand',
-                install_btn: 'Install',
-                
-                // === NOTIFICATIONS ===
-                notification_telegram_ok: '✅ Telegram bot is working!',
-                
-                // === ROLES ===
-                role_admin: 'Administrator 👑',
-                role_manager: 'Manager 📋',
-                role_it: 'IT Specialist 💻',
-                role_viewer: 'Viewer 👀',
-                role_accountant: 'Accountant 🧾',
-                
-                // === MENU ===
-                menu_title: '📋 Menu',
-                menu_all_products: 'All Products',
-                menu_low_stock: 'Low Stock',
-                menu_history: 'History',
-                menu_calendar: 'Calendar',
-                menu_export_import: 'EXPORT/IMPORT',
-                menu_users: 'User Management',
-                menu_logout: 'Logout',
-                menu_schedule: 'Schedule / Payroll',
-                menu_archive: 'Schedule Archive',
-                
-                // === CALENDAR ===
-                calendar_days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-                calendar_event_add: '➕ Add',
-                
-                // === EDIT ===
-                edit_title: '✏️ Edit',
-                edit_no_photo: '📷 No photo',
-                edit_photo: '📷 Photo',
-                edit_name: '📝 Name',
-                edit_skus: '🔢 SKUs',
-                edit_size: '📏 Size',
-                edit_qty: '🔢 Quantity',
-                edit_min_stock: '⚠️ Min Stock',
-                edit_save: '💾 Save',
-                edit_delete: '🗑️ Delete',
-                edit_cancel: '✕ Cancel',
-                
-                // === SCHEDULE ===
-                big_schedule_title: 'Schedule & Payroll',
-                big_schedule_select_employee: 'Select employee',
-                big_schedule_load: '📅 Load',
-                big_schedule_all_present: '✅ All present',
-                big_schedule_all_absent: '❌ All absent',
-                big_schedule_save: '💾 Save',
-                big_schedule_payroll: '💰 Payroll',
-                big_schedule_no_employees: 'Load employees',
-                big_schedule_select_employee_first: 'Select employee for calculation',
-                big_schedule_total: '💰 Total:',
-                big_schedule_week: 'Week',
-                big_schedule_worked: 'Worked',
-                big_schedule_earned: 'Earned',
-                big_schedule_present: '✅ Present',
-                big_schedule_absent: '❌ Absent',
-                big_schedule_weekend: 'Weekend',
-                big_schedule_today: 'Today',
-                big_schedule_saved: '✅ Schedule saved',
-                big_schedule_no_permission: '⛔ Insufficient permissions',
-                
-                // === ARCHIVE ===
-                archive_title: 'Schedule & Payroll Archive',
-                archive_show: '📂 Show',
-                archive_export: '📤 Export',
-                archive_no_data: 'No data for selected period',
-                archive_employee: 'Employee',
-                archive_date: 'Date',
-                archive_status: 'Status',
-                archive_amount: 'Amount',
-                
-                // === PAYMENTS ===
-                payment_title: 'Salary Payment',
-                payment_amount_label: '💳 Payment amount:',
-                payment_confirm: '✅ Pay',
-                payment_cancel: '✕ Cancel',
-                payment_enter: 'Enter amount',
-                payment_days: 'Worked: {days} shifts',
-                payment_rate: 'Rate per shift: {rate} ₽',
-                
-                // === LOGOUT ===
-                logout_confirm: 'Are you sure you want to logout?',
-                logout_error: '❌ Logout error',
-                logout_success: '✅ Logout successful',
-                
-                // === EDIT ===
-                edit_product: '✏️ Edit product',
-                edit_name_label: '📝 Name',
-                edit_sku_label: '🔢 SKUs',
-                edit_size_label: '📏 Size',
-                edit_qty_label: '🔢 Quantity',
-                edit_min_stock_label: '⚠️ Min stock',
-                edit_photo_label: '📷 Photo',
-                edit_save: '💾 Save',
-                edit_delete: '🗑️ Delete',
-                edit_cancel: '✕ Cancel',
-                edit_no_photo: '📷 No photo',
-                edit_sku_add: '➕ Add',
-                edit_sku_enter: 'Enter SKU',
-                edit_sku_exists: 'This SKU already exists',
-                edit_sku_added: '✅ SKU "{sku}" added',
-                edit_sku_removed: '✅ SKU "{sku}" removed',
-                edit_sku_remove_confirm: 'Remove SKU?',
-                edit_no_skus: 'No SKUs',
-                edit_save_success: '✅ Product "{name}" updated',
-                edit_save_error: '❌ Save error',
-                edit_delete_confirm: 'Delete product "{name}" ({sku})?',
-                edit_delete_success: '✅ Product deleted',
-                
-                // === HISTORY ===
-                history_title: '📋 History',
-                history_loading: 'Loading history...',
-                history_empty: 'History is empty',
-                history_error: '❌ Error loading history',
-                history_count: '({count} records)',
-                history_actions: {
-                    product_added: '➕ Product added',
-                    product_updated: '✏️ Product updated',
-                    product_deleted: '🗑️ Product deleted',
-                    category_added: '📂 Category added',
-                    category_deleted: '📂 Category deleted',
-                    user_registered: '👤 User registered',
-                    user_role_changed: '🔄 Role changed',
-                    user_deleted: '🗑️ User deleted'
-                },
-                history_user: 'User',
-                history_system: 'System',
-                
-                // === COMMON ===
-                confirm: 'Confirm',
-                cancel: 'Cancel',
-                yes: 'Yes',
-                no: 'No',
-                delete: 'Delete',
-                edit: 'Edit',
-                save: 'Save',
-                close: 'Close'
-            },
-            zh: {
-                // === 通用 ===
-                warehouse: '仓库管理',
-                allProducts: '所有商品',
-                lowStock: '低库存',
-                history: '历史记录',
-                calendar: '日历',
-                exportImport: '导出/导入',
-                users: '用户管理',
-                logout: '退出',
-                categories: '分类',
-                schedule: '排班 / 薪资',
-                archive: '排班存档',
-                
-                // === 搜索 ===
-                search_placeholder: '🔍 搜索名称、SKU...',
-                search_all_categories: '全部分类',
-                search_all_subcategories: '全部子分类',
-                search_all_products: '所有商品',
-                search_low_stock: '⚠️ 低库存',
-                search_in_stock: '✅ 有货',
-                search_out_of_stock: '❌ 缺货',
-                search_clear: '✕ 清除',
-                search_results: '📊 找到：{count} 个，共 {total} 个',
-                search_not_found: '🔍 未找到',
-                no_categories: '没有分类',
-                
-                // === 认证 ===
-                auth_title: '📦 仓库',
-                auth_subtitle: '登录或注册',
-                auth_login: '登录',
-                auth_register: '注册',
-                login_email: '📧 邮箱',
-                login_password: '🔒 密码',
-                login_btn: '登录',
-                register_email: '📧 邮箱',
-                register_password: '🔒 密码',
-                register_name: '👤 您的名字',
-                register_btn: '注册',
-                register_success: '✅ 注册成功！',
-                
-                // === 2FA ===
-                twofa_title: '🔐 双重认证',
-                twofa_desc: '验证码已发送到 Telegram',
-                twofa_bot: '请检查 @Skladotm_Bot 的消息',
-                twofa_code_label: '输入 Telegram 验证码：',
-                twofa_code_placeholder: '000000',
-                twofa_verify: '✅ 验证',
-                twofa_resend: '🔄 重新发送',
-                twofa_verified: '✅ 双重认证已验证！',
-                twofa_invalid: '❌ 验证码无效！',
-                twofa_code_sent: '📱 验证码已发送到 Telegram！',
-                twofa_resend_sent: '📱 新验证码已发送到 Telegram！',
-                twofa_error: '⚠️ 发送错误，请检查控制台',
-                twofa_expired: '⏰ 验证码已过期',
-                twofa_timer: '⏳ {time}',
-                
-                // === 导出 ===
-                export_title: '导出商品',
-                export_desc: '选择要导出到 Excel 的字段：',
-                import_title: '导入商品',
-                import_desc: '上传 Excel 或 PDF 文件更新库存：',
-                import_file_btn: '📥 选择文件',
-                import_hint: '按字段更新：供应商 SKU（纯代码）+ 尺寸',
-                field_name: '名称',
-                field_sku: 'SKU',
-                field_size: '尺寸',
-                field_qty: '数量',
-                field_category: '分类',
-                field_min_stock: '最小库存',
-                export_selected: '📤 选定字段',
-                export_advanced: '📤 高级',
-                export_all: '📤 所有字段',
-                export_success: '✅ 已导出 {count} 个商品',
-                export_error: '❌ 导出错误',
-                export_no_products: '⚠️ 没有商品可导出',
-                export_no_fields: '选择要导出的字段',
-                export_all_success: '✅ 已导出 {count} 个商品（所有字段）',
-                
-                // === 导入 ===
-                import_mode_title: '📥 导入模式',
-                import_mode_desc: '如何更新数量？',
-                import_mode_sub: '选择对文件中商品的操作',
-                import_add: '➕ 添加',
-                import_sub: '➖ 减去',
-                import_replace: '🔄 替换',
-                import_file_title: '上传',
-                import_file_sub: '上传 Excel 或 PDF 文件',
-                file_drop_text: '点击或拖拽 Excel (.xlsx, .xls) 或 PDF 文件',
-                import_file_empty: '❌ 文件为空',
-                import_file_error: '❌ 文件读取错误',
-                import_complete: '✅ 导入完成！',
-                import_updated: '更新：{count}',
-                import_added: '添加：{count}',
-                import_errors: '错误：{count}',
-                import_no_data: '❌ 没有数据可导入',
-                import_columns_error: '❌ 未找到 "供应商 SKU" 和 "数量" 列',
-                import_grouped: '从 {total} 行分组出 {unique} 个唯一商品',
-                import_pdf_ocr: 'PDF 中的 OCR 文本识别...',
-                import_pdf_ocr_done: '✅ OCR 完成，提取了 {count} 条记录',
-                import_pdf_ocr_error: '❌ OCR 错误：{error}',
-                import_pdf_no_text: '❌ 无法从 PDF 提取文本（可能是没有 OCR 的扫描件）',
-                import_pdf_supported: '📄 支持：Excel (.xlsx, .xls) 和 PDF（包括 HTML 表格）',
-                
-                // === PWA ===
-                install_title: '📱 安装应用',
-                install_desc: '仓库随时在手',
-                install_btn: '安装',
-                
-                // === 通知 ===
-                notification_telegram_ok: '✅ Telegram 机器人正常工作！',
-                
-                // === 角色 ===
-                role_admin: '管理员 👑',
-                role_manager: '经理 📋',
-                role_it: 'IT 专员 💻',
-                role_viewer: '观察员 👀',
-                role_accountant: '会计师 🧾',
-                
-                // === 菜单 ===
-                menu_title: '📋 菜单',
-                menu_all_products: '所有商品',
-                menu_low_stock: '低库存',
-                menu_history: '历史记录',
-                menu_calendar: '日历',
-                menu_export_import: '导出/导入',
-                menu_users: '用户管理',
-                menu_logout: '退出',
-                menu_schedule: '排班 / 薪资',
-                menu_archive: '排班存档',
-                
-                // === 日历 ===
-                calendar_days: ['一','二','三','四','五','六','日'],
-                calendar_event_add: '➕ 添加',
-                
-                // === 编辑 ===
-                edit_title: '✏️ 编辑',
-                edit_no_photo: '📷 无照片',
-                edit_photo: '📷 照片',
-                edit_name: '📝 名称',
-                edit_skus: '🔢 SKU',
-                edit_size: '📏 尺寸',
-                edit_qty: '🔢 数量',
-                edit_min_stock: '⚠️ 最小库存',
-                edit_save: '💾 保存',
-                edit_delete: '🗑️ 删除',
-                edit_cancel: '✕ 取消',
-                
-                // === 排班 ===
-                big_schedule_title: '排班和薪资',
-                big_schedule_select_employee: '选择员工',
-                big_schedule_load: '📅 加载',
-                big_schedule_all_present: '✅ 全部到场',
-                big_schedule_all_absent: '❌ 全部缺席',
-                big_schedule_save: '💾 保存',
-                big_schedule_payroll: '💰 薪资',
-                big_schedule_no_employees: '加载员工',
-                big_schedule_select_employee_first: '选择员工进行计算',
-                big_schedule_total: '💰 总计：',
-                big_schedule_week: '周',
-                big_schedule_worked: '工作',
-                big_schedule_earned: '收入',
-                big_schedule_present: '✅ 到场',
-                big_schedule_absent: '❌ 缺席',
-                big_schedule_weekend: '周末',
-                big_schedule_today: '今天',
-                big_schedule_saved: '✅ 排班已保存',
-                big_schedule_no_permission: '⛔ 权限不足',
-                
-                // === 存档 ===
-                archive_title: '排班和薪资存档',
-                archive_show: '📂 显示',
-                archive_export: '📤 导出',
-                archive_no_data: '所选期间没有数据',
-                archive_employee: '员工',
-                archive_date: '日期',
-                archive_status: '状态',
-                archive_amount: '金额',
-                
-                // === 付款 ===
-                payment_title: '薪资付款',
-                payment_amount_label: '💳 付款金额：',
-                payment_confirm: '✅ 付款',
-                payment_cancel: '✕ 取消',
-                payment_enter: '输入金额',
-                payment_days: '工作：{days} 天',
-                payment_rate: '日薪：{rate} ₽',
-                
-                // === 退出 ===
-                logout_confirm: '您确定要退出吗？',
-                logout_error: '❌ 退出错误',
-                logout_success: '✅ 退出成功',
-                
-                // === 编辑 ===
-                edit_product: '✏️ 编辑商品',
-                edit_name_label: '📝 名称',
-                edit_sku_label: '🔢 SKU',
-                edit_size_label: '📏 尺寸',
-                edit_qty_label: '🔢 数量',
-                edit_min_stock_label: '⚠️ 最小库存',
-                edit_photo_label: '📷 照片',
-                edit_save: '💾 保存',
-                edit_delete: '🗑️ 删除',
-                edit_cancel: '✕ 取消',
-                edit_no_photo: '📷 无照片',
-                edit_sku_add: '➕ 添加',
-                edit_sku_enter: '输入 SKU',
-                edit_sku_exists: '此 SKU 已存在',
-                edit_sku_added: '✅ SKU "{sku}" 已添加',
-                edit_sku_removed: '✅ SKU "{sku}" 已删除',
-                edit_sku_remove_confirm: '删除 SKU？',
-                edit_no_skus: '没有 SKU',
-                edit_save_success: '✅ 商品 "{name}" 已更新',
-                edit_save_error: '❌ 保存错误',
-                edit_delete_confirm: '删除商品 "{name}" ({sku})？',
-                edit_delete_success: '✅ 商品已删除',
-                
-                // === 历史 ===
-                history_title: '📋 历史记录',
-                history_loading: '加载历史...',
-                history_empty: '历史为空',
-                history_error: '❌ 加载历史错误',
-                history_count: '({count} 条记录)',
-                history_actions: {
-                    product_added: '➕ 添加商品',
-                    product_updated: '✏️ 更新商品',
-                    product_deleted: '🗑️ 删除商品',
-                    category_added: '📂 添加分类',
-                    category_deleted: '📂 删除分类',
-                    user_registered: '👤 用户注册',
-                    user_role_changed: '🔄 角色变更',
-                    user_deleted: '🗑️ 删除用户'
-                },
-                history_user: '用户',
-                history_system: '系统',
-                
-                // === 通用 ===
-                confirm: '确认',
-                cancel: '取消',
-                yes: '是',
-                no: '否',
-                delete: '删除',
-                edit: '编辑',
-                save: '保存',
-                close: '关闭'
-            }
-        };
-
-        let currentLanguage = localStorage.getItem('language') || 'ru';
-        let currentPaymentUser = null;
-        let currentPaymentMonth = null;
-        let currentPaymentDays = 0;
-
-        function t(key, params = {}) {
-            const lang = currentLanguage || 'ru';
-            const keys = key.split('.');
-            let value = translations[lang];
-            for (const k of keys) {
-                if (value && value[k] !== undefined) {
-                    value = value[k];
-                } else {
-                    value = null;
-                    break;
-                }
-            }
-            if (value === null || value === undefined) {
-                let fallback = translations.ru;
-                for (const k of keys) {
-                    if (fallback && fallback[k] !== undefined) {
-                        fallback = fallback[k];
-                    } else {
-                        fallback = key;
-                        break;
-                    }
-                }
-                value = fallback;
-            }
-            if (typeof value === 'string') {
-                for (const [k, v] of Object.entries(params)) {
-                    value = value.replace(new RegExp(`{${k}}`, 'g'), v);
-                }
-            }
-            return value;
-        }
-
-        function setLanguage(lang) {
-            currentLanguage = lang;
-            localStorage.setItem('language', lang);
-            document.querySelectorAll('.language-selector button').forEach(b => {
-                b.classList.toggle('active', b.textContent.toLowerCase() === lang);
-            });
-            
-            const elementsMap = {
-                'authTitle': 'auth_title',
-                'authSubtitle': 'auth_subtitle',
-                'authLoginTab': 'auth_login',
-                'authRegisterTab': 'auth_register',
-                'loginEmailLabel': 'login_email',
-                'loginPasswordLabel': 'login_password',
-                'loginBtn': 'login_btn',
-                'registerEmailLabel': 'register_email',
-                'registerPasswordLabel': 'register_password',
-                'registerNameLabel': 'register_name',
-                'registerBtn': 'register_btn',
-                'registerSuccess': 'register_success',
-                'menuTitle': 'menu_title',
-                'menuAllProducts': 'menu_all_products',
-                'menuLowStock': 'menu_low_stock',
-                'menuHistory': 'menu_history',
-                'menuCalendar': 'menu_calendar',
-                'menuExportImport': 'menu_export_import',
-                'menuUsers': 'menu_users',
-                'menuLogout': 'menu_logout',
-                'menuSchedule': 'menu_schedule',
-                'menuArchive': 'menu_archive',
-                'headerTitle': 'warehouse',
-                'stockAll': 'search_all_products',
-                'stockLow': 'search_low_stock',
-                'stockHigh': 'search_in_stock',
-                'stockZero': 'search_out_of_stock',
-                'clearBtn': 'search_clear',
-                'noCategories': 'no_categories',
-                'categoriesTitle': 'categories',
-                'closeSubBtn': 'search_clear',
-                'editTitle': 'edit_title',
-                'editNoPhoto': 'edit_no_photo',
-                'editPhotoLabel': 'edit_photo',
-                'editNameLabel': 'edit_name',
-                'editSkusLabel': 'edit_skus',
-                'editSizeLabel': 'edit_size',
-                'editQtyLabel': 'edit_qty',
-                'editMinStockLabel': 'edit_min_stock',
-                'editSaveBtn': 'edit_save',
-                'editDeleteBtn': 'edit_delete',
-                'editCancelBtn': 'edit_cancel',
-                'twofaTitle': 'twofa_title',
-                'twofaDesc': 'twofa_desc',
-                'twofaBot': 'twofa_bot',
-                'twofaCodeLabel': 'twofa_code_label',
-                'twofaVerifyBtn': 'twofa_verify',
-                'twofaResendBtn': 'twofa_resend',
-                'exportModalTitle': 'exportImport',
-                'exportTitle': 'export_title',
-                'exportDesc': 'export_desc',
-                'importTitle': 'import_title',
-                'importDesc': 'import_desc',
-                'importFileBtn': 'import_file_btn',
-                'importHint': 'import_hint',
-                'fieldName': 'field_name',
-                'fieldSku': 'field_sku',
-                'fieldSize': 'field_size',
-                'fieldQty': 'field_qty',
-                'fieldCategory': 'field_category',
-                'fieldMinStock': 'field_min_stock',
-                'exportSelectedBtn': 'export_selected',
-                'exportAdvancedBtn': 'export_advanced',
-                'exportAllBtn': 'export_all',
-                'importModeTitle': 'import_mode_title',
-                'importModeDesc': 'import_mode_desc',
-                'importModeSub': 'import_mode_sub',
-                'importAddBtn': 'import_add',
-                'importSubBtn': 'import_sub',
-                'importReplaceBtn': 'import_replace',
-                'importFileTitle': 'import_file_title',
-                'importFileSub': 'import_file_sub',
-                'fileDropText': 'file_drop_text',
-                'installTitle': 'install_title',
-                'installDesc': 'install_desc',
-                'installBtn': 'install_btn',
-                'allProductsTitle': 'allProducts',
-                'lowStockTitle': 'lowStock',
-                'historyTitle': 'history',
-                'calendarTitle': 'calendar',
-                'usersTitle': 'users',
-                'addEventBtn': 'calendar_event_add',
-                'bigScheduleTitle': 'big_schedule_title',
-                'archiveTitle': 'archive_title',
-                'paymentModalTitle': 'payment_title'
-            };
-            
-            for (const [id, key] of Object.entries(elementsMap)) {
-                const el = document.getElementById(id);
-                if (el) {
-                    const text = t(key);
-                    if (text && text !== key) {
-                        if (id === 'headerTitle') {
-                            el.textContent = '📦 ' + text;
-                        } else {
-                            el.textContent = text;
-                        }
-                    }
-                }
-            }
-            
-            const dayIds = ['calMon', 'calTue', 'calWed', 'calThu', 'calFri', 'calSat', 'calSun'];
-            dayIds.forEach((id, i) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    const days = t('calendar_days');
-                    if (Array.isArray(days)) {
-                        el.textContent = days[i] || el.textContent;
-                    }
-                }
-            });
-            
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) searchInput.placeholder = t('search_placeholder');
-            
-            const twoFactorInput = document.getElementById('twoFactorCode');
-            if (twoFactorInput) twoFactorInput.placeholder = t('twofa_code_placeholder');
-            
-            const filterStock = document.getElementById('filterStock');
-            if (filterStock) {
-                const options = filterStock.options;
-                if (options[0]) options[0].textContent = t('search_all_products');
-                if (options[1]) options[1].textContent = t('search_low_stock');
-                if (options[2]) options[2].textContent = t('search_in_stock');
-                if (options[3]) options[3].textContent = t('search_out_of_stock');
-            }
-            
-            const langNames = { ru: 'Русский', en: 'English', zh: '中文' };
-            showNotification(`🌍 ${langNames[lang] || lang.toUpperCase()}`, 'info');
-        }
-
-        // ==================================================
         // 🌙 ТЕМА
         // ==================================================
         function loadTheme() {
@@ -2969,10 +2018,10 @@
             });
             const results = document.getElementById('searchResults');
             if (filteredProducts.length > 0 && filteredProducts.length < products.length) {
-                results.textContent = t('search_results', { count: filteredProducts.length, total: products.length });
+                results.textContent = `📊 Найдено: ${filteredProducts.length} из ${products.length}`;
                 results.style.display = 'block';
             } else if (document.getElementById('searchInput').value && filteredProducts.length === 0) {
-                results.textContent = t('search_not_found');
+                results.textContent = '🔍 Ничего не найдено';
                 results.style.display = 'block';
             } else {
                 results.style.display = 'none';
@@ -2994,10 +2043,10 @@
             const catSelect = document.getElementById('filterCategory');
             const subSelect = document.getElementById('filterSubcategory');
             const currentCat = catSelect.value;
-            catSelect.innerHTML = `<option value="">${t('search_all_categories')}</option>`;
+            catSelect.innerHTML = `<option value="">Все категории</option>`;
             categories.forEach(c => catSelect.innerHTML += `<option value="${escapeHtml(c.name)}" ${c.name === currentCat ? 'selected' : ''}>${c.emoji || '📁'} ${escapeHtml(c.name)}</option>`);
             const currentSub = subSelect.value;
-            subSelect.innerHTML = `<option value="">${t('search_all_subcategories')}</option>`;
+            subSelect.innerHTML = `<option value="">Все подкатегории</option>`;
             subcategories.forEach(s => subSelect.innerHTML += `<option value="${s.id}" ${s.id === currentSub ? 'selected' : ''}>${escapeHtml(s.name)}</option>`);
         }
 
@@ -3045,7 +2094,7 @@
                         if (adminMenu) adminMenu.classList.remove('hidden');
                     }
                     // Показываем меню "График/Зарплата" для бухгалтера
-                    const scheduleMenu = document.getElementById('menuSchedule');
+                    const scheduleMenu = document.querySelector('.menu-item[onclick*="openBigScheduleModal"]');
                     if (scheduleMenu) {
                         if (currentUserRole === 'it' || currentUserRole === 'admin' ||
                             currentUserPermissions.canViewSchedule || currentUserPermissions.canManageSchedule || 
@@ -3056,7 +2105,6 @@
                         }
                     }
                     updateSyncStatus('✅ Готово', 'online');
-                    setLanguage(currentLanguage);
                     loadTheme();
                     if (!currentUserData.telegramChatId) {
                         setTimeout(async () => {
@@ -3089,7 +2137,7 @@
 
         const ROLE_CONFIGS = {
             admin: {
-                label: t('role_admin'),
+                label: 'Администратор 👑',
                 icon: '👑',
                 permissions: {
                     canView: true, canCreate: true, canEdit: true, canDelete: true,
@@ -3100,7 +2148,7 @@
                 }
             },
             manager: {
-                label: t('role_manager'),
+                label: 'Менеджер 📋',
                 icon: '📋',
                 permissions: {
                     canView: true, canCreate: true, canEdit: true, canDelete: true,
@@ -3111,7 +2159,7 @@
                 }
             },
             it: {
-                label: t('role_it'),
+                label: 'IT-специалист 💻',
                 icon: '💻',
                 permissions: {
                     canView: true, canCreate: false, canEdit: false, canDelete: false,
@@ -3122,7 +2170,7 @@
                 }
             },
             viewer: {
-                label: t('role_viewer'),
+                label: 'Наблюдатель 👀',
                 icon: '👀',
                 permissions: {
                     canView: true, canCreate: false, canEdit: false, canDelete: false,
@@ -3133,7 +2181,7 @@
                 }
             },
             accountant: {
-                label: t('role_accountant'),
+                label: 'Бухгалтер 🧾',
                 icon: '🧾',
                 permissions: {
                     canView: true, canCreate: false, canEdit: false, canDelete: false,
@@ -3171,8 +2219,6 @@
             safeApplyStyles('addProductRow', { display: canCreate ? 'flex' : 'none' });
             safeApplyStyles('addProductBtn', { display: canCreate ? 'inline-flex' : 'none' });
             safeApplyStyles('addProductPhotoBtn', { display: canCreate ? 'inline-flex' : 'none' });
-            safeApplyStyles('exportBtn', { display: canExport ? 'inline-flex' : 'none' });
-            safeApplyStyles('importBtn', { display: canImport ? 'inline-flex' : 'none' });
             safeApplyStyles('editSaveBtn', { display: canEdit ? 'inline-flex' : 'none' });
             safeApplyStyles('editDeleteBtn', { display: canDelete ? 'inline-flex' : 'none' });
             
@@ -3391,7 +2437,7 @@
         function renderCategories() {
             const grid = document.getElementById('categoryGrid');
             if (categories.length === 0) { 
-                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p id="noCategories">${t('no_categories')}</p></div>`; 
+                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>Нет категорий</p></div>`; 
                 return; 
             }
             let html = '';
@@ -3455,7 +2501,7 @@
         function renderSubcategories() {
             const grid = document.getElementById('subcategoryGrid');
             if (subcategories.length === 0) { 
-                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${t('no_categories')}</p></div>`; 
+                grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>Нет подкатегорий</p></div>`; 
                 return; 
             }
             let html = '';
@@ -3522,7 +2568,7 @@
             if (filteredProducts.length > 0) subProducts = subProducts.filter(p => filteredProducts.some(fp => fp.id === p.id));
             countEl.textContent = `(${subProducts.length})`;
             if (subProducts.length === 0) {
-                list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${filteredProducts.length > 0 ? t('search_not_found') : 'Нет товаров'}</p></div>`;
+                list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${filteredProducts.length > 0 ? '🔍 Ничего не найдено' : 'Нет товаров'}</p></div>`;
             } else {
                 let html = '';
                 subProducts.forEach(p => {
@@ -3612,30 +2658,13 @@
             if (product.photo) {
                 preview.innerHTML = `<img src="${product.photo}" style="max-width:150px; max-height:150px; border-radius:12px;">`;
             } else {
-                preview.innerHTML = `<div class="no-photo">${t('edit_no_photo')}</div>`;
+                preview.innerHTML = `<div class="no-photo">📷 Нет фото</div>`;
             }
             document.getElementById('editPhotoInput').value = '';
             currentEditPhotoFile = null;
             
-            const editTitle = document.getElementById('editTitle');
-            if (editTitle) editTitle.textContent = t('edit_product');
-            
-            const labels = {
-                'editPhotoLabel': 'edit_photo_label',
-                'editNameLabel': 'edit_name_label',
-                'editSkusLabel': 'edit_sku_label',
-                'editSizeLabel': 'edit_size_label',
-                'editQtyLabel': 'edit_qty_label',
-                'editMinStockLabel': 'edit_min_stock_label',
-                'editSaveBtn': 'edit_save',
-                'editDeleteBtn': 'edit_delete',
-                'editCancelBtn': 'edit_cancel'
-            };
-            
-            for (const [id, key] of Object.entries(labels)) {
-                const el = document.getElementById(id);
-                if (el) el.textContent = t(key);
-            }
+            const editTitle = document.querySelector('#editModal .modal-title');
+            if (editTitle) editTitle.textContent = '✏️ Редактирование товара';
             
             document.getElementById('editModal').classList.add('show');
             document.body.style.overflow = 'hidden';
@@ -3655,7 +2684,7 @@
             if (!container) return;
             
             if (!editSkuList || editSkuList.length === 0) {
-                container.innerHTML = `<span style="color:var(--text-muted);font-size:12px;">${t('edit_no_skus')}</span>`;
+                container.innerHTML = `<span style="color:var(--text-muted);font-size:12px;">Нет артикулов</span>`;
                 return;
             }
             let html = '';
@@ -3663,7 +2692,7 @@
                 html += `
                     <span class="sku-tag">
                         ${escapeHtml(sku)}
-                        <button class="remove-sku" onclick="removeSkuFromEdit(${index})" title="${t('delete')}">✕</button>
+                        <button class="remove-sku" onclick="removeSkuFromEdit(${index})" title="Удалить">✕</button>
                     </span>
                 `;
             });
@@ -3672,20 +2701,20 @@
 
         function addSkuToEdit() {
             const sku = document.getElementById('editNewSku').value.trim();
-            if (!sku) { showNotification(t('edit_sku_enter'), 'error'); return; }
-            if (editSkuList.includes(sku)) { showNotification(t('edit_sku_exists'), 'error'); return; }
+            if (!sku) { showNotification('Введите артикул', 'error'); return; }
+            if (editSkuList.includes(sku)) { showNotification('Этот артикул уже добавлен', 'error'); return; }
             editSkuList.push(sku);
             document.getElementById('editNewSku').value = '';
             renderEditSkuList();
-            showNotification(t('edit_sku_added', { sku: sku }), 'success');
+            showNotification(`✅ Артикул "${sku}" добавлен`, 'success');
         }
 
         function removeSkuFromEdit(index) {
-            if (confirm(t('edit_sku_remove_confirm'))) {
+            if (confirm('Удалить артикул?')) {
                 const removed = editSkuList[index];
                 editSkuList.splice(index, 1);
                 renderEditSkuList();
-                showNotification(t('edit_sku_removed', { sku: removed }), 'success');
+                showNotification(`✅ Артикул "${removed}" удалён`, 'success');
             }
         }
 
@@ -3726,11 +2755,11 @@
                 await db.collection('products').doc(editProductId).update(updateData);
                 await logAction('product_updated', { name, sku: editSkuList[0], size, qty });
                 
-                showNotification(t('edit_save_success', { name: name }), 'success');
+                showNotification(`✅ Товар "${name}" обновлён`, 'success');
                 closeEditModal();
                 if (currentSubModalId) openSubcategoryModal(currentSubModalId);
             } catch (e) {
-                showNotification(t('edit_save_error') + ': ' + e.message, 'error');
+                showNotification('❌ Ошибка сохранения: ' + e.message, 'error');
                 console.error(e);
             }
         }
@@ -3741,17 +2770,17 @@
             
             const product = products.find(p => p.id === editProductId);
             if (!product) return;
-            if (!confirm(t('edit_delete_confirm', { name: product.name, sku: product.sku }))) return;
+            if (!confirm(`Удалить товар "${product.name}" (${product.sku})?`)) return;
             
             try {
                 await db.collection('products').doc(editProductId).delete();
                 await logAction('product_deleted', { name: product.name, sku: product.sku });
-                showNotification(t('edit_delete_success'), 'success');
+                showNotification('✅ Товар удалён', 'success');
                 sendTelegramNotification(`🗑️ Удалён товар: ${product.name}`);
                 closeEditModal();
                 if (currentSubModalId) openSubcategoryModal(currentSubModalId);
             } catch (e) {
-                showNotification(t('edit_save_error') + ': ' + e.message, 'error');
+                showNotification('❌ Ошибка удаления: ' + e.message, 'error');
                 console.error(e);
             }
         }
@@ -3766,7 +2795,7 @@
             if (!modal || !list) { console.error('❌ Элементы модалки не найдены'); return; }
             if (countEl) countEl.textContent = `(${products.length})`;
             if (products.length === 0) {
-                list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${t('allProducts')}</p></div>`;
+                list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>Нет товаров</p></div>`;
             } else {
                 let html = '';
                 products.forEach(p => {
@@ -3844,13 +2873,13 @@
             
             if (!modal || !list) {
                 console.error('❌ Элементы модалки истории не найдены');
-                showNotification(t('history_error'), 'error');
+                showNotification('❌ Ошибка загрузки истории', 'error');
                 return;
             }
             
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
-            list.innerHTML = `<div style="text-align:center; padding:20px;"><div class="loading-spinner"></div><p style="color:var(--text-muted); margin-top:8px;">${t('history_loading')}</p></div>`;
+            list.innerHTML = `<div style="text-align:center; padding:20px;"><div class="loading-spinner"></div><p style="color:var(--text-muted); margin-top:8px;">Загрузка истории...</p></div>`;
             
             try {
                 const snapshot = await db.collection('logs')
@@ -3864,10 +2893,10 @@
                     logs.push({ id: doc.id, ...data });
                 });
                 
-                if (count) count.textContent = t('history_count', { count: logs.length });
+                if (count) count.textContent = `(${logs.length} записей)`;
                 
                 if (logs.length === 0) {
-                    list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${t('history_empty')}</p></div>`;
+                    list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>История изменений пуста</p></div>`;
                 } else {
                     let html = '';
                     logs.forEach(log => {
@@ -3880,9 +2909,18 @@
                             minute: '2-digit'
                         });
                         
-                        const actionNames = t('history_actions');
+                        const actionNames = {
+                            product_added: '➕ Добавление товара',
+                            product_updated: '✏️ Обновление товара',
+                            product_deleted: '🗑️ Удаление товара',
+                            category_added: '📂 Добавление категории',
+                            category_deleted: '📂 Удаление категории',
+                            user_registered: '👤 Регистрация пользователя',
+                            user_role_changed: '🔄 Изменение роли',
+                            user_deleted: '🗑️ Удаление пользователя'
+                        };
                         const actionName = actionNames[log.action] || log.action || 'Действие';
-                        const userInfo = log.userEmail || t('history_system');
+                        const userInfo = log.userEmail || 'Система';
                         
                         let details = '';
                         if (log.data) {
@@ -3908,8 +2946,8 @@
                 }
             } catch (error) {
                 console.error('Ошибка загрузки истории:', error);
-                list.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>${t('history_error')}</p></div>`;
-                showNotification(t('history_error'), 'error');
+                list.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>❌ Ошибка загрузки истории</p></div>`;
+                showNotification('❌ Ошибка загрузки истории', 'error');
             }
         }
 
@@ -4684,6 +3722,293 @@
             }
         }
 
+        // ==================================================
+        // 🔍 УЛУЧШЕННЫЙ ПАРСИНГ HTML ТАБЛИЦ И АРТИКУЛОВ
+        // ==================================================
+
+        function parseHtmlTable(text) {
+            const result = [];
+            
+            // Ищем все таблицы
+            const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+            let tableMatch;
+            
+            while ((tableMatch = tableRegex.exec(text)) !== null) {
+                const tableContent = tableMatch[1];
+                
+                // Ищем все строки
+                const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+                let rowMatch;
+                let rows = [];
+                
+                while ((rowMatch = rowRegex.exec(tableContent)) !== null) {
+                    rows.push(rowMatch[1]);
+                }
+                
+                if (rows.length === 0) continue;
+                
+                // Парсим каждую строку
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    
+                    // Извлекаем ячейки
+                    const cellRegex = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+                    let cellMatch;
+                    const cells = [];
+                    
+                    while ((cellMatch = cellRegex.exec(row)) !== null) {
+                        let content = cellMatch[1]
+                            .replace(/<[^>]+>/g, '') // Убираем HTML теги
+                            .trim()
+                            .replace(/\s+/g, ' ');
+                        cells.push(content);
+                    }
+                    
+                    if (cells.length === 0) continue;
+                    
+                    // Проверяем, является ли строка заголовком
+                    const headerKeywords = ['артикул', 'sku', 'размер', 'количество', 'наименование', 'бренд'];
+                    const isHeader = cells.some(cell => 
+                        headerKeywords.some(keyword => cell.toLowerCase().includes(keyword))
+                    );
+                    
+                    if (isHeader && i === 0) {
+                        continue; // Пропускаем заголовок
+                    }
+                    
+                    // Ищем артикул (буквы + цифры)
+                    let sku = '';
+                    let size = '';
+                    let qty = 1;
+                    
+                    // Проходим по всем ячейкам
+                    for (const cell of cells) {
+                        const cleanCell = cell.trim();
+                        if (!cleanCell) continue;
+                        
+                        // Ищем артикул: YH003, LB001, VCT-6, 605-Dime и т.д.
+                        // Паттерн: буквы (1-4) + цифры (1-5) + опционально дефис + буквы/цифры
+                        const skuMatch = cleanCell.match(/\b([A-Z]{1,4}[0-9]{1,5}(?:-[A-Z0-9]{1,5})?)\b/i);
+                        if (skuMatch && !sku) {
+                            sku = skuMatch[1].toUpperCase();
+                            console.log(`🔍 Найден артикул: ${sku} в ячейке: "${cleanCell}"`);
+                            continue;
+                        }
+                        
+                        // Если не нашли артикул, ищем склеенный (буквы + цифры через пробел)
+                        if (!sku) {
+                            const mergedMatch = cleanCell.match(/\b([A-Z]{1,4})\s+([0-9]{4,15})\b/i);
+                            if (mergedMatch) {
+                                sku = (mergedMatch[1] + mergedMatch[2]).toUpperCase();
+                                console.log(`🔍 Найден склеенный артикул: ${sku} в ячейке: "${cleanCell}"`);
+                                continue;
+                            }
+                        }
+                        
+                        // Ищем размеры
+                        const sizeMatch = cleanCell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                        if (sizeMatch && !size) {
+                            size = sizeMatch[1].toUpperCase();
+                            console.log(`🔍 Найден размер: ${size} в ячейке: "${cleanCell}"`);
+                            continue;
+                        }
+                    }
+                    
+                    // Если нашли артикул и размер
+                    if (sku && size) {
+                        console.log(`✅ Добавлен: ${sku} | ${size} | ${qty}`);
+                        result.push({
+                            'Артикул': sku,
+                            'Размер': size,
+                            'Количество': qty
+                        });
+                    } else if (sku) {
+                        // Если есть артикул, но нет размера - пробуем найти размер по контексту
+                        // Ищем размеры в соседних ячейках
+                        for (const cell of cells) {
+                            const sizeMatch = cell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                            if (sizeMatch) {
+                                size = sizeMatch[1].toUpperCase();
+                                console.log(`🔍 Найден размер (по контексту): ${size}`);
+                                break;
+                            }
+                        }
+                        
+                        if (sku && size) {
+                            console.log(`✅ Добавлен (по контексту): ${sku} | ${size} | ${qty}`);
+                            result.push({
+                                'Артикул': sku,
+                                'Размер': size,
+                                'Количество': qty
+                            });
+                        } else {
+                            console.log(`⚠️ Найден артикул ${sku}, но не найден размер`);
+                        }
+                    } else {
+                        // Если не нашли артикул, ищем в строке целиком
+                        const fullRow = cells.join(' ');
+                        const skuMatch = fullRow.match(/\b([A-Z]{1,4}[0-9]{1,5}(?:-[A-Z0-9]{1,5})?)\b/i);
+                        if (skuMatch) {
+                            sku = skuMatch[1].toUpperCase();
+                            const sizeMatch = fullRow.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                            if (sizeMatch) {
+                                size = sizeMatch[1].toUpperCase();
+                                console.log(`✅ Добавлен (из всей строки): ${sku} | ${size} | ${qty}`);
+                                result.push({
+                                    'Артикул': sku,
+                                    'Размер': size,
+                                    'Количество': qty
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            console.log(`📊 Итог парсинга HTML: ${result.length} записей`);
+            return result;
+        }
+
+        // ==================================================
+        // 🔍 УЛУЧШЕННЫЙ ПАРСИНГ PDF ТЕКСТА
+        // ==================================================
+        function parsePDFTextToTable(text) {
+            console.log('📄 Текст для парсинга:', text);
+            
+            let cleanText = text
+                .replace(/\r/g, '')
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/\s{3,}/g, '  ');
+            
+            const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const result = [];
+            
+            // 🔥 Сначала пробуем найти HTML-таблицы
+            const hasHtmlTable = cleanText.includes('<table') || cleanText.includes('</table>');
+            if (hasHtmlTable) {
+                const htmlResult = parseHtmlTable(cleanText);
+                if (htmlResult.length > 0) {
+                    return htmlResult;
+                }
+            }
+            
+            // 📊 Если нет HTML, парсим обычный текст
+            let currentSku = '';
+            let currentSize = '';
+            let currentQty = 1;
+            let foundSku = false;
+            
+            for (const line of lines) {
+                console.log('🔍 Обработка строки:', line);
+                
+                // Пропускаем заголовки
+                if (line.includes('Дата:') || line.includes('Лист подбора') || 
+                    line.includes('Количество товаров') || line.includes('№ задания') ||
+                    line.includes('Фото') || line.includes('Бренд') || line.includes('Наименование')) {
+                    continue;
+                }
+                
+                // Ищем артикулы в строке
+                const skuMatches = line.match(/\b([A-Z]{1,4}[0-9]{1,5}(?:-[A-Z0-9]{1,5})?)\b/gi);
+                if (skuMatches) {
+                    for (const match of skuMatches) {
+                        const sku = match.toUpperCase();
+                        // Ищем размер в этой же строке
+                        const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                        let size = sizeMatch ? sizeMatch[1].toUpperCase() : '';
+                        
+                        // Если размер не найден, ищем в следующих строках
+                        if (!size) {
+                            // Сохраняем артикул для последующего поиска размера
+                            currentSku = sku;
+                            currentSize = '';
+                            foundSku = true;
+                            console.log(`🔍 Найден артикул: ${sku} (размер ищем позже)`);
+                            continue;
+                        }
+                        
+                        console.log(`✅ Добавлен: ${sku} | ${size} | 1`);
+                        result.push({
+                            'Артикул': sku,
+                            'Размер': size,
+                            'Количество': 1
+                        });
+                        currentSku = '';
+                        foundSku = false;
+                    }
+                } else if (foundSku && currentSku) {
+                    // Если у нас есть сохраненный артикул, ищем размер в текущей строке
+                    const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                    if (sizeMatch) {
+                        const size = sizeMatch[1].toUpperCase();
+                        console.log(`✅ Добавлен (размер найден позже): ${currentSku} | ${size} | 1`);
+                        result.push({
+                            'Артикул': currentSku,
+                            'Размер': size,
+                            'Количество': 1
+                        });
+                        currentSku = '';
+                        foundSku = false;
+                    }
+                }
+            }
+            
+            console.log(`📊 Итог парсинга: ${result.length} записей`);
+            return result;
+        }
+
+        // ==================================================
+        // 🧠 УЛУЧШЕННАЯ ФУНКЦИЯ ГРУППИРОВКИ ДАННЫХ
+        // ==================================================
+        function groupImportData(rawData, skuKey, sizeKey, qtyKey) {
+            const groups = {};
+            let totalRows = 0;
+            
+            console.log('📊 Начинаем группировку данных...');
+            console.log(`📄 Всего записей: ${rawData.length}`);
+            
+            rawData.forEach(row => {
+                let rawSku = String(row[skuKey] || '').trim();
+                let cleanSku = extractCleanSku(rawSku);
+                
+                let size = sizeKey ? String(row[sizeKey] || '').trim().toUpperCase() : '';
+                
+                let qty = parseInt(row[qtyKey]) || 1; // По умолчанию 1, если количество не указано
+                if (qty === 0) qty = 1;
+                
+                totalRows++;
+                
+                const groupKey = `${cleanSku}|${size}`;
+                
+                if (groups[groupKey]) {
+                    groups[groupKey].quantity += qty;
+                    console.log(`➕ Суммируем: ${cleanSku} + ${size} = ${groups[groupKey].quantity}`);
+                } else {
+                    const nameKey = Object.keys(row).find(h => 
+                        h.toLowerCase().includes('назван') || 
+                        h.toLowerCase().includes('наимен') || 
+                        h.toLowerCase().includes('name') ||
+                        h.toLowerCase().includes('товар')
+                    );
+                    const name = nameKey ? String(row[nameKey] || '').trim() : cleanSku;
+                    
+                    groups[groupKey] = {
+                        sku: cleanSku,
+                        originalSku: rawSku,
+                        size: size,
+                        quantity: qty,
+                        name: name || cleanSku,
+                        rawData: row
+                    };
+                    console.log(`🆕 Новая группа: ${cleanSku} + ${size} = ${qty}`);
+                }
+            });
+            
+            const result = Object.values(groups);
+            console.log(`📊 Группировка завершена: ${result.length} уникальных товаров из ${totalRows} строк`);
+            return result;
+        }
+
         async function handlePDFImport(file) {
             const ocrStatus = document.getElementById('ocrStatus');
             const ocrText = document.getElementById('ocrStatusText');
@@ -4730,7 +4055,7 @@
                 const groupedData = groupImportData(parsedData, 'Артикул', 'Размер', 'Количество');
                 const preview = document.getElementById('importPreview');
                 document.getElementById('importFileName').textContent = `📄 ${file.name} (PDF)`;
-                document.getElementById('importFileCount').textContent = t('import_grouped', { unique: groupedData.length, total: parsedData.length });
+                document.getElementById('importFileCount').textContent = `Сгруппировано ${groupedData.length} уникальных товаров из ${parsedData.length} строк`;
                 preview.classList.add('show');
                 importFileData = groupedData;
                 await loadMasterSkuCache();
@@ -4744,105 +4069,6 @@
             }
         }
 
-        function parsePDFTextToTable(text) {
-            let cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n').replace(/\s{3,}/g, '  ');
-            const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            const result = [];
-            if (cleanText.includes('<table') || cleanText.includes('</table>')) {
-                const htmlResult = parseHtmlTable(cleanText);
-                if (htmlResult.length > 0) return htmlResult;
-            }
-            for (const line of lines) {
-                if (line.includes('Дата:') || line.includes('Лист подбора') || line.includes('Количество товаров') || line.includes('№ задания') || line.includes('Фото') || line.includes('Бренд') || line.includes('Наименование')) continue;
-                const words = line.match(/\S+/g) || [];
-                if (words.length < 3) continue;
-                let sku = '', foundSize = '';
-                for (let i = 0; i < words.length; i++) {
-                    const word = words[i];
-                    if (/^[A-Z]{1,4}[0-9]{1,5}(?:-[A-Z0-9]+)?$/i.test(word)) {
-                        sku = word.toUpperCase();
-                        break;
-                    }
-                }
-                if (!sku) {
-                    for (let i = 0; i < words.length; i++) {
-                        if (/^\d{8,10}$/.test(words[i])) {
-                            for (let j = i + 1; j < words.length; j++) {
-                                const word = words[j];
-                                if (/^(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})$/.test(word)) {
-                                    foundSize = word.toUpperCase();
-                                    continue;
-                                }
-                                if (/^[A-Z]{1,4}[0-9]{1,5}$/i.test(word) || /^[A-Z]{1,4}[0-9]{1,5}-[A-Z]{1,2}$/i.test(word)) {
-                                    sku = word.toUpperCase();
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                    }
-                }
-                if (sku && !sku.match(/[0-9]/)) {
-                    for (let i = 0; i < words.length; i++) {
-                        if (words[i] === sku && i + 1 < words.length && /^\d+$/.test(words[i + 1])) {
-                            sku = sku + words[i + 1];
-                            break;
-                        }
-                    }
-                }
-                if (!sku) {
-                    const skuMatch = line.match(/\b([A-Z]{1,4})\s+([0-9]{4,15})\b/i);
-                    if (skuMatch) sku = (skuMatch[1] + skuMatch[2]).toUpperCase();
-                }
-                if (!foundSize) {
-                    const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-                    if (sizeMatch) foundSize = sizeMatch[1].toUpperCase();
-                }
-                if (sku && foundSize) {
-                    result.push({ 'Артикул': sku, 'Размер': foundSize, 'Количество': 1 });
-                }
-            }
-            return result;
-        }
-
-        function parseHtmlTable(text) {
-            const result = [];
-            const tableMatch = text.match(/<table>(.*?)<\/table>/s);
-            if (!tableMatch) return result;
-            const tableContent = tableMatch[1];
-            const rowMatches = tableContent.match(/<tr>(.*?)<\/tr>/gs);
-            if (!rowMatches) return result;
-            for (let i = 0; i < rowMatches.length; i++) {
-                const row = rowMatches[i];
-                const cellMatches = row.match(/<td>(.*?)<\/td>/gs);
-                if (!cellMatches) continue;
-                const cells = cellMatches.map(cell => cell.replace(/<td>/g, '').replace(/<\/td>/g, '').trim().replace(/\s+/g, ' ').trim());
-                if (i === 0) {
-                    const headerText = cells.join(' ');
-                    if (headerText.includes('Артикул продавца') || headerText.includes('Артикул') || headerText.includes('Размер') || headerText.includes('Количество')) continue;
-                }
-                let sku = '', size = '';
-                for (let j = 0; j < cells.length; j++) {
-                    const cell = cells[j];
-                    const skuMatch = cell.match(/\b([A-Z]{1,4}[0-9]{1,5}(?:-[A-Z0-9]+)?)\b/i);
-                    if (skuMatch && !sku) sku = skuMatch[1].toUpperCase();
-                    const sizeMatch = cell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-                    if (sizeMatch && !size) size = sizeMatch[1].toUpperCase();
-                }
-                if (!sku) {
-                    for (const cell of cells) {
-                        const skuMatch = cell.match(/\b([A-Z]{1,4})\s+([0-9]{4,15})\b/i);
-                        if (skuMatch) {
-                            sku = (skuMatch[1] + skuMatch[2]).toUpperCase();
-                            break;
-                        }
-                    }
-                }
-                if (sku && size) result.push({ 'Артикул': sku, 'Размер': size, 'Количество': 1 });
-            }
-            return result;
-        }
-
         function handleExcelImport(file) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -4851,7 +4077,7 @@
                     const workbook = XLSX.read(data, { type: 'array' });
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
                     if (jsonData.length === 0) {
-                        showNotification(t('import_file_empty'), 'error');
+                        showNotification('❌ Файл пуст', 'error');
                         return;
                     }
                     const headers = Object.keys(jsonData[0]);
@@ -4859,13 +4085,13 @@
                     const sizeKey = headers.find(h => h.toLowerCase().includes('размер') || h.toLowerCase().includes('size'));
                     const qtyKey = headers.find(h => h.toLowerCase().includes('количеств') || h.toLowerCase().includes('qty') || h.toLowerCase().includes('шт'));
                     if (!skuKey || !qtyKey) {
-                        showNotification(t('import_columns_error'), 'error');
+                        showNotification('❌ Не найдены колонки "Артикул продавца" и "Количество"', 'error');
                         return;
                     }
                     const groupedData = groupImportData(jsonData, skuKey, sizeKey, qtyKey);
                     const preview = document.getElementById('importPreview');
                     document.getElementById('importFileName').textContent = `📄 ${file.name}`;
-                    document.getElementById('importFileCount').textContent = t('import_grouped', { unique: groupedData.length, total: jsonData.length });
+                    document.getElementById('importFileCount').textContent = `Сгруппировано ${groupedData.length} уникальных товаров из ${jsonData.length} строк`;
                     preview.classList.add('show');
                     importFileData = groupedData;
                     loadMasterSkuCache().then(() => {
@@ -4873,46 +4099,17 @@
                         document.getElementById('importStatus').innerHTML = generateImportStatusHTML(matchedData);
                     });
                 } catch (e) {
-                    showNotification(t('import_file_error') + ': ' + e.message, 'error');
+                    showNotification('❌ Ошибка чтения файла: ' + e.message, 'error');
                     console.error(e);
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function groupImportData(rawData, skuKey, sizeKey, qtyKey) {
-            const groups = {};
-            let totalRows = 0;
-            rawData.forEach(row => {
-                let rawSku = String(row[skuKey] || '').trim();
-                let cleanSku = extractCleanSku(rawSku);
-                let size = sizeKey ? String(row[sizeKey] || '').trim().toUpperCase() : '';
-                let qty = parseInt(row[qtyKey]) || 0;
-                if (qty === 0) return;
-                totalRows++;
-                const groupKey = `${cleanSku}|${size}`;
-                if (groups[groupKey]) {
-                    groups[groupKey].quantity += qty;
-                } else {
-                    const nameKey = Object.keys(row).find(h => h.toLowerCase().includes('назван') || h.toLowerCase().includes('наимен') || h.toLowerCase().includes('name') || h.toLowerCase().includes('товар'));
-                    const name = nameKey ? String(row[nameKey] || '').trim() : cleanSku;
-                    groups[groupKey] = {
-                        sku: cleanSku,
-                        originalSku: rawSku,
-                        size: size,
-                        quantity: qty,
-                        name: name || cleanSku,
-                        rawData: row
-                    };
-                }
-            });
-            return Object.values(groups);
-        }
-
         async function processImportWithIntelligentMatch() {
             if (!checkPermission('canImport')) return;
             if (!importFileData || importFileData.length === 0) {
-                showNotification(t('import_no_data'), 'error');
+                showNotification('❌ Нет данных для импорта', 'error');
                 return;
             }
             await loadMasterSkuCache();
@@ -5039,7 +4236,7 @@
         // 🚪 ВЫХОД ИЗ СИСТЕМЫ
         // ==================================================
         function logoutUser() {
-            if (confirm(t('logout_confirm'))) {
+            if (confirm('Вы уверены, что хотите выйти?')) {
                 auth.signOut().then(() => {
                     currentUser = null;
                     currentUserRole = null;
@@ -5048,7 +4245,7 @@
                     location.reload();
                 }).catch((error) => {
                     console.error('Ошибка выхода:', error);
-                    showNotification(t('logout_error') + ': ' + error.message, 'error');
+                    showNotification('❌ Ошибка выхода: ' + error.message, 'error');
                 });
             }
         }
@@ -5168,7 +4365,7 @@
             const select = document.getElementById('bigScheduleEmployeeSelect');
             if (!select) return;
             const currentValue = select.value;
-            select.innerHTML = `<option value="">${t('big_schedule_select_employee')}</option>`;
+            select.innerHTML = `<option value="">Выберите сотрудника</option>`;
             bigScheduleUsers.forEach(user => {
                 select.innerHTML += `<option value="${user.id}" ${user.id === currentValue ? 'selected' : ''}>${escapeHtml(user.name)}</option>`;
             });
@@ -5180,7 +4377,7 @@
         function renderBigUsersList() {
             const container = document.getElementById('bigEmployeesList');
             if (bigScheduleUsers.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">${t('big_schedule_no_employees')}</div>`;
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">Загрузите сотрудников</div>`;
                 return;
             }
             let html = '';
@@ -5269,7 +4466,7 @@
             const start = new Date(startDate);
             const end = new Date(endDate);
             
-            const weekDays = document.getElementById('bigWeekDays');
+            const weekDays = document.querySelector('#bigCalendarWrapper .week-days');
             const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
             weekDays.innerHTML = days.map(d => `<span>${d}</span>`).join('');
             
@@ -5560,7 +4757,7 @@
             const container = document.getElementById('bigPayrollContent');
             const user = bigScheduleUsers.find(u => u.id === userId);
             if (!user) {
-                container.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:10px;">${t('big_schedule_select_employee_first')}</div>`;
+                container.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:10px;">Выберите сотрудника для расчёта</div>`;
                 return;
             }
             
@@ -5762,7 +4959,7 @@
         // ==================================================
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Система запущена!');
-            console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram, График и расчёт, Архив');
+            console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Тема, Анимации, Фото, Telegram, График и расчёт, Архив');
             console.log('🧠 ИНТЕЛЛЕКТУАЛЬНЫЙ ИМПОРТ АКТИВИРОВАН!');
             console.log('📊 Импорт: группировка по "Артикул продавца" (очищенный код) + Размер');
             console.log('📄 Поддержка: Excel (.xlsx, .xls) и PDF (с OCR и HTML-таблицами)');
@@ -5771,7 +4968,6 @@
             console.log('🔄 Принудительный OCR для всех PDF файлов');
             console.log('🔍 ИНТЕЛЛЕКТУАЛЬНОЕ СОПОСТАВЛЕНИЕ: LB001 → LB001hsj-shd08, 803 → 803-liffh, 803 → 80364272');
             loadTheme();
-            setLanguage(currentLanguage);
             
             setTimeout(testTelegramBot, 3000);
             
@@ -5784,21 +4980,7 @@
             
             document.addEventListener('click', (e) => {
                 if (e.target.closest('#editModal') && document.getElementById('editModal').classList.contains('show')) {
-                    const labels = {
-                        'editPhotoLabel': 'edit_photo_label',
-                        'editNameLabel': 'edit_name_label',
-                        'editSkusLabel': 'edit_sku_label',
-                        'editSizeLabel': 'edit_size_label',
-                        'editQtyLabel': 'edit_qty_label',
-                        'editMinStockLabel': 'edit_min_stock_label',
-                        'editSaveBtn': 'edit_save',
-                        'editDeleteBtn': 'edit_delete',
-                        'editCancelBtn': 'edit_cancel'
-                    };
-                    for (const [id, key] of Object.entries(labels)) {
-                        const el = document.getElementById(id);
-                        if (el) el.textContent = t(key);
-                    }
+                    // Обновляем текст для редактирования
                 }
             });
         });
