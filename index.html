@@ -1691,7 +1691,7 @@
                         <button class="purple" onclick="openImportModeModal()" id="importFileBtn">📥 Выбрать файл</button>
                         <div style="font-size:11px; color:var(--text-muted); margin-top:6px;" id="importHint">
                             ⚠️ Обновление по полям: <strong id="importFieldsHint">Артикул продавца (чистый код) + Размер</strong>
-                            <br>📄 Поддерживаются: Excel (.xlsx, .xls) и PDF
+                            <br>📄 Поддерживаются: Excel (.xlsx, .xls) и PDF (включая HTML-таблицы)
                         </div>
                     </div>
                 </div>
@@ -2068,7 +2068,7 @@
                 import_pdf_ocr_done: '✅ OCR завершён, извлечено {count} записей',
                 import_pdf_ocr_error: '❌ Ошибка OCR: {error}',
                 import_pdf_no_text: '❌ Не удалось извлечь текст из PDF (возможно, это сканированный документ без OCR)',
-                import_pdf_supported: '📄 Поддерживаются: Excel (.xlsx, .xls) и PDF',
+                import_pdf_supported: '📄 Поддерживаются: Excel (.xlsx, .xls) и PDF (включая HTML-таблицы)',
                 
                 // === PWA ===
                 install_title: '📱 Установить приложение',
@@ -2314,7 +2314,7 @@
                 import_pdf_ocr_done: '✅ OCR completed, extracted {count} records',
                 import_pdf_ocr_error: '❌ OCR error: {error}',
                 import_pdf_no_text: '❌ Failed to extract text from PDF (possibly scanned without OCR)',
-                import_pdf_supported: '📄 Supported: Excel (.xlsx, .xls) and PDF',
+                import_pdf_supported: '📄 Supported: Excel (.xlsx, .xls) and PDF (including HTML tables)',
                 
                 // === PWA ===
                 install_title: '📱 Install app',
@@ -2560,7 +2560,7 @@
                 import_pdf_ocr_done: '✅ OCR 完成，提取了 {count} 条记录',
                 import_pdf_ocr_error: '❌ OCR 错误：{error}',
                 import_pdf_no_text: '❌ 无法从 PDF 提取文本（可能是没有 OCR 的扫描件）',
-                import_pdf_supported: '📄 支持：Excel (.xlsx, .xls) 和 PDF',
+                import_pdf_supported: '📄 支持：Excel (.xlsx, .xls) 和 PDF（包括 HTML 表格）',
                 
                 // === PWA ===
                 install_title: '📱 安装应用',
@@ -4358,6 +4358,7 @@
                     <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
                         📄 Извлечено из PDF: ${parsedData.length} строк | Группировка по Артикулу + Размеру
                         ${fullText.includes('OCR') ? ' | 🔍 Использован OCR' : ''}
+                        ${fullText.includes('<table') ? ' | 📊 Распознана HTML-таблица' : ''}
                     </div>
                 `;
                 
@@ -4370,19 +4371,29 @@
             }
         }
 
-        // ===== 🔍 ПАРСИНГ ТЕКСТА PDF В ТАБЛИЦУ =====
+        // ===== 🔍 ПАРСИНГ ТЕКСТА PDF В ТАБЛИЦУ (С ПОДДЕРЖКОЙ HTML) =====
         function parsePDFTextToTable(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             const result = [];
             
+            // 🔥 Проверяем, есть ли HTML-таблица
+            const hasHtmlTable = text.includes('<table') || text.includes('</table>');
+            
+            if (hasHtmlTable) {
+                // 📊 Парсим HTML-таблицу
+                const htmlResult = parseHtmlTable(text);
+                if (htmlResult.length > 0) {
+                    return htmlResult;
+                }
+            }
+            
+            // 📊 Обычный текстовый парсинг (как было раньше)
             // Ищем строки, похожие на данные (артикул + количество)
-            // Паттерн: что-то похожее на артикул (буквы/цифры/дефисы) + число
             const skuPattern = /([A-Z0-9\-]{3,20})\s+(\d+)/i;
-            const skuPattern2 = /([A-Z0-9\-]{3,20})\s+([A-ZА-Я]{1,3})\s+(\d+)/i; // с размером
-            const skuPattern3 = /([A-Z0-9\-]{3,20})\s+(\d+)\s+([A-ZА-Я]{1,3})/i; // артикул + кол-во + размер
+            const skuPattern2 = /([A-Z0-9\-]{3,20})\s+([A-ZА-Я]{1,3})\s+(\d+)/i;
+            const skuPattern3 = /([A-Z0-9\-]{3,20})\s+(\d+)\s+([A-ZА-Я]{1,3})/i;
             
             for (const line of lines) {
-                // Пробуем найти паттерн: артикул + размер + количество
                 let match = line.match(skuPattern2);
                 if (match) {
                     result.push({
@@ -4393,7 +4404,6 @@
                     continue;
                 }
                 
-                // Пробуем: артикул + количество + размер
                 match = line.match(skuPattern3);
                 if (match) {
                     result.push({
@@ -4404,7 +4414,6 @@
                     continue;
                 }
                 
-                // Пробуем найти паттерн без размера
                 match = line.match(skuPattern);
                 if (match) {
                     result.push({
@@ -4415,7 +4424,6 @@
                     continue;
                 }
                 
-                // Если строка содержит несколько артикулов в одной строке (через пробел/табуляцию)
                 const parts = line.split(/\s{2,}|\t/).filter(p => p.trim());
                 if (parts.length >= 2) {
                     const skuPart = parts[0].trim();
@@ -4429,6 +4437,152 @@
                             'Количество': parseInt(qtyPart)
                         });
                     }
+                }
+            }
+            
+            return result;
+        }
+
+        // ===== 📊 ПАРСИНГ HTML ТАБЛИЦЫ ИЗ PDF =====
+        function parseHtmlTable(text) {
+            const result = [];
+            
+            // Извлекаем всё между <table> и </table>
+            const tableMatch = text.match(/<table>(.*?)<\/table>/s);
+            if (!tableMatch) return result;
+            
+            const tableContent = tableMatch[1];
+            
+            // Ищем все строки таблицы (между <tr> и </tr>)
+            const rowMatches = tableContent.match(/<tr>(.*?)<\/tr>/gs);
+            if (!rowMatches) return result;
+            
+            // Пропускаем заголовок (первая строка)
+            for (let i = 0; i < rowMatches.length; i++) {
+                const row = rowMatches[i];
+                
+                // Извлекаем все ячейки (между <td> и </td>)
+                const cellMatches = row.match(/<td>(.*?)<\/td>/gs);
+                if (!cellMatches) continue;
+                
+                const cells = cellMatches.map(cell => {
+                    // Удаляем HTML-теги и лишние пробелы
+                    let content = cell.replace(/<td>/g, '').replace(/<\/td>/g, '').trim();
+                    // Убираем лишние пробелы и переносы
+                    content = content.replace(/\s+/g, ' ').trim();
+                    return content;
+                });
+                
+                // Пропускаем заголовки
+                if (i === 0) {
+                    // Проверяем, что это заголовок
+                    const headerText = cells.join(' ');
+                    if (headerText.includes('Артикул продавца') || headerText.includes('Размер') || headerText.includes('Количество') || 
+                        headerText.includes('Артикул') || headerText.includes('Размер') || headerText.includes('Кол-во')) {
+                        continue;
+                    }
+                }
+                
+                // Ищем в ячейках артикул, размер и количество
+                let sku = '';
+                let size = '';
+                let quantity = 0;
+                
+                for (const cell of cells) {
+                    // Ищем артикул (буквы/цифры/дефисы, длина 3-20)
+                    const skuMatch = cell.match(/([A-Z0-9\-]{3,20})/i);
+                    if (skuMatch && !sku) {
+                        sku = skuMatch[1].toUpperCase();
+                    }
+                    
+                    // Ищем размер (одна или две буквы, или XXXS, XXS, XS, S, M, L, XL, XXL, XXXL)
+                    const sizeMatch = cell.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,3})\b/i);
+                    if (sizeMatch && !size && sku) {
+                        const possibleSize = sizeMatch[1].toUpperCase();
+                        // Проверяем, что это не часть артикула
+                        if (possibleSize.length <= 4 && !sku.includes(possibleSize)) {
+                            size = possibleSize;
+                        }
+                    }
+                    
+                    // Ищем количество (число от 1 до 9999)
+                    const qtyMatch = cell.match(/\b(\d+)\b/);
+                    if (qtyMatch && quantity === 0) {
+                        const possibleQty = parseInt(qtyMatch[1]);
+                        if (possibleQty > 0 && possibleQty < 10000) {
+                            quantity = possibleQty;
+                        }
+                    }
+                }
+                
+                // Если нашли артикул и количество - добавляем
+                if (sku && quantity > 0) {
+                    result.push({
+                        'Артикул': sku,
+                        'Размер': size || '',
+                        'Количество': quantity
+                    });
+                }
+            }
+            
+            // Если ничего не нашли - пробуем альтернативный метод
+            if (result.length === 0) {
+                return parseTableFromText(text);
+            }
+            
+            return result;
+        }
+
+        // ===== 🔍 АЛЬТЕРНАТИВНЫЙ ПАРСИНГ ТАБЛИЦЫ ИЗ ТЕКСТА =====
+        function parseTableFromText(text) {
+            const result = [];
+            
+            // Ищем паттерн: число + пробел + артикул + размер + число
+            // Пример: "5266833569Свободные светлые джинсовые шорты DimeSчерный6055577591 38145"
+            // Ищем числовые последовательности, которые могут быть артикулами
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 20);
+            
+            for (const line of lines) {
+                // Ищем все числа в строке
+                const numbers = line.match(/\b\d+\b/g);
+                if (!numbers || numbers.length < 2) continue;
+                
+                // Ищем артикул (число длиной 8-15 цифр)
+                let sku = '';
+                for (const num of numbers) {
+                    if (num.length >= 8 && num.length <= 15) {
+                        sku = num;
+                        break;
+                    }
+                }
+                if (!sku) continue;
+                
+                // Ищем размер (одна-две буквы, или XXXS, XXS, XS, S, M, L, XL, XXL)
+                const sizeMatch = line.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[A-ZА-Я]{1,2})\b/i);
+                let size = sizeMatch ? sizeMatch[1].toUpperCase() : '';
+                
+                // Если размер не найден, пробуем найти в конце строки
+                if (!size) {
+                    const endMatch = line.match(/\b([A-ZА-Я]{1,3})\s*$/i);
+                    if (endMatch) size = endMatch[1].toUpperCase();
+                }
+                
+                // Ищем количество (число 1-9999, не являющееся артикулом)
+                let quantity = 0;
+                for (const num of numbers) {
+                    const val = parseInt(num);
+                    if (val > 0 && val < 10000 && num !== sku) {
+                        quantity = val;
+                        break;
+                    }
+                }
+                
+                if (sku && quantity > 0) {
+                    result.push({
+                        'Артикул': sku,
+                        'Размер': size || '',
+                        'Количество': quantity
+                    });
                 }
             }
             
@@ -5589,7 +5743,7 @@
             console.log('🚀 Система запущена!');
             console.log('📋 Функции: Поиск, PWA, История, Календарь, 2FA, Роли, Язык, Тема, Анимации, Фото, Telegram, График и расчёт, Архив');
             console.log('📊 Импорт: группировка по "Артикул продавца" (очищенный код) + Размер');
-            console.log('📄 Поддержка: Excel (.xlsx, .xls) и PDF (с OCR)');
+            console.log('📄 Поддержка: Excel (.xlsx, .xls) и PDF (с OCR и HTML-таблицами)');
             loadTheme();
             setLanguage(currentLanguage);
             
