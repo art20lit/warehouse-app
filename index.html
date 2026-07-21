@@ -4577,7 +4577,7 @@
             return clean;
         }
 
-        // ===== ОБНОВЛЁННАЯ ФУНКЦИЯ ИМПОРТА =====
+        // ===== ОБНОВЛЁННАЯ ФУНКЦИЯ ИМПОРТА С ГРУППИРОВКОЙ =====
         async function processImport() {
             if (!checkPermission('canImport')) return;
             if (!importFileData || importFileData.length === 0) { 
@@ -4590,16 +4590,70 @@
             progress.classList.add('show');
             bar.style.width = '0%';
             
+            // 📊 Сначала ГРУППИРУЕМ все строки из файла
+            // Ключ: Артикул + Размер, Значение: сумма количества
+            const groupedItems = {};
+            
+            console.log('📊 Начинаем группировку файла...');
+            console.log(`📄 Всего строк в файле: ${importFileData.length}`);
+            
+            for (const row of importFileData) {
+                const sku = row.sku; // уже очищенный артикул
+                const size = row.size || ''; // размер
+                const qty = parseInt(row.quantity) || 0;
+                
+                if (!sku || qty === 0) continue;
+                
+                // Создаём уникальный ключ: АРТИКУЛ|РАЗМЕР
+                const key = `${sku}|${size.toUpperCase()}`;
+                
+                if (groupedItems[key]) {
+                    // ✅ Если такая комбинация уже есть - суммируем
+                    groupedItems[key].quantity += qty;
+                    console.log(`➕ Суммируем: ${sku} + ${size} = ${groupedItems[key].quantity}`);
+                } else {
+                    // ✅ Новая комбинация
+                    groupedItems[key] = {
+                        sku: sku,
+                        size: size,
+                        quantity: qty,
+                        name: row.name || sku
+                    };
+                    console.log(`🆕 Новая группа: ${sku} + ${size} = ${qty}`);
+                }
+            }
+            
+            const groupedArray = Object.values(groupedItems);
+            console.log(`📊 Всего уникальных комбинаций: ${groupedArray.length}`);
+            console.log('📊 Группы:', groupedArray);
+            
+            // 📊 Показываем пользователю, что нашлось
+            const statusEl = document.getElementById('importStatus');
+            statusEl.innerHTML = `
+                <div style="font-weight:600; color:var(--accent-color); margin-bottom:8px;">
+                    📊 Найдено ${groupedArray.length} уникальных комбинаций 
+                    (из ${importFileData.length} строк)
+                </div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; max-height:150px; overflow-y:auto; text-align:left;">
+                    ${groupedArray.slice(0, 20).map(g => `${g.sku} | ${g.size || 'без размера'} = ${g.quantity} шт.`).join('<br>')}
+                    ${groupedArray.length > 20 ? `<br>... и ещё ${groupedArray.length - 20} позиций` : ''}
+                </div>
+                <div style="font-size:13px; color:var(--text-secondary);">
+                    ⏳ Обработка...
+                </div>
+            `;
+            
             let updated = 0, added = 0, errors = 0;
-            const total = importFileData.length;
+            const total = groupedArray.length;
             let processed = 0;
             
-            for (let row of importFileData) {
+            // 🔄 Теперь обрабатываем каждую уникальную группу
+            for (const group of groupedArray) {
                 try {
-                    const sku = row.sku;
-                    const size = row.size;
-                    const fileQty = row.quantity;
-                    const name = row.name;
+                    const sku = group.sku;
+                    const size = group.size;
+                    const fileQty = group.quantity;
+                    const name = group.name;
                     
                     if (!sku) { 
                         errors++; 
@@ -4609,21 +4663,31 @@
                     
                     // 🔍 Ищем существующий товар по артикулу + размер
                     const existing = products.find(p => {
+                        // Проверяем, содержит ли массив skus наш артикул
                         const hasSku = Array.isArray(p.skus) 
                             ? p.skus.some(s => extractCleanSku(s) === sku) 
                             : extractCleanSku(p.sku) === sku;
+                        
+                        // Проверяем размер (если указан)
                         const matchSize = size ? p.size === size : true;
+                        
                         return hasSku && matchSize;
                     });
                     
                     if (existing) {
+                        // ✅ Товар найден → обновляем количество
                         let newQty;
+                        let actionText = '';
+                        
                         if (importMode === 'add') {
                             newQty = existing.quantity + fileQty;
+                            actionText = `➕ Добавлено ${fileQty}`;
                         } else if (importMode === 'subtract') {
                             newQty = Math.max(0, existing.quantity - fileQty);
-                        } else {
+                            actionText = `➖ Убавлено ${fileQty}`;
+                        } else { // replace
                             newQty = fileQty;
+                            actionText = `🔄 Заменено на ${fileQty}`;
                         }
                         
                         await db.collection('products').doc(existing.id).update({ 
@@ -4636,13 +4700,47 @@
                         });
                         updated++;
                         
+                        console.log(`✅ Обновлён: ${existing.name} | ${sku} | ${size} | ${existing.quantity} → ${newQty} (${actionText})`);
+                        
+                        // 📤 Отправляем уведомление в Telegram
+                        await sendTelegramNotification(
+                            `🔄 Обновлён товар: ${existing.name}\n` +
+                            `📦 Артикул: ${sku}\n` +
+                            `📏 Размер: ${size || 'не указан'}\n` +
+                            `${actionText}\n` +
+                            `📊 Было: ${existing.quantity} → Стало: ${newQty}`
+                        );
+                        
                     } else {
+                        // 🆕 Товар не найден → создаём новый
+                        let initialQty;
+                        let actionText = '';
+                        
+                        if (importMode === 'add') {
+                            initialQty = fileQty;
+                            actionText = '➕ Добавлен';
+                        } else if (importMode === 'subtract') {
+                            initialQty = 0;
+                            actionText = '➖ Пропущен (убавление до 0)';
+                        } else { // replace
+                            initialQty = fileQty;
+                            actionText = '🔄 Создан';
+                        }
+                        
+                        // Если режим "убавить" и товара нет - пропускаем
+                        if (importMode === 'subtract') {
+                            console.log(`⏭️ Пропускаем (товар не найден, режим убавления): ${sku} | ${size}`);
+                            errors++;
+                            processed++;
+                            continue;
+                        }
+                        
                         const newProduct = {
                             name: name || sku,
                             skus: [sku],
                             sku: sku,
-                            size: size,
-                            quantity: importMode === 'add' ? fileQty : (importMode === 'subtract' ? 0 : fileQty),
+                            size: size || '',
+                            quantity: initialQty,
                             subcategoryId: '',
                             minStock: 5,
                             createdAt: new Date().toISOString(),
@@ -4653,27 +4751,52 @@
                         
                         await db.collection('products').add(newProduct);
                         added++;
+                        
+                        console.log(`➕ Добавлен новый: ${newProduct.name} | ${sku} | ${size} | ${initialQty} (${actionText})`);
+                        
+                        // 📤 Уведомление о новом товаре
+                        await sendTelegramNotification(
+                            `➕ Добавлен новый товар: ${newProduct.name}\n` +
+                            `📦 Артикул: ${sku}\n` +
+                            `📏 Размер: ${size || 'не указан'}\n` +
+                            `📊 Количество: ${initialQty}`
+                        );
                     }
                     
                 } catch (e) {
                     errors++;
-                    console.error('❌ Ошибка импорта строки:', row, e);
+                    console.error('❌ Ошибка импорта группы:', group, e);
                 }
                 
                 processed++;
                 bar.style.width = `${(processed / total) * 100}%`;
             }
             
-            const status = document.getElementById('importStatus');
+            // 📊 ИТОГОВЫЙ РЕЗУЛЬТАТ
             const modeNames = {
                 'add': '➕ Добавление',
                 'subtract': '➖ Убавление',
                 'replace': '🔄 Замена'
             };
+            
+            const resultMessage = 
+                `✅ Импорт завершён!\n` +
+                `📊 Режим: ${modeNames[importMode] || importMode}\n` +
+                `📦 Уникальных групп: ${total}\n` +
+                `🔄 Обновлено: ${updated}\n` +
+                `➕ Добавлено: ${added}\n` +
+                `${errors > 0 ? `❌ Ошибок: ${errors}` : '🎉 Все успешно!'}`;
+            
+            // 📤 Итоговое уведомление в Telegram
+            await sendTelegramNotification(resultMessage);
+            
+            // 📊 Показываем результат пользователю
+            const status = document.getElementById('importStatus');
             status.innerHTML = `
-                <div style="font-weight:600;color:${errors > 0 ? 'var(--danger-color)' : 'var(--success-color)'};">
-                    ✅ Импорт завершён!
-                    <br>📦 Обновлено: ${updated} | ➕ Добавлено: ${added} 
+                <div style="font-weight:600; color:${errors > 0 ? 'var(--danger-color)' : 'var(--success-color)'};">
+                    ${errors > 0 ? '⚠️' : '✅'} Импорт завершён!
+                    <br>📊 Уникальных групп: ${total}
+                    <br>🔄 Обновлено: ${updated} | ➕ Добавлено: ${added} 
                     ${errors > 0 ? `| ❌ Ошибок: ${errors}` : ''}
                     <br><span style="font-size:12px; opacity:0.7;">
                         Режим: ${modeNames[importMode] || importMode}
@@ -4690,7 +4813,8 @@
                 updated, 
                 added, 
                 errors,
-                total: total
+                total: total,
+                originalRows: importFileData.length
             });
             
             setTimeout(() => progress.classList.remove('show'), 3000);
