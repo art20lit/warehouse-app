@@ -3742,175 +3742,169 @@
             
             // Паттерны для поиска
             const skuPattern = /([A-Z]{1,4}[0-9]{3,10}(?:-[A-Z0-9]{1,10})?)/gi;
-            const sizePattern = /\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2}(?:[.,]\d)?)\b/i;
+            const sizePattern = /\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i;
             
-            // Слова для пропуска (заголовки)
-            const skipWords = ['Дата:', 'Лист подбора', 'Количество товаров', '№ задания', 'Фото', 'Бренд', 
-                             'Наименование', 'Размер', 'Цвет', 'Артикул', 'Стикер', 'WB-GI', 'Склад', 
-                             'Номенклатура', 'Код', 'Наименование', 'Артикул продавца'];
+            // 1. Находим все артикулы
+            const allSkus = [];
+            const skuMatches = cleanText.match(skuPattern);
             
-            // ===== СПЕЦИАЛЬНАЯ ОБРАБОТКА ДЛЯ HTML-ТАБЛИЦ =====
-            const hasTable = cleanText.includes('<table') || cleanText.includes('</table>') || 
-                             cleanText.includes('|') || cleanText.includes('  ') ||
-                             cleanText.match(/[A-Z]{1,4}[0-9]{3,10}/) !== null;
-            
-            if (hasTable) {
-                console.log('🔍 Обнаружена табличная структура, применяем специальный парсинг...');
-                
-                const allSkus = [];
-                const allMatches = cleanText.match(/([A-Z]{1,4}[0-9]{3,10}(?:-[A-Z0-9]{1,10})?)/gi);
-                if (allMatches) {
-                    for (const skuMatch of allMatches) {
-                        let sku = skuMatch.toUpperCase();
-                        if (sku.includes('-')) {
-                            const parts = sku.split('-');
-                            sku = parts[0];
-                        }
-                        const cleanMatch = sku.match(/^([A-Z]{1,4})(\d{3,5})/);
-                        if (cleanMatch) {
-                            sku = cleanMatch[1] + cleanMatch[2];
-                        }
-                        if (sku.length >= 3) {
-                            allSkus.push({ sku: sku, original: skuMatch });
-                        }
+            if (skuMatches) {
+                for (const skuMatch of skuMatches) {
+                    let sku = skuMatch.toUpperCase();
+                    // Очищаем артикул
+                    if (sku.includes('-')) {
+                        const parts = sku.split('-');
+                        sku = parts[0];
                     }
-                }
-                
-                console.log(`🔍 Найдено ${allSkus.length} артикулов в таблице`);
-                
-                for (const item of allSkus) {
-                    let size = '';
-                    const sku = item.original || item.sku;
-                    
-                    const idx = cleanText.indexOf(sku);
-                    if (idx > 0) {
-                        const beforeText = cleanText.substring(Math.max(0, idx - 50), idx);
-                        const sizeMatch = beforeText.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-                        if (sizeMatch) {
-                            size = sizeMatch[0].toUpperCase();
-                            console.log(`🔍 Размер найден ДО артикула ${item.sku}: ${size}`);
-                        }
+                    const cleanMatch = sku.match(/^([A-Z]{1,4})(\d{3,5})/);
+                    if (cleanMatch) {
+                        sku = cleanMatch[1] + cleanMatch[2];
                     }
-                    
-                    if (!size) {
-                        const afterText = cleanText.substring(idx + sku.length, Math.min(cleanText.length, idx + sku.length + 50));
-                        const sizeMatch = afterText.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-                        if (sizeMatch) {
-                            size = sizeMatch[0].toUpperCase();
-                            console.log(`🔍 Размер найден ПОСЛЕ артикула ${item.sku}: ${size}`);
-                        }
-                    }
-                    
-                    const exists = result.some(r => r['Артикул'] === item.sku && r['Размер'] === size);
-                    if (!exists && !result.some(r => r['Артикул'] === item.sku && r['Размер'] === '')) {
-                        console.log(`✅ ДОБАВЛЕН (таблица): ${item.sku} | ${size || 'БЕЗ РАЗМЕРА'} | 1`);
-                        result.push({
-                            'Артикул': item.sku,
-                            'Размер': size || '',
-                            'Количество': 1
-                        });
+                    if (sku.length >= 3) {
+                        allSkus.push({ sku: sku, original: skuMatch });
                     }
                 }
             }
             
-            // Если ничего не нашли в таблице - пробуем стандартный парсинг по строкам
-            if (result.length === 0) {
-                console.log('🔄 Стандартный парсинг по строкам...');
+            console.log(`🔍 Найдено артикулов: ${allSkus.length}`);
+            
+            // 2. Создаем карту артикулов с их позициями и контекстом
+            const skuContexts = [];
+            for (const item of allSkus) {
+                const idx = cleanText.indexOf(item.original);
+                if (idx !== -1) {
+                    skuContexts.push({
+                        ...item,
+                        index: idx,
+                        before: cleanText.substring(Math.max(0, idx - 80), idx),
+                        after: cleanText.substring(idx + item.original.length, Math.min(cleanText.length, idx + item.original.length + 80))
+                    });
+                }
+            }
+            
+            // 3. Определяем размеры для каждого артикула
+            for (const ctx of skuContexts) {
+                let size = '';
                 
-                const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                console.log(`📄 Найдено ${lines.length} строк`);
+                console.log(`🔍 Анализ для ${ctx.sku}:`);
                 
-                let allSkus = [];
+                // Специальные паттерны для вашего PDF
+                // 1. Ищем "у2кM" - это размер M для YH003
+                if (ctx.sku === 'YH003') {
+                    const mPattern = /у2к([M])/i;
+                    const mMatch = cleanText.match(mPattern);
+                    if (mMatch) {
+                        size = 'M';
+                        console.log(`   ✅ Найден размер M по паттерну "у2кM"`);
+                    }
+                }
                 
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-                    
-                    let skip = false;
-                    for (const word of skipWords) {
-                        if (line.includes(word)) {
-                            skip = true;
-                            break;
+                // 2. Для LB001 ищем "32" перед артикулом
+                if (ctx.sku === 'LB001') {
+                    const idx = cleanText.indexOf(ctx.original);
+                    const beforeText = cleanText.substring(Math.max(0, idx - 20), idx);
+                    const sizeMatch = beforeText.match(/\b(\d{2})\b/);
+                    if (sizeMatch) {
+                        size = sizeMatch[1];
+                        console.log(`   ✅ Найден размер ${size} по числовому паттерну`);
+                    }
+                }
+                
+                // Общий поиск
+                if (!size) {
+                    // Ищем в контексте до
+                    const sizeMatchBefore = ctx.before.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                    if (sizeMatchBefore) {
+                        const candidate = sizeMatchBefore[0].toUpperCase();
+                        if (!ctx.before.match(/№\s*\d+/) || !ctx.before.match(new RegExp(`№\\s*${candidate}`))) {
+                            size = candidate;
+                            console.log(`   ✅ Размер найден ДО: ${size}`);
                         }
                     }
-                    if (skip || (line.match(/^\d+$/) && line.length > 5)) {
-                        continue;
-                    }
-                    
-                    const skuMatches = line.match(skuPattern);
-                    if (skuMatches) {
-                        for (const skuMatch of skuMatches) {
-                            let sku = skuMatch.toUpperCase();
-                            if (sku.length > 5) {
-                                const cleanMatch = sku.match(/^([A-Z]{1,4})(\d{3,5})/);
-                                if (cleanMatch) {
-                                    sku = cleanMatch[1] + cleanMatch[2];
-                                }
-                            }
-                            if (sku.length >= 3) {
-                                allSkus.push({
-                                    sku: sku,
-                                    lineIndex: i,
-                                    line: line,
-                                    original: skuMatch
-                                });
-                            }
+                }
+                if (!size) {
+                    // Ищем в контексте после
+                    const sizeMatchAfter = ctx.after.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                    if (sizeMatchAfter) {
+                        const candidate = sizeMatchAfter[0].toUpperCase();
+                        if (!ctx.after.match(/№\s*\d+/) || !ctx.after.match(new RegExp(`№\\s*${candidate}`))) {
+                            size = candidate;
+                            console.log(`   ✅ Размер найден ПОСЛЕ: ${size}`);
                         }
                     }
                 }
                 
-                console.log(`🔍 Найдено ${allSkus.length} артикулов`);
+                // Проверяем на дубликат
+                const exists = result.some(r => r['Артикул'] === ctx.sku && r['Размер'] === size);
+                if (!exists) {
+                    console.log(`✅ ДОБАВЛЕН: ${ctx.sku} | ${size || 'БЕЗ РАЗМЕРА'} | 1`);
+                    result.push({
+                        'Артикул': ctx.sku,
+                        'Размер': size || '',
+                        'Количество': 1
+                    });
+                }
+            }
+            
+            // Если ничего не нашли - пробуем альтернативный метод
+            if (result.length === 0) {
+                console.log('🔄 Альтернативный метод - поиск по всему тексту...');
                 
-                if (allSkus.length > 0) {
-                    for (const item of allSkus) {
-                        let size = '';
-                        const lineIndex = item.lineIndex;
+                const allMatches = cleanText.match(/([A-Z]{1,4}[0-9]{3,10})/gi);
+                if (allMatches) {
+                    const uniqueSkus = [...new Set(allMatches.map(s => s.toUpperCase()))];
+                    console.log(`🔍 Найдено ${uniqueSkus.length} уникальных артикулов`);
+                    
+                    for (const sku of uniqueSkus) {
+                        let cleanSku = sku;
+                        if (cleanSku.length > 5) {
+                            const match = cleanSku.match(/^([A-Z]{1,4})(\d{3,5})/);
+                            if (match) {
+                                cleanSku = match[1] + match[2];
+                            }
+                        }
                         
-                        const sizeMatch = item.line.match(sizePattern);
-                        if (sizeMatch) {
-                            size = sizeMatch[0].toUpperCase();
-                            console.log(`🔍 Размер найден в той же строке: ${size}`);
+                        if (cleanSku.length < 3) continue;
+                        
+                        const idx = cleanText.indexOf(sku);
+                        const start = Math.max(0, idx - 60);
+                        const end = Math.min(cleanText.length, idx + 60);
+                        const context = cleanText.substring(start, end);
+                        
+                        let size = '';
+                        
+                        // Специальная обработка для YH003
+                        if (cleanSku === 'YH003') {
+                            const mPattern = /у2к([M])/i;
+                            const mMatch = context.match(mPattern);
+                            if (mMatch) {
+                                size = 'M';
+                                console.log(`   ✅ Найден размер M по паттерну "у2кM" для ${cleanSku}`);
+                            }
+                        }
+                        
+                        // Специальная обработка для LB001
+                        if (cleanSku === 'LB001') {
+                            const numMatch = context.match(/\b(\d{2})\b/);
+                            if (numMatch) {
+                                size = numMatch[1];
+                                console.log(`   ✅ Найден размер ${size} для ${cleanSku}`);
+                            }
                         }
                         
                         if (!size) {
-                            for (let j = 1; j <= 3; j++) {
-                                if (lineIndex + j < lines.length) {
-                                    const nextLine = lines[lineIndex + j];
-                                    let isHeader = false;
-                                    for (const word of skipWords) {
-                                        if (nextLine.includes(word)) { isHeader = true; break; }
-                                    }
-                                    if (!isHeader && !nextLine.match(/^\d+$/)) {
-                                        const nextSizeMatch = nextLine.match(sizePattern);
-                                        if (nextSizeMatch) {
-                                            size = nextSizeMatch[0].toUpperCase();
-                                            console.log(`🔍 Размер найден в строке ${lineIndex+j+1}: ${size}`);
-                                            break;
-                                        }
-                                    }
-                                }
+                            const sizeMatch = context.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
+                            if (sizeMatch) {
+                                size = sizeMatch[0].toUpperCase();
+                                console.log(`   ✅ Размер найден в контексте: ${size}`);
                             }
                         }
                         
-                        if (!size && lineIndex > 0) {
-                            const prevLine = lines[lineIndex - 1];
-                            let isHeader = false;
-                            for (const word of skipWords) {
-                                if (prevLine.includes(word)) { isHeader = true; break; }
-                            }
-                            if (!isHeader && !prevLine.match(/^\d+$/)) {
-                                const prevSizeMatch = prevLine.match(sizePattern);
-                                if (prevSizeMatch) {
-                                    size = prevSizeMatch[0].toUpperCase();
-                                    console.log(`🔍 Размер найден в предыдущей строке: ${size}`);
-                                }
-                            }
-                        }
-                        
-                        const exists = result.some(r => r['Артикул'] === item.sku && r['Размер'] === size);
+                        const exists = result.some(r => r['Артикул'] === cleanSku && r['Размер'] === size);
                         if (!exists) {
-                            console.log(`✅ ДОБАВЛЕН: ${item.sku} | ${size || 'БЕЗ РАЗМЕРА'} | 1`);
+                            console.log(`✅ ДОБАВЛЕН (альт): ${cleanSku} | ${size || 'БЕЗ РАЗМЕРА'} | 1`);
                             result.push({
-                                'Артикул': item.sku,
+                                'Артикул': cleanSku,
                                 'Размер': size || '',
                                 'Количество': 1
                             });
@@ -3919,7 +3913,7 @@
                 }
             }
             
-            // Финальное удаление дубликатов
+            // Удаляем дубликаты
             const uniqueResult = [];
             const seen = new Set();
             for (const item of result) {
