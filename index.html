@@ -3362,100 +3362,8 @@ return sku.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
 }
 return clean;
 }
-
-// 🔥 ИСПРАВЛЕННАЯ ФУНКЦИЯ — сохраняет результат в importMatchedData
-function matchSkuWithDatabase(data) {
-const results = [];
-let exactMatches = 0, fuzzyMatches = 0, partialMatches = 0, notFound = 0;
-
-console.log(`🔍 Начинаем сопоставление ${data.length} товаров...`);
-
-for (const item of data) {
-const sku = item.sku;
-if (!sku) {
-notFound++;
-results.push({ ...item, found: false, reason: 'empty_sku' });
-continue;
-}
-const match = intelligentSkuSearch(sku);
-if (match) {
-if (match.matchType === 'variant' && match.score >= 0.9) exactMatches++;
-else if (match.matchType === 'variant' && match.score >= 0.8) fuzzyMatches++;
-else partialMatches++;
-
-console.log(`  ✅ "${sku}" → "${match.masterSku.sku}" (${Math.round(match.score*100)}%)`);
-
-results.push({
-...item,
-found: true,
-match: match,
-masterSku: match.masterSku,
-matchType: match.matchType,
-confidence: match.score,
-allMatches: match.allMatches || []
-});
-} else {
-notFound++;
-console.log(`  ❌ "${sku}" — не найден`);
-results.push({ ...item, found: false, reason: 'not_found' });
-}
-}
-const matchedCount = exactMatches + fuzzyMatches + partialMatches;
-
-const result = {
-results: results,
-matchedCount: matchedCount,
-total: data.length,
-exactMatches: exactMatches,
-fuzzyMatches: fuzzyMatches,
-partialMatches: partialMatches,
-notFound: notFound
-};
-
-// 🔥 КРИТИЧНО: сохраняем результат в глобальную переменную!
-importMatchedData = result;
-console.log(`📊 ИТОГ сопоставления: ${matchedCount}/${data.length} найдено`);
-
-return result;
-}
-
-function generateImportStatusHTML(matchedData) {
-const { results, total, matchedCount, exactMatches, fuzzyMatches, partialMatches, notFound } = matchedData;
-let html = `
-<div style="font-weight:600; margin-bottom:8px;">🧠 Интеллектуальное сопоставление артикулов:</div>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; margin-bottom: 10px;">
-<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
-<div style="font-weight:700; font-size:16px; color: var(--accent-color);">${total}</div>
-<div style="font-size:10px; color: var(--text-muted);">Всего</div>
-</div>
-<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
-<div style="font-weight:700; font-size:16px; color: var(--success-color);">${exactMatches}</div>
-<div style="font-size:10px; color: var(--text-muted);">🎯 Точные</div>
-</div>
-<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
-<div style="font-weight:700; font-size:16px; color: var(--warning-color);">${fuzzyMatches}</div>
-<div style="font-size:10px; color: var(--text-muted);">👍 Похожие</div>
-</div>
-<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
-<div style="font-weight:700; font-size:16px; color: var(--purple-color);">${partialMatches}</div>
-<div style="font-size:10px; color: var(--text-muted);">🔍 Частичные</div>
-</div>
-<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
-<div style="font-weight:700; font-size:16px; color: var(--danger-color);">${notFound}</div>
-<div style="font-size:10px; color: var(--text-muted);">❌ Не найдены</div>
-</div>
-</div>
-<button class="success small" onclick="processImportWithIntelligentMatch()" style="width:100%;">
-✅ Импортировать ${matchedCount} товаров (${total} всего)
-</button>
-<div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
-${notFound > 0 ? `⚠️ ${notFound} артикулов не найдены в базе — будут созданы как новые` : '✅ Все артикулы найдены!'}
-</div>
-`;
-return html;
-}
 // ==================================================
-// 📤 ИМПОРТ (ОСНОВНАЯ ЛОГИКА)
+// 📤 ИМПОРТ (ОСНОВНАЯ ЛОГИКА) - ИСПРАВЛЕННАЯ
 // ==================================================
 function openImportExportModal() {
 document.getElementById('importExportModal').classList.add('show');
@@ -3514,19 +3422,18 @@ showNotification('❌ Неподдерживаемый формат файла',
 }
 }
 // ==================================================
-// 🔥 УНИВЕРСАЛЬНЫЙ ПАРСИНГ PDF
+// 🔥 ПАРСИНГ PDF - ИСПРАВЛЕННЫЙ
 // ==================================================
 function parsePDFTextToTable(text) {
-console.log('📄 НАЧИНАЕМ ПАРСИНГ ТЕКСТА');
 let cleanText = text
 .replace(/\r/g, '')
 .replace(/===+ Page \d+ ===/g, '')
 .replace(/\n{3,}/g, '\n')
 .trim();
-console.log('📄 Длина текста:', cleanText.length);
 const result = [];
 const skuPattern = /([A-Z]{1,4}[0-9]{3,10}(?:-[A-Z0-9]{1,10})?)/gi;
 const sizePattern = /\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i;
+// Находим все артикулы
 const allSkus = [];
 const skuMatches = cleanText.match(skuPattern);
 if (skuMatches) {
@@ -3545,63 +3452,49 @@ allSkus.push({ sku: sku, original: skuMatch });
 }
 }
 }
-console.log(`🔍 Найдено артикулов: ${allSkus.length}`);
-const skuContexts = [];
+// Определяем размеры для каждого артикула
 for (const item of allSkus) {
-const idx = cleanText.indexOf(item.original);
-if (idx !== -1) {
-skuContexts.push({
-...item,
-index: idx,
-before: cleanText.substring(Math.max(0, idx - 80), idx),
-after: cleanText.substring(idx + item.original.length, Math.min(cleanText.length, idx + item.original.length + 80))
-});
-}
-}
-for (const ctx of skuContexts) {
 let size = '';
-if (ctx.sku === 'YH003') {
+const idx = cleanText.indexOf(item.original);
+// Специальная обработка для YH003
+if (item.sku === 'YH003') {
 const mPattern = /у2к([M])/i;
 const mMatch = cleanText.match(mPattern);
 if (mMatch) {
 size = 'M';
 }
 }
-if (ctx.sku === 'LB001') {
-const idx = cleanText.indexOf(ctx.original);
+// Для LB001 ищем число перед артикулом
+if (!size && item.sku === 'LB001') {
 const beforeText = cleanText.substring(Math.max(0, idx - 20), idx);
-const sizeMatch = beforeText.match(/\b(\d{2})\b/);
+const numMatch = beforeText.match(/\b(\d{2})\b/);
+if (numMatch) {
+size = numMatch[1];
+}
+}
+// Общий поиск
+if (!size) {
+const contextStart = Math.max(0, idx - 80);
+const contextEnd = Math.min(cleanText.length, idx + item.original.length + 80);
+const context = cleanText.substring(contextStart, contextEnd);
+const sizeMatch = context.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
 if (sizeMatch) {
-size = sizeMatch[1];
-}
-}
-if (!size) {
-const sizeMatchBefore = ctx.before.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-if (sizeMatchBefore) {
-const candidate = sizeMatchBefore[0].toUpperCase();
-if (!ctx.before.match(/№\s*\d+/) || !ctx.before.match(new RegExp(`№\\s*${candidate}`))) {
+const candidate = sizeMatch[0].toUpperCase();
+if (!context.match(/№\s*\d+/) && !context.match(new RegExp(`№\\s*${candidate}`))) {
 size = candidate;
 }
 }
 }
-if (!size) {
-const sizeMatchAfter = ctx.after.match(/\b(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})\b/i);
-if (sizeMatchAfter) {
-const candidate = sizeMatchAfter[0].toUpperCase();
-if (!ctx.after.match(/№\s*\d+/) || !ctx.after.match(new RegExp(`№\\s*${candidate}`))) {
-size = candidate;
-}
-}
-}
-const exists = result.some(r => r['Артикул'] === ctx.sku && r['Размер'] === size);
+const exists = result.some(r => r['Артикул'] === item.sku && r['Размер'] === size);
 if (!exists) {
 result.push({
-'Артикул': ctx.sku,
+'Артикул': item.sku,
 'Размер': size || '',
 'Количество': 1
 });
 }
 }
+// Альтернативный метод
 if (result.length === 0) {
 const allMatches = cleanText.match(/([A-Z]{1,4}[0-9]{3,10})/gi);
 if (allMatches) {
@@ -3659,9 +3552,11 @@ seen.add(key);
 uniqueResult.push(item);
 }
 }
-console.log(`📊 ИТОГ: найдено ${uniqueResult.length} уникальных товаров`);
 return uniqueResult;
 }
+// ==================================================
+// 📥 ОБРАБОТКА PDF
+// ==================================================
 async function handlePDFImport(file) {
 const ocrStatus = document.getElementById('ocrStatus');
 const ocrText = document.getElementById('ocrStatusText');
@@ -3732,8 +3627,9 @@ ocrStatus.classList.remove('show');
 showNotification('❌ Ошибка: ' + e.message, 'error');
 }
 }
-
-// 🔥 ИСПРАВЛЕННАЯ ФУНКЦИЯ — async/await для корректной работы с кэшем
+// ==================================================
+// 📥 ОБРАБОТКА EXCEL
+// ==================================================
 async function handleExcelImport(file) {
 const reader = new FileReader();
 reader.onload = async function(e) {
@@ -3759,12 +3655,9 @@ document.getElementById('importFileName').textContent = `📄 ${file.name}`;
 document.getElementById('importFileCount').textContent = `Сгруппировано ${groupedData.length} уникальных товаров из ${jsonData.length} строк`;
 preview.classList.add('show');
 importFileData = groupedData;
-
-// 🔥 Обновляем кэш ПЕРЕД сопоставлением
 await loadMasterSkuCache();
 const matchedData = matchSkuWithDatabase(groupedData);
 document.getElementById('importStatus').innerHTML = generateImportStatusHTML(matchedData);
-
 showNotification(`✅ Обработано: ${matchedData.matchedCount}/${matchedData.total} товаров`, 'success');
 } catch (e) {
 showNotification('❌ Ошибка чтения файла: ' + e.message, 'error');
@@ -3773,7 +3666,9 @@ console.error(e);
 };
 reader.readAsArrayBuffer(file);
 }
-
+// ==================================================
+// 📊 ГРУППИРОВКА ДАННЫХ
+// ==================================================
 function groupImportData(rawData, skuKey, sizeKey, qtyKey) {
 const groups = {};
 let totalRows = 0;
@@ -3807,43 +3702,109 @@ rawData: row
 });
 return Object.values(groups);
 }
-
-// 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ — теперь товары ТОЧНО обновляются в базе
+// ==================================================
+// 🧠 СОПОСТАВЛЕНИЕ С БАЗОЙ - ИСПРАВЛЕННОЕ
+// ==================================================
+function matchSkuWithDatabase(data) {
+const results = [];
+let exactMatches = 0, fuzzyMatches = 0, partialMatches = 0, notFound = 0;
+for (const item of data) {
+const sku = item.sku;
+if (!sku) {
+notFound++;
+results.push({ ...item, found: false, reason: 'empty_sku' });
+continue;
+}
+const match = intelligentSkuSearch(sku);
+if (match) {
+if (match.matchType === 'variant' && match.score >= 0.9) exactMatches++;
+else if (match.matchType === 'variant' && match.score >= 0.8) fuzzyMatches++;
+else partialMatches++;
+results.push({
+...item,
+found: true,
+match: match,
+masterSku: match.masterSku,
+matchType: match.matchType,
+confidence: match.score,
+allMatches: match.allMatches || []
+});
+} else {
+notFound++;
+results.push({ ...item, found: false, reason: 'not_found' });
+}
+}
+const matchedCount = exactMatches + fuzzyMatches + partialMatches;
+// Сохраняем результат в глобальную переменную
+importMatchedData = {
+results: results,
+matchedCount: matchedCount,
+total: data.length,
+exactMatches: exactMatches,
+fuzzyMatches: fuzzyMatches,
+partialMatches: partialMatches,
+notFound: notFound
+};
+return importMatchedData;
+}
+// ==================================================
+// 📋 ГЕНЕРАЦИЯ HTML СТАТУСА
+// ==================================================
+function generateImportStatusHTML(matchedData) {
+const { results, total, matchedCount, exactMatches, fuzzyMatches, partialMatches, notFound } = matchedData;
+let html = `
+<div style="font-weight:600; margin-bottom:8px;">🧠 Интеллектуальное сопоставление артикулов:</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; margin-bottom: 10px;">
+<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
+<div style="font-weight:700; font-size:16px; color: var(--accent-color);">${total}</div>
+<div style="font-size:10px; color: var(--text-muted);">Всего</div>
+</div>
+<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
+<div style="font-weight:700; font-size:16px; color: var(--success-color);">${exactMatches}</div>
+<div style="font-size:10px; color: var(--text-muted);">🎯 Точные</div>
+</div>
+<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
+<div style="font-weight:700; font-size:16px; color: var(--warning-color);">${fuzzyMatches}</div>
+<div style="font-size:10px; color: var(--text-muted);">👍 Похожие</div>
+</div>
+<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
+<div style="font-weight:700; font-size:16px; color: var(--purple-color);">${partialMatches}</div>
+<div style="font-size:10px; color: var(--text-muted);">🔍 Частичные</div>
+</div>
+<div style="background: var(--bg-card); padding: 6px 10px; border-radius: 8px; text-align: center;">
+<div style="font-weight:700; font-size:16px; color: var(--danger-color);">${notFound}</div>
+<div style="font-size:10px; color: var(--text-muted);">❌ Не найдены</div>
+</div>
+</div>
+<button class="success small" onclick="processImportWithIntelligentMatch()" style="width:100%;">
+✅ Импортировать ${matchedCount} товаров (${total} всего)
+</button>
+<div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+${notFound > 0 ? `⚠️ ${notFound} артикулов не найдены в базе — будут созданы как новые` : '✅ Все артикулы найдены!'}
+</div>
+`;
+return html;
+}
+// ==================================================
+// 🚀 ВЫПОЛНЕНИЕ ИМПОРТА - ИСПРАВЛЕННОЕ
+// ==================================================
 async function processImportWithIntelligentMatch() {
 if (!checkPermission('canImport')) return;
-
-// 🔥 Используем СОХРАНЁННЫЙ результат сопоставления
 if (!importMatchedData || !importMatchedData.results || importMatchedData.results.length === 0) {
 showNotification('❌ Нет данных для импорта. Загрузите файл заново.', 'error');
 return;
 }
-
-console.log(`🚀 НАЧИНАЕМ ИМПОРТ в режиме: ${importMode}`);
-console.log(`📦 Товаров к обработке: ${importMatchedData.results.length}`);
-
-// 🔥 Обновляем кэш перед импортом (свежие данные из Firestore)
 await loadMasterSkuCache();
-
 const progress = document.getElementById('importProgress');
 const bar = document.getElementById('importProgressBar');
 progress.classList.add('show');
 bar.style.width = '0%';
-
 const results = importMatchedData.results;
-const foundResults = results.filter(r => r.found);
-const notFoundResults = results.filter(r => !r.found);
-
-console.log(`✅ Найдено в базе: ${foundResults.length}`);
-console.log(`❌ Не найдено: ${notFoundResults.length}`);
-
 let updated = 0, added = 0, errors = 0, skipped = 0;
 const total = results.length;
 let processed = 0;
-
 for (const result of results) {
 processed++;
-
-// Товар НЕ найден в базе
 if (!result.found) {
 if (importMode !== 'subtract') {
 try {
@@ -3858,51 +3819,35 @@ createdAt: new Date().toISOString(),
 createdBy: currentUser.uid,
 source: 'intelligent_import'
 };
-
-const docRef = await db.collection('products').add(newProduct);
+await db.collection('products').add(newProduct);
 added++;
-console.log(`  ➕ Добавлен новый: "${result.sku}" (ID: ${docRef.id})`);
 } catch (e) {
 errors++;
-console.error(`  ❌ Ошибка добавления "${result.sku}":`, e);
+console.error(e);
 }
 } else {
 skipped++;
-console.log(`  ⏭️ Пропущен (нет в базе, режим УБАВИТЬ): "${result.sku}"`);
 }
-
-// Обновляем прогресс-бар
 if (total > 0) bar.style.width = `${(processed / total) * 100}%`;
 continue;
 }
-
-// Товар НАЙДЕН в базе — обновляем количество
 try {
 const existing = result.masterSku;
-
-// 🔥 КРИТИЧНО: защита от undefined quantity
 const currentQty = parseInt(existing.quantity) || 0;
 const importQty = parseInt(result.quantity) || 0;
-
 if (importQty === 0) {
 skipped++;
-console.log(`  ⏭️ Пропущен (кол-во 0): "${result.sku}"`);
 if (total > 0) bar.style.width = `${(processed / total) * 100}%`;
 continue;
 }
-
 let newQty;
 if (importMode === 'add') {
 newQty = currentQty + importQty;
 } else if (importMode === 'subtract') {
 newQty = Math.max(0, currentQty - importQty);
-} else { // replace
+} else {
 newQty = importQty;
 }
-
-console.log(`  🔄 "${existing.sku}": ${currentQty} → ${newQty} (режим: ${importMode})`);
-
-// 🔥 Обновляем документ в Firestore
 await db.collection('products').doc(existing.id).update({
 quantity: newQty,
 updatedAt: new Date().toISOString(),
@@ -3914,68 +3859,45 @@ lastImportMatch: 'intelligent',
 lastImportConfidence: result.confidence || 0,
 lastImportMatchType: result.matchType || 'unknown'
 });
-
 updated++;
-
-// 🔥 ВАЖНО: обновляем кэш, чтобы следующие товары видели свежие данные
 const cacheIndex = masterSkuCache.findIndex(m => m.id === existing.id);
 if (cacheIndex !== -1) {
 masterSkuCache[cacheIndex].quantity = newQty;
 }
-
 } catch (e) {
 errors++;
-console.error(`  ❌ Ошибка обновления "${result.masterSku?.sku}":`, e);
+console.error(e);
 }
-
-// Обновляем прогресс-бар
 if (total > 0) bar.style.width = `${(processed / total) * 100}%`;
 }
-
-// Логируем действие
 const modeNames = {
 'add': '➕ Добавление',
 'subtract': '➖ Убавление',
 'replace': '🔄 Замена'
 };
-
-console.log(`✅ ИМПОРТ ЗАВЕРШЁН:`);
-console.log(`   Обновлено: ${updated}`);
-console.log(`   Добавлено: ${added}`);
-console.log(`   Пропущено: ${skipped}`);
-console.log(`   Ошибок: ${errors}`);
-
 showNotification(
 `✅ Импорт завершён: обновлено ${updated}, добавлено ${added}${errors > 0 ? `, ошибок ${errors}` : ''}`,
 errors > 0 ? 'warning' : 'success'
 );
-
 await logAction('intelligent_import_completed', {
 mode: importMode,
 updated: updated,
 added: added,
 skipped: skipped,
 errors: errors,
-total: results.length,
-found: foundResults.length,
-notFound: notFoundResults.length
+total: results.length
 });
-
 sendTelegramNotification(
 `📦 Импорт завершён\n` +
 `Режим: ${modeNames[importMode]}\n` +
 `✅ Обновлено: ${updated}\n` +
-`➕ Добавлено: ${added}\n` +
-`❌ Не найдено: ${notFoundResults.length}`
+`➕ Добавлено: ${added}`
 );
-
-// 🔥 Сбрасываем данные импорта
 setTimeout(() => {
 progress.classList.remove('show');
 importFileData = null;
 importMatchedData = null;
 }, 3000);
-
 closeImportFileModal();
 }
 // ==================================================
@@ -4059,7 +3981,7 @@ function escapeHtml(str) { if (!str) return ''; return String(str).replace(/[&<>
 function openMenu() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('sideOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
 function closeMenu() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('sideOverlay').classList.remove('open'); document.body.style.overflow = 'auto'; }
 // ==================================================
-// 📊 НОВЫЙ ГРАФИК С ДАТАМИ
+// 📊 ГРАФИК (остальной код без изменений)
 // ==================================================
 let bigScheduleData = {};
 let bigScheduleUsers = [];
