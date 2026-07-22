@@ -523,12 +523,13 @@ function findProductBySkuAndSize(fileSku, fileSize) {
 }
 
 // ==================================================
-// 🔥 ПОСТРОЧНЫЙ ПАРСЕР — работает ТОЛЬКО со строками таблицы
+// 🔥 НОВЫЙ ПАРСЕР — работает со строками таблицы Wildberries
 // ==================================================
 function parsePDFTextToTable(text) {
-    console.log('📄 ПОСТРОЧНЫЙ ПАРСИНГ PDF');
+    console.log('📄 ПАРСИНГ PDF ПОСТРОЧНО (Wildberries формат)');
     const result = [];
     
+    // Очищаем текст
     const cleanText = text
         .replace(/\r/g, '')
         .replace(/===+ Page \d+ ===/g, '')
@@ -536,16 +537,13 @@ function parsePDFTextToTable(text) {
         .trim();
     
     const lines = cleanText.split(/\r?\n/);
-    console.log(`📄 Строк в тексте: ${lines.length}`);
+    console.log(`📄 Всего строк: ${lines.length}`);
     
-    // Паттерн размера — ТОЧНОЕ совпадение целого слова
-    const sizePattern = /^(XXXS|XXS|XS|S\/M|M\/L|L\/XL|ONE\s*SIZE|UNIVERSAL|S|M|L|XL|XXL|XXXL|44|46|48|50|52|54|56|28|30|32|34|36|38|40|42)$/i;
+    // Паттерн размера
+    const sizePattern = /^(XXXS|XXS|XS|S\/M|M\/L|L\/XL|ONE\s*SIZE|UNIVERSAL|S|M|L|XL|XXL|XXXL|\d{2,3})$/i;
     
-    // Паттерн артикула — буквы + цифры, длина >= 3
-    const skuPattern = /^[A-Z][A-Z0-9\-\.]{2,20}$/i;
-    
-    // ❌ СЛОВА-ИСКЛЮЧЕНИЯ (НЕ артикулы!)
-    const excludeWords = /^(WB|GI|WBGI|Rick|Owens|Dime|Baggy|universal|black|white|red|blue|green|yellow|pink|purple|orange|brown|gray|grey|beige|kamypnak|Kamypnak|KAMYPNAK|uct|non6opa|KonM4ecTBo|KonMyecTBO|Ne 3agaHM9|LBeT|ApTMKyn|CTMKep|HaMMeHoBaHMe|Pa3Mep|EpeHA|中OTO)$/i;
+    // ❌ Слова которые НЕ являются артикулами
+    const excludeWords = /^(WB|GI|WBGI|Rick|Owens|Dime|Baggy|universal|black|white|red|blue|green|yellow|pink|purple|orange|brown|gray|grey|beige|kamypnak|KAMYPNAK|Kamypnak|KonM4ecTBo|KonMyecTBO|uct|nop6opa|Ne 3agaHM9|CTMKep|ApTMKyn)$/i;
     
     let tableLinesCount = 0;
     let skippedLines = 0;
@@ -554,32 +552,39 @@ function parsePDFTextToTable(text) {
         const line = lines[i].trim();
         if (!line) continue;
         
-        // 🔥 ВАЖНО: Работаем ТОЛЬКО со строками таблицы (содержат |)
+        // 🔥 Работаем ТОЛЬКО со строками таблицы (содержат |)
         if (!line.includes('|')) {
             skippedLines++;
             continue;
         }
         
         // Разбиваем на колонки
-        const parts = line.split('|').map(p => p.trim()).filter(p => p && p !== '---' && p !== '');
+        const parts = line.split('|').map(p => p.trim()).filter(p => p !== '');
         
-        // Пропускаем строки-разделители и заголовки
-        if (parts.length < 3) {
+        // Пропускаем строки-разделители (---)
+        if (parts.some(p => /^-+$/.test(p))) {
             skippedLines++;
             continue;
         }
         
-        // Проверяем что это НЕ строка-заголовок таблицы
-        if (parts.some(p => /^(Ne|LBeT|ApTMKyn|CTMKep|HaMMeHoBaHMe|Pa3Mep|EpeHA|中OTO)$/i.test(p))) {
+        // Пропускаем строки-заголовки (содержат Ne, 3agaHM9, ApTMKyn и т.д.)
+        if (parts.some(p => /^(Ne|3agaHM9|ApTMKyn|CTMKep|HaMMeHoBaHMe|Pa3Mep|LBeT|中OTO|EpeHA)$/i.test(p))) {
             skippedLines++;
             continue;
         }
         
+        // Пропускаем строки с малым количеством колонок
+        if (parts.length < 5) {
+            skippedLines++;
+            continue;
+        }
+        
+        // 🔥 Ищем размер и артикул в колонках
         let foundSize = '';
         let foundSku = '';
         
-        // 🔥 Ищем размер и артикул в колонках
-        for (const part of parts) {
+        for (let j = 0; j < parts.length; j++) {
+            const part = parts[j];
             if (!part) continue;
             
             // Ищем размер (ТОЧНОЕ совпадение)
@@ -588,25 +593,26 @@ function parsePDFTextToTable(text) {
                 continue;
             }
             
-            // Ищем артикул
-            if (!foundSku && skuPattern.test(part) && 
-                !excludeWords.test(part) && 
-                !/^\d+$/.test(part) &&
-                part.length >= 3 &&
+            // Ищем артикул (буквы + цифры, длина >= 3, не исключение)
+            if (!foundSku && 
+                /^[A-Z0-9][A-Z0-9\-\.]{2,20}$/i.test(part) &&
                 /[A-Z]/i.test(part) &&
-                /\d/.test(part)) {  // 🔥 Артикул ОБЯЗАТЕЛЬНО должен содержать И буквы, И цифры
+                /\d/.test(part) &&
+                !excludeWords.test(part) &&
+                !/^\d+$/.test(part)) {
                 foundSku = part;
             }
         }
         
         // Если нашли и размер, и артикул — добавляем
         if (foundSku && foundSize) {
-            // Очищаем артикул (убираем лишнее)
+            // Очищаем артикул
             let cleanSku = foundSku.toUpperCase();
             if (cleanSku.includes('-')) {
-                const parts2 = cleanSku.split('-');
-                if (parts2.length >= 2 && /^\d+$/.test(parts2[1])) {
-                    cleanSku = parts2[0];  // Оставляем только буквенную часть
+                const skuParts = cleanSku.split('-');
+                // Если после дефиса только цифры — оставляем как есть (например 601-black-jeans)
+                if (skuParts.length === 2 && /^\d+$/.test(skuParts[1])) {
+                    cleanSku = skuParts[0];
                 }
             }
             
@@ -617,11 +623,13 @@ function parsePDFTextToTable(text) {
                 'Количество': 1
             });
             tableLinesCount++;
+        } else {
+            skippedLines++;
         }
     }
     
     console.log(`📊 Найдено строк с товарами: ${tableLinesCount}`);
-    console.log(`⏭️ Пропущено строк (без таблицы): ${skippedLines}`);
+    console.log(`⏭️ Пропущено строк: ${skippedLines}`);
     console.log('📊 Результат:', JSON.stringify(result, null, 2));
     return result;
 }
