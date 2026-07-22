@@ -523,7 +523,7 @@ function findProductBySkuAndSize(fileSku, fileSize) {
 }
 
 // ==================================================
-// 🔥 НОВЫЙ ПОСТРОЧНЫЙ ПАРСЕР PDF (для таблиц)
+// 🔥 ПОСТРОЧНЫЙ ПАРСЕР — работает ТОЛЬКО со строками таблицы
 // ==================================================
 function parsePDFTextToTable(text) {
     console.log('📄 ПОСТРОЧНЫЙ ПАРСИНГ PDF');
@@ -538,72 +538,91 @@ function parsePDFTextToTable(text) {
     const lines = cleanText.split(/\r?\n/);
     console.log(`📄 Строк в тексте: ${lines.length}`);
     
-    // Паттерн размера — точное совпадение целого слова
+    // Паттерн размера — ТОЧНОЕ совпадение целого слова
     const sizePattern = /^(XXXS|XXS|XS|S\/M|M\/L|L\/XL|ONE\s*SIZE|UNIVERSAL|S|M|L|XL|XXL|XXXL|44|46|48|50|52|54|56|28|30|32|34|36|38|40|42)$/i;
     
     // Паттерн артикула — буквы + цифры, длина >= 3
-    const skuPattern = /^[A-Z0-9][A-Z0-9\-\.]{2,30}$/i;
+    const skuPattern = /^[A-Z][A-Z0-9\-\.]{2,20}$/i;
     
-    // Слова которые НЕ являются артикулами
-    const excludeWords = /^(WB|GI|WBGI|Rick|Owens|Dime|Baggy|universal|black|white|red|blue|green|yellow|pink|purple|orange|brown|gray|grey|beige|kamypnak)$/i;
+    // ❌ СЛОВА-ИСКЛЮЧЕНИЯ (НЕ артикулы!)
+    const excludeWords = /^(WB|GI|WBGI|Rick|Owens|Dime|Baggy|universal|black|white|red|blue|green|yellow|pink|purple|orange|brown|gray|grey|beige|kamypnak|Kamypnak|KAMYPNAK|uct|non6opa|KonM4ecTBo|KonMyecTBO|Ne 3agaHM9|LBeT|ApTMKyn|CTMKep|HaMMeHoBaHMe|Pa3Mep|EpeHA|中OTO)$/i;
+    
+    let tableLinesCount = 0;
+    let skippedLines = 0;
     
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
         
+        // 🔥 ВАЖНО: Работаем ТОЛЬКО со строками таблицы (содержат |)
+        if (!line.includes('|')) {
+            skippedLines++;
+            continue;
+        }
+        
+        // Разбиваем на колонки
+        const parts = line.split('|').map(p => p.trim()).filter(p => p && p !== '---' && p !== '');
+        
+        // Пропускаем строки-разделители и заголовки
+        if (parts.length < 3) {
+            skippedLines++;
+            continue;
+        }
+        
+        // Проверяем что это НЕ строка-заголовок таблицы
+        if (parts.some(p => /^(Ne|LBeT|ApTMKyn|CTMKep|HaMMeHoBaHMe|Pa3Mep|EpeHA|中OTO)$/i.test(p))) {
+            skippedLines++;
+            continue;
+        }
+        
         let foundSize = '';
         let foundSku = '';
         
-        if (line.includes('|')) {
-            // Строка таблицы — разбиваем по |
-            const parts = line.split('|').map(p => p.trim()).filter(p => p && p !== '---');
+        // 🔥 Ищем размер и артикул в колонках
+        for (const part of parts) {
+            if (!part) continue;
             
-            for (const part of parts) {
-                if (!part) continue;
-                
-                // Ищем размер
-                if (!foundSize && sizePattern.test(part)) {
-                    foundSize = part.toUpperCase();
-                    continue;
-                }
-                
-                // Ищем артикул (есть буквы + длина >= 3 + не исключение)
-                if (!foundSku && skuPattern.test(part) &&
-                    /[A-Z]/i.test(part) &&
-                    !excludeWords.test(part) &&
-                    !/^\d+$/.test(part) &&
-                    part.length >= 3) {
-                    foundSku = part;
-                }
+            // Ищем размер (ТОЧНОЕ совпадение)
+            if (!foundSize && sizePattern.test(part)) {
+                foundSize = part.toUpperCase();
+                continue;
             }
-        } else {
-            // Строка без | (OCR не распознал таблицу)
-            const words = line.split(/\s+/);
-            for (const word of words) {
-                if (!word) continue;
-                if (!foundSize && sizePattern.test(word)) {
-                    foundSize = word.toUpperCase();
-                } else if (!foundSku && skuPattern.test(word) &&
-                           /[A-Z]/i.test(word) &&
-                           !excludeWords.test(word) &&
-                           !/^\d+$/.test(word) &&
-                           word.length >= 3) {
-                    foundSku = word;
-                }
+            
+            // Ищем артикул
+            if (!foundSku && skuPattern.test(part) && 
+                !excludeWords.test(part) && 
+                !/^\d+$/.test(part) &&
+                part.length >= 3 &&
+                /[A-Z]/i.test(part) &&
+                /\d/.test(part)) {  // 🔥 Артикул ОБЯЗАТЕЛЬНО должен содержать И буквы, И цифры
+                foundSku = part;
             }
         }
         
+        // Если нашли и размер, и артикул — добавляем
         if (foundSku && foundSize) {
-            console.log(`  ✅ ${foundSku} | ${foundSize}`);
+            // Очищаем артикул (убираем лишнее)
+            let cleanSku = foundSku.toUpperCase();
+            if (cleanSku.includes('-')) {
+                const parts2 = cleanSku.split('-');
+                if (parts2.length >= 2 && /^\d+$/.test(parts2[1])) {
+                    cleanSku = parts2[0];  // Оставляем только буквенную часть
+                }
+            }
+            
+            console.log(`  ✅ Строка ${i}: артикул="${cleanSku}" размер="${foundSize}"`);
             result.push({
-                'Артикул': foundSku,
+                'Артикул': cleanSku,
                 'Размер': foundSize,
                 'Количество': 1
             });
+            tableLinesCount++;
         }
     }
     
-    console.log(`📊 Найдено строк с товарами: ${result.length}`);
+    console.log(`📊 Найдено строк с товарами: ${tableLinesCount}`);
+    console.log(`⏭️ Пропущено строк (без таблицы): ${skippedLines}`);
+    console.log('📊 Результат:', JSON.stringify(result, null, 2));
     return result;
 }
 
