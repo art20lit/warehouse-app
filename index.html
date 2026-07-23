@@ -456,167 +456,184 @@ function generateSearchVariants(sku){const variants=new Set();const clean=sku.to
 function intelligentSkuSearch(fileSku){if(!fileSku)return null;const cleanFileSku=cleanSku(fileSku);if(!cleanFileSku||cleanFileSku.length<2)return null;const searchVariants=generateSearchVariants(cleanFileSku);let bestMatch=null;let bestScore=0;let allMatches=[];for(const variant of searchVariants){for(const masterSku of masterSkuCache){for(const masterVariant of masterSku.searchVariants){const score=calculateMatchScore(variant,masterVariant);if(score>0.6){const match={masterSku:masterSku,fileSku:fileSku,cleanFileSku:cleanFileSku,variant:variant,masterVariant:masterVariant,score:score,matchType:'variant'};allMatches.push(match);if(score>bestScore){bestScore=score;bestMatch=match;}}}}}if(bestMatch&&bestScore>0.7){console.log(`✅ Найден: ${bestMatch.masterSku.cleanSku} (оценка: ${Math.round(bestScore*100)}%)`);return{...bestMatch,allMatches:allMatches.sort((a,b)=>b.score-a.score).slice(0,5)};}if(allMatches.length>0&&allMatches[0].score>0.5){const best=allMatches[0];console.log(`⚠️ Частичное совпадение: ${best.masterSku.cleanSku} (${Math.round(best.score*100)}%)`);return{...best,allMatches:allMatches.slice(0,3),matchType:'partial'};}console.log(`❌ Не найден: "${fileSku}"`);return null;}
 function calculateMatchScore(variant1,variant2){const v1=variant1.toUpperCase().trim();const v2=variant2.toUpperCase().trim();if(v1===v2)return 1.0;if(v1.includes(v2)||v2.includes(v1)){const shorter=Math.min(v1.length,v2.length);const longer=Math.max(v1.length,v2.length);return 0.7+(0.3*(shorter/longer));}if(v1.startsWith(v2)||v2.startsWith(v1)){const shorter=Math.min(v1.length,v2.length);const longer=Math.max(v1.length,v2.length);return 0.6+(0.2*(shorter/longer));}if(v1.endsWith(v2)||v2.endsWith(v1)){const shorter=Math.min(v1.length,v2.length);const longer=Math.max(v1.length,v2.length);return 0.5+(0.2*(shorter/longer));}const numbers1=v1.replace(/[^0-9]/g,'');const numbers2=v2.replace(/[^0-9]/g,'');if(numbers1&&numbers2){if(numbers1===numbers2)return 0.85;if(numbers1.includes(numbers2)||numbers2.includes(numbers1)){const shorter=Math.min(numbers1.length,numbers2.length);const longer=Math.max(numbers1.length,numbers2.length);return 0.65+(0.2*(shorter/longer));}const first3_1=numbers1.substring(0,3);const first3_2=numbers2.substring(0,3);if(first3_1===first3_2)return 0.75;}const letters1=v1.replace(/[^A-Z]/g,'');const letters2=v2.replace(/[^A-Z]/g,'');if(letters1&&letters2&&letters1===letters2)return 0.7;const distance=levenshteinDistance(v1,v2);const maxLen=Math.max(v1.length,v2.length);if(maxLen===0)return 0;const similarity=1-(distance/maxLen);const lenRatio=Math.min(v1.length,v2.length)/Math.max(v1.length,v2.length);return similarity*(0.8+0.2*lenRatio);}
 function levenshteinDistance(a,b){const matrix=[];for(let i=0;i<=b.length;i++)matrix[i]=[i];for(let j=0;j<=a.length;j++)matrix[0][j]=j;for(let i=1;i<=b.length;i++){for(let j=1;j<=a.length;j++){if(b[i-1]===a[j-1]){matrix[i][j]=matrix[i-1][j-1];}else{matrix[i][j]=Math.min(matrix[i-1][j-1]+1,matrix[i][j-1]+1,matrix[i-1][j]+1);}}}return matrix[b.length][a.length];}
-function cleanSku(sku){if(!sku)return'';let clean=String(sku).trim().toUpperCase();clean=clean.split(' ')[0];clean=clean.replace(/[^A-Z0-9\-]/g,'');if(clean.includes('-')){const parts=clean.split('-');if(parts.length>=2&&/^\d+$/.test(parts[1])){if(/\d/.test(parts[0])){clean=parts[0];}else{const firstDigit=parts[1].charAt(0);clean=parts[0]+'-'+firstDigit;}}else{clean=parts[0];}}clean=clean.replace(/[^A-Z0-9\-]/g,'');if(!clean)return String(sku).trim().toUpperCase().replace(/[^A-Z0-9\-]/g,'');return clean;}
-function extractCleanSku(sku){if(!sku)return'';let clean=sku.trim().toUpperCase();clean=clean.split(' ')[0];const hasLetters=/[A-Z]/.test(clean);if(hasLetters){const match=clean.match(/^([A-Z]+[0-9]+)/);if(match)clean=match[1];if(clean&&clean.includes('-')){const parts=clean.split('-');if(parts.length>=2&&/^\d+$/.test(parts[1])){const letterPart=parts[0];const numberPart=parts[1];const firstDigit=numberPart.charAt(0);if(/\d/.test(letterPart)){clean=letterPart;}else{clean=`${letterPart}-${firstDigit}`;}}else{clean=parts[0];}}}else{const match=clean.match(/^(\d{3})/);if(match)clean=match[1];}clean=clean.replace(/[^A-Z0-9\-]/g,'');if(!clean)return sku.trim().toUpperCase().replace(/[^A-Z0-9\-]/g,'');return clean;}
 
 // ==================================================
-// 🔥 НОВАЯ ФУНКЦИЯ — поиск по АРТИКУЛУ + РАЗМЕРУ (регистронезависимо)
+// 🔥 НОВАЯ УМНАЯ cleanSku (нормализация артикулов)
 // ==================================================
-function findProductBySkuAndSize(fileSku, fileSize) {
-    if (!fileSku) return null;
-    const cleanFileSku = cleanSku(fileSku).toUpperCase();
-    const cleanFileSize = (fileSize || '').trim().toUpperCase();
-    console.log(`🔍 Ищем: артикул="${cleanFileSku}", размер="${cleanFileSize}"`);
+function cleanSku(sku) {
+    if (!sku) return '';
+    let clean = String(sku).trim().toUpperCase();
     
-    // 1. ТОЧНОЕ совпадение (регистр не важен)
-    const exactMatch = products.find(p => {
-        const pSkus = (p.skus || [p.sku]).map(s => cleanSku(s).toUpperCase());
-        const skuMatch = pSkus.includes(cleanFileSku);
-        const sizeMatch = (p.size || '').trim().toUpperCase() === cleanFileSize;
-        return skuMatch && sizeMatch;
-    });
+    // Убираем пробелы и лишние символы
+    clean = clean.split(' ')[0];
+    clean = clean.replace(/[^A-Z0-9\-]/g, '');
     
-    if (exactMatch) {
-        console.log(`  ✅ Точное: ${exactMatch.name} (${exactMatch.sku}, ${exactMatch.size})`);
-        return { product: exactMatch, matchType: 'exact', confidence: 1.0, sizeMatch: true };
+    // 🔥 НОВОЕ: Если артикул типа VCT4 (буквы + цифры без дефиса) → VCT-4
+    if (/^[A-Z]+\d+$/.test(clean) && clean.length >= 4) {
+        const match = clean.match(/^([A-Z]+)(\d+)$/);
+        if (match) {
+            clean = match[1] + '-' + match[2];
+        }
     }
     
-    // 2. Нечёткое совпадение по артикулу
-    const fuzzyMatch = intelligentSkuSearch(fileSku);
-    if (!fuzzyMatch) {
-        console.log(`  ❌ Артикул не найден`);
-        return null;
+    if (clean.includes('-')) {
+        const parts = clean.split('-');
+        
+        // VCT-4, VCT-5, VCT-2 — оставляем как есть
+        if (/^[A-Z]+$/.test(parts[0]) && /^\d+$/.test(parts[1])) {
+            clean = parts[0] + '-' + parts[1];
+        }
+        // 601-black-jeans, 605-Dime-01 — берём только цифры в начале
+        else if (/^\d+$/.test(parts[0])) {
+            clean = parts[0];
+        }
+        // LB001-A5620040 — берём первую часть
+        else {
+            clean = parts[0];
+        }
     }
     
-    const masterProduct = products.find(p => p.id === fuzzyMatch.masterSku.id);
-    if (!masterProduct) return null;
-    
-    // 3. Проверяем размер
-    const masterSize = (masterProduct.size || '').trim().toUpperCase();
-    if (masterSize === cleanFileSize) {
-        console.log(`  ✅ Нечёткое + размер совпадает`);
-        return { product: masterProduct, matchType: 'fuzzy_with_size', confidence: fuzzyMatch.score, sizeMatch: true };
-    }
-    
-    // 4. Ищем другой товар с таким же артикулом и нужным размером
-    const sameSkuDiffSize = products.find(p => {
-        const pSkus = (p.skus || [p.sku]).map(s => cleanSku(s).toUpperCase());
-        const skuMatch = pSkus.includes(cleanFileSku);
-        const sizeMatch = (p.size || '').trim().toUpperCase() === cleanFileSize;
-        return skuMatch && sizeMatch;
-    });
-    
-    if (sameSkuDiffSize) {
-        console.log(`  ✅ Нашли с нужным размером: ${sameSkuDiffSize.name}`);
-        return { product: sameSkuDiffSize, matchType: 'same_sku_diff_size', confidence: 0.9, sizeMatch: true };
-    }
-    
-    // 5. Размер не совпадает
-    console.log(`  ⚠️ Размер не совпадает: база="${masterSize}", файл="${cleanFileSize}"`);
-    return {
-        product: masterProduct,
-        matchType: 'size_mismatch',
-        confidence: fuzzyMatch.score * 0.7,
-        sizeMatch: false,
-        expectedSize: cleanFileSize,
-        actualSize: masterSize
-    };
+    return clean;
 }
 
 // ==================================================
-// 🔥 ПАРСЕР — работает с умно извлечённым текстом (с |) и без
+// 🔥 НОВАЯ extractCleanSku
+// ==================================================
+function extractCleanSku(sku) {
+    if (!sku) return '';
+    let clean = sku.trim().toUpperCase();
+    clean = clean.split(' ')[0];
+    clean = clean.replace(/[^A-Z0-9\-]/g, '');
+    
+    // 🔥 НОВОЕ: VCT4 → VCT-4
+    if (/^[A-Z]+\d+$/.test(clean) && clean.length >= 4) {
+        const match = clean.match(/^([A-Z]+)(\d+)$/);
+        if (match) {
+            clean = match[1] + '-' + match[2];
+        }
+    }
+    
+    if (clean.includes('-')) {
+        const parts = clean.split('-');
+        
+        // VCT-4, VCT-5 — оставляем
+        if (/^[A-Z]+$/.test(parts[0]) && /^\d+$/.test(parts[1])) {
+            clean = parts[0] + '-' + parts[1];
+        }
+        // 601-black-jeans — берём цифры
+        else if (/^\d+$/.test(parts[0])) {
+            clean = parts[0];
+        }
+        // LB001-A5620040 — берём первую часть
+        else {
+            clean = parts[0];
+        }
+    }
+    
+    return clean;
+}
+
+// ==================================================
+// 🔥 УЛУЧШЕННЫЙ parsePDFTextToTable
 // ==================================================
 function parsePDFTextToTable(text) {
     console.log('📄 ПАРСИНГ PDF ПОСТРОЧНО');
     const result = [];
     
-    if (!text || text.trim().length === 0) {
-        console.log('⚠️ Пустой текст');
-        return result;
-    }
-    
-    const cleanText = text
+    let cleanText = text
         .replace(/\r/g, '')
         .replace(/===+ Page \d+ ===/g, '')
         .replace(/\n{3,}/g, '\n')
         .trim();
     
     const lines = cleanText.split(/\r?\n/);
-    console.log(`📄 Строк в тексте: ${lines.length}`);
+    console.log(`📄 Всего строк: ${lines.length}`);
     
-    // Паттерн размера
-    const sizePattern = /^(XXXS|XXS|XS|S\/M|M\/L|L\/XL|ONE\s*SIZE|UNIVERSAL|S|M|L|XL|XXL|XXXL|\d{2,3})$/i;
+    // 🔥 Паттерн размера — ТОЧНОЕ совпадение
+    const sizePattern = /^(XXXS|XXS|XS|S\/M|M\/L|L\/XL|ONE\s*SIZE|UNIVERSAL|S|M|L|XL|XXL|XXXL|44|46|48|50|52|54|56|28|30|32|34|36|38|40|42)$/i;
     
-    // Слова-исключения
-    const excludeWords = /^(WB|GI|WBGI|Rick|Owens|Dime|Baggy|universal|black|white|red|blue|green|yellow|pink|purple|orange|brown|gray|grey|beige|kamypnak|KAMYPNAK|Kamypnak|uct|nop6opa|KonM4ecTBo|KonMyecTBO|CTMKep|ApTMKyn|Ne|3agaHM9|LBeT|Pa3Mep|EpeHA|中OTO|HaMMeHoBaHMe)$/i;
+    // 🔥 Паттерн артикула — буквы + цифры, длина >= 3
+    const skuPattern = /^[A-Z0-9][A-Z0-9\-\.]{2,30}$/i;
     
-    // Паттерн артикула (буквы + цифры)
-    const skuPattern = /^[A-Z][A-Z0-9\-\.]{2,25}$/i;
-    
-    let tableLinesCount = 0;
+    // ❌ Слова-исключения
+    const excludeWords = /^(WB|GI|WBGI|Dime|Baggy|universal|black|white|red|blue|green|yellow|pink|purple|orange|brown|gray|grey|beige|kamypnak|Rick|Owens)$/i;
     
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
         
+        // 🔥 Логируем ВСЕ строки с |
+        if (line.includes('|')) {
+            console.log(`📄 Строка ${i}: ${line.substring(0, 100)}...`);
+        }
+        
         let foundSize = '';
         let foundSku = '';
         
-        // 🔥 Разбиваем строку на части
-        // Сначала пробуем по |
-        let parts;
         if (line.includes('|')) {
-            parts = line.split('|').map(p => p.trim()).filter(p => p && p !== '---');
-        } else {
-            // Если нет | — разбиваем по пробелам
-            parts = line.split(/\s+/).filter(p => p);
-        }
-        
-        for (const part of parts) {
-            if (!part || part === '---') continue;
+            // Разбиваем на колонки
+            const parts = line.split('|').map(p => p.trim()).filter(p => p && p !== '---');
             
-            // Ищем размер
-            if (!foundSize && sizePattern.test(part)) {
-                foundSize = part.toUpperCase();
+            // 🔥 НОВОЕ: пропускаем строки-заголовки
+            if (parts.some(p => /^(Ne|3agaHM9|ApTMKyn|CTMKep|HaMMeHoBaHMe|Pa3Mep|LBeT|中OTO|EpeHA)$/i.test(p))) {
+                console.log(`  ⏭️ Пропуск (заголовок)`);
                 continue;
             }
             
-            // Ищем артикул (ОБЯЗАТЕЛЬНО буквы + цифры, не исключение)
-            if (!foundSku && 
-                skuPattern.test(part) &&
-                /[A-Z]/i.test(part) &&
-                /\d/.test(part) &&
-                !excludeWords.test(part) &&
-                !/^\d+$/.test(part) &&
-                part.length >= 3) {
-                foundSku = part;
+            for (const part of parts) {
+                if (!part) continue;
+                
+                // Ищем размер
+                if (!foundSize && sizePattern.test(part)) {
+                    foundSize = part.toUpperCase();
+                    continue;
+                }
+                
+                // 🔥 НОВОЕ: ищем артикул — должен содержать И буквы, И цифры (или только буквы с цифрами)
+                if (!foundSku && 
+                    skuPattern.test(part) &&
+                    /[A-Z]/i.test(part) &&
+                    !excludeWords.test(part) &&
+                    !/^\d+$/.test(part) &&
+                    part.length >= 3 &&
+                    // 🔥 НОВОЕ: исключаем номера заказов (только цифры)
+                    !/^\d{5,}$/.test(part)) {
+                    foundSku = part;
+                }
+            }
+        } else {
+            // Строка без | (OCR не распознал таблицу)
+            const words = line.split(/\s+/);
+            for (const word of words) {
+                if (!word) continue;
+                if (!foundSize && sizePattern.test(word)) {
+                    foundSize = word.toUpperCase();
+                } else if (!foundSku && 
+                           skuPattern.test(word) &&
+                           /[A-Z]/i.test(word) &&
+                           !excludeWords.test(word) &&
+                           !/^\d+$/.test(word) &&
+                           word.length >= 3) {
+                    foundSku = word;
+                }
             }
         }
         
-        // Если нашли и размер, и артикул
         if (foundSku && foundSize) {
-            // Очищаем артикул
-            let cleanSku = foundSku.toUpperCase();
-            
-            // Убираем суффикс после дефиса если там только цифры
-            if (cleanSku.includes('-')) {
-                const skuParts = cleanSku.split('-');
-                if (skuParts.length === 2 && /^\d+$/.test(skuParts[1])) {
-                    cleanSku = skuParts[0];
-                }
-            }
-            
-            console.log(`  ✅ Строка ${i}: артикул="${cleanSku}" размер="${foundSize}"`);
+            // 🔥 НОВОЕ: нормализуем артикул через cleanSku
+            const normalizedSku = cleanSku(foundSku);
+            console.log(`  ✅ "${foundSku}" → "${normalizedSku}" | ${foundSize}`);
             result.push({
-                'Артикул': cleanSku,
+                'Артикул': normalizedSku,
                 'Размер': foundSize,
                 'Количество': 1
             });
-            tableLinesCount++;
+        } else if (line.includes('|') && !line.includes('---')) {
+            console.log(`  ❌ Не найдено: sku="${foundSku}", size="${foundSize}"`);
         }
     }
     
-    console.log(`📊 Найдено строк с товарами: ${tableLinesCount}`);
+    console.log(`📊 Найдено строк с товарами: ${result.length}`);
     return result;
 }
 
